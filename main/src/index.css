@@ -1,0 +1,205 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Professional Business Portal Design System
+All colors MUST be HSL. Modern gradient sidebar with clean dashboard design.
+*/
+
+@layer base {
+  :root {
+    /* Core Background & Text */
+    --background: 0 0% 100%;
+    --foreground: 218 27% 26%;
+    
+    /* Cards & Surfaces */
+    --card: 0 0% 100%;
+    --card-foreground: 218 27% 26%;
+    --card-shadow: 220 13% 91%;
+    
+    /* Sidebar - Dark Professional in light mode as well */
+    --sidebar-from: 221 39% 11%;   /* Slate 900 */
+    --sidebar-to: 222 31% 17%;     /* Slate 800 */
+    --sidebar-text: 0 0% 100%;     /* White text on dark */
+    --sidebar-hover: 0 0% 100% / 0.08; /* Subtle white overlay */
+    
+    /* Primary Brand Colors */
+    --primary: 243 75% 59%;        /* Purple */
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 243 75% 54%;
+    
+    /* Accent Colors - Pastel Theme */
+    --accent-blue: 213 94% 68%;     /* Soft blue */
+    --accent-green: 142 69% 58%;    /* Soft green */
+    --accent-purple: 262 83% 78%;   /* Soft purple */
+    --accent-orange: 25 95% 63%;    /* Soft orange */
+    
+    /* UI States */
+    --secondary: 220 13% 95%;
+    --secondary-foreground: 218 27% 26%;
+    
+    --muted: 220 13% 95%;
+    --muted-foreground: 218 11% 65%;
+    
+    --accent: 220 13% 95%;
+    --accent-foreground: 218 27% 26%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 243 75% 59%;
+    
+    /* Border Radius */
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Dark Mode Colors */
+    --background: 218 27% 18%;
+    --foreground: 210 40% 98%;
+    --card: 218 27% 18%;
+    --card-foreground: 210 40% 98%;
+    
+    /* Dark Sidebar - deeper slate gradient */
+    --sidebar-from: 222 41% 8%;   /* Slate 950 */
+    --sidebar-to: 222 31% 14%;    /* Slate 800/900 mix */
+    --sidebar-text: 0 0% 100%;
+    --sidebar-hover: 0 0% 100% / 0.12;
+    
+    --primary: 243 75% 59%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 243 75% 64%;
+    
+    --secondary: 218 27% 25%;
+    --secondary-foreground: 210 40% 98%;
+    
+    --muted: 218 27% 25%;
+    --muted-foreground: 215 20.2% 65.1%;
+    
+    --accent: 218 27% 25%;
+    --accent-foreground: 210 40% 98%;
+    
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 218 27% 25%;
+    --input: 218 27% 25%;
+    --ring: 243 75% 59%;
+    --card-shadow: 218 27% 12%;
+  }
+}
+
+/* Custom Utilities */
+@layer utilities {
+  /* Sidebar Gradient */
+  .sidebar-gradient {
+    background: linear-gradient(135deg, hsl(var(--sidebar-from)), hsl(var(--sidebar-to)));
+  }
+  
+  /* Card Shadows */
+  .card-shadow {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+  
+  .card-shadow-lg {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  }
+  
+  /* Hover Transitions */
+  .transition-hover {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Glass Effect */
+  .glass-effect {
+    backdrop-filter: blur(8px);
+    background: hsl(var(--background) / 0.8);
+  }
+}
+
+/* Component Styles */
+@layer components {
+  /* Sidebar Item Hover */
+  .sidebar-item {
+    @apply relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sidebar-text transition-hover;
+  }
+  
+  .sidebar-item:hover {
+    background: hsl(var(--sidebar-hover));
+    transform: translateX(2px);
+  }
+
+  .sidebar-icon {
+    color: hsl(var(--sidebar-text) / 0.9);
+  }
+  .sidebar-item:hover .sidebar-icon {
+    color: hsl(var(--sidebar-text));
+  }
+
+  /* Active pill style like preview */
+  .sidebar-item.active {
+    background: hsl(var(--primary) / 0.28);
+    color: hsl(var(--sidebar-text));
+    box-shadow:
+      0 0 0 1px hsl(var(--primary) / 0.35),
+      0 10px 25px -10px hsl(var(--primary) / 0.45);
+  }
+  .sidebar-item.active .sidebar-icon {
+    color: hsl(var(--sidebar-text));
+  }
+  
+  .sidebar-item.active {
+    background: hsl(var(--sidebar-hover));
+    box-shadow: inset 3px 0 0 hsl(var(--sidebar-text));
+  }
+  
+  /* Dashboard Widget */
+  .dashboard-widget {
+    @apply bg-card rounded-xl p-6 card-shadow transition-hover;
+  }
+  
+  .dashboard-widget:hover {
+    @apply card-shadow-lg;
+    transform: translateY(-3px);
+  }
+  
+  /* Accent Color Utilities */
+  .accent-blue { color: hsl(var(--accent-blue)); }
+  .bg-accent-blue { background-color: hsl(var(--accent-blue)); }
+  .accent-green { color: hsl(var(--accent-green)); }
+  .bg-accent-green { background-color: hsl(var(--accent-green)); }
+  .accent-purple { color: hsl(var(--accent-purple)); }
+  .bg-accent-purple { background-color: hsl(var(--accent-purple)); }
+  .accent-orange { color: hsl(var(--accent-orange)); }
+  .bg-accent-orange { background-color: hsl(var(--accent-orange)); }
+  .accent-blue\/10 { color: hsl(var(--accent-blue) / 0.1); }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
