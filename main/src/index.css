@@ -201,5 +201,6 @@ All colors MUST be HSL. Modern gradient sidebar with clean dashboard design.
   body {
     @apply bg-background text-foreground font-sans;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      overflow-x: hidden;
   }
 }
