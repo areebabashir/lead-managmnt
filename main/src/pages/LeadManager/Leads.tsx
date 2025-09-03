@@ -1,15 +1,16 @@
+// pages/LeadManagerLeads.tsx
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  MoreVertical, 
-  Eye, 
-  Edit, 
-  Trash2, 
-  Phone, 
-  Mail, 
+import {
+  Plus,
+  Search,
+  Filter,
+  MoreVertical,
+  Eye,
+  Edit,
+  Trash2,
+  Phone,
+  Mail,
   Calendar,
   Download,
   ChevronDown,
@@ -19,66 +20,66 @@ import {
 
 // Mock data
 const mockLeads = [
-  { 
-    id: 1, 
-    name: 'Alice Cooper', 
-    email: 'alice@example.com', 
-    phone: '+1 (555) 123-4567', 
+  {
+    id: 1,
+    name: 'Alice Cooper',
+    email: 'alice@example.com',
+    phone: '+1 (555) 123-4567',
     company: 'Tech Solutions Inc.',
-    source: 'Website Form', 
-    status: 'new', 
+    source: 'Website Form',
+    status: 'new',
     priority: 'high',
     lastContact: '2024-01-15',
     value: 5000,
     assignedTo: 'John Smith'
   },
-  { 
-    id: 2, 
-    name: 'Bob Martin', 
-    email: 'bob@example.com', 
-    phone: '+1 (555) 234-5678', 
+  {
+    id: 2,
+    name: 'Bob Martin',
+    email: 'bob@example.com',
+    phone: '+1 (555) 234-5678',
     company: 'Marketing Pro',
-    source: 'Google Ads', 
-    status: 'contacted', 
+    source: 'Google Ads',
+    status: 'contacted',
     priority: 'medium',
     lastContact: '2024-01-14',
     value: 3500,
     assignedTo: 'Sarah Johnson'
   },
-  { 
-    id: 3, 
-    name: 'Carol White', 
-    email: 'carol@example.com', 
-    phone: '+1 (555) 345-6789', 
+  {
+    id: 3,
+    name: 'Carol White',
+    email: 'carol@example.com',
+    phone: '+1 (555) 345-6789',
     company: 'Design Studio',
-    source: 'Referral', 
-    status: 'qualified', 
+    source: 'Referral',
+    status: 'qualified',
     priority: 'high',
     lastContact: '2024-01-13',
     value: 7500,
     assignedTo: 'Mike Davis'
   },
-  { 
-    id: 4, 
-    name: 'David Brown', 
-    email: 'david@example.com', 
-    phone: '+1 (555) 456-7890', 
+  {
+    id: 4,
+    name: 'David Brown',
+    email: 'david@example.com',
+    phone: '+1 (555) 456-7890',
     company: 'Retail Plus',
-    source: 'LinkedIn', 
-    status: 'proposal', 
+    source: 'LinkedIn',
+    status: 'proposal',
     priority: 'high',
     lastContact: '2024-01-12',
     value: 12000,
     assignedTo: 'John Smith'
   },
-  { 
-    id: 5, 
-    name: 'Eva Martinez', 
-    email: 'eva@example.com', 
-    phone: '+1 (555) 567-8901', 
+  {
+    id: 5,
+    name: 'Eva Martinez',
+    email: 'eva@example.com',
+    phone: '+1 (555) 567-8901',
     company: 'Food & Co',
-    source: 'Cold Call', 
-    status: 'lost', 
+    source: 'Cold Call',
+    status: 'lost',
     priority: 'low',
     lastContact: '2024-01-10',
     value: 2000,
@@ -98,7 +99,7 @@ const Badge = ({ children, variant = 'default' }: { children: React.ReactNode, v
     low: 'bg-gray-100 text-gray-800 border-gray-200',
     default: 'bg-gray-100 text-gray-800 border-gray-200'
   };
-  
+
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${variants[variant] || variants.default}`}>
       {children}
@@ -116,8 +117,8 @@ export default function LeadManagerLeads() {
 
   const filteredLeads = mockLeads.filter(lead => {
     const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         lead.company.toLowerCase().includes(searchTerm.toLowerCase());
+      lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.company.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -151,7 +152,7 @@ export default function LeadManagerLeads() {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium shadow-sm hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-medium shadow-sm hover:bg-blue-700 transition-colors"
         >
           <Plus className="h-4 w-4" />
           Add New Lead
@@ -167,7 +168,7 @@ export default function LeadManagerLeads() {
             placeholder="Search leads by name, email, or company..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+            className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
           />
         </div>
         
@@ -175,7 +176,7 @@ export default function LeadManagerLeads() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-3 bg-white border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500"
+            className="px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-blue-500"
           >
             <option value="all">All Status</option>
             <option value="new">New</option>
@@ -185,7 +186,7 @@ export default function LeadManagerLeads() {
             <option value="lost">Lost</option>
           </select>
           
-          <button className="flex items-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-lg text-gray-700 hover:text-gray-900 hover:border-gray-300 transition-colors">
+          <button className="flex items-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-700 hover:text-gray-900 hover:border-gray-300 transition-colors">
             <Download className="h-4 w-4" />
             Export
           </button>
@@ -193,14 +194,14 @@ export default function LeadManagerLeads() {
       </div>
 
       {/* Leads Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">All Leads ({filteredLeads.length})</h2>
             {selectedLeads.length > 0 && (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-600">{selectedLeads.length} selected</span>
-                <button className="px-3 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors text-sm">
+                <button className="px-3 py-1.5 bg-red-100 text-red-700 rounded-xl hover:bg-red-200 transition-colors text-sm">
                   Delete Selected
                 </button>
               </div>
@@ -345,7 +346,7 @@ export default function LeadManagerLeads() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-lg p-6 w-full max-w-md mx-4"
+              className="bg-white rounded-xl p-6 w-full max-w-md mx-4"
             >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Lead</h3>
               <div className="space-y-4">
@@ -353,7 +354,7 @@ export default function LeadManagerLeads() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter lead name"
                   />
                 </div>
@@ -361,7 +362,7 @@ export default function LeadManagerLeads() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                   <input
                     type="email"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter email address"
                   />
                 </div>
@@ -369,7 +370,7 @@ export default function LeadManagerLeads() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
                   <input
                     type="tel"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter phone number"
                   />
                 </div>
@@ -377,13 +378,13 @@ export default function LeadManagerLeads() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter company name"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Source</label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  <select className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <option value="">Select source</option>
                     <option value="Website Form">Website Form</option>
                     <option value="Google Ads">Google Ads</option>
@@ -396,13 +397,13 @@ export default function LeadManagerLeads() {
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => setShowAddModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => setShowAddModal(false)}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
                 >
                   Add Lead
                 </button>
