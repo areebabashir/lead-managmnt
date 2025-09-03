@@ -1,3 +1,4 @@
+// components/layout/AppLayout.tsx
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sidebar } from './Sidebar';
@@ -11,15 +12,15 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background flex">
-      <Sidebar 
-        collapsed={sidebarCollapsed} 
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+    <div className="min-h-screen  flex">
+      <Sidebar
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
-      
+
       <div className={`flex-1 flex flex-col transition-all duration-300 ${
-        sidebarCollapsed ? 'ml-16' : 'ml-64'
-      } lg:ml-64`}> 
+        sidebarCollapsed ? 'ml-20' : 'ml-64'
+      }`}>
         <Header 
           sidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
