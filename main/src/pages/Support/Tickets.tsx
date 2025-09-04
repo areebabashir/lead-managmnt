@@ -13,10 +13,23 @@ import {
   Calendar,
   User,
 } from "lucide-react";
-import DataTable from "react-data-table-component";
+import DataTable, { TableColumn, TableStyles } from "react-data-table-component";
+
+// ✅ Define ticket type
+interface Ticket {
+  id: string;
+  title: string;
+  customer: string;
+  priority: "high" | "medium" | "low";
+  status: "open" | "in-progress" | "resolved" | "closed";
+  created: string;
+  agent: string;
+  responses: number;
+  lastActivity: string;
+}
 
 // Mock Tickets Data
-const mockTickets = [
+const mockTickets: Ticket[] = [
   {
     id: "#T001",
     title: "Login issues with new account",
@@ -124,10 +137,10 @@ export default function SupportTickets() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
-  const [tickets, setTickets] = useState(mockTickets);
+  const [tickets, setTickets] = useState<Ticket[]>(mockTickets);
 
-  // ✅ Custom styles
-  const customStyles = {
+  // ✅ Typed custom styles
+  const customStyles: TableStyles = {
     headCells: { style: { justifyContent: "center", color: "#000" } },
     cells: { style: { justifyContent: "center", textAlign: "center" } },
     headRow: {
@@ -170,12 +183,13 @@ export default function SupportTickets() {
     total: tickets.length,
   };
 
-  const columns = [
+  // ✅ Typed columns
+  const columns: TableColumn<Ticket>[] = [
     {
       name: "Ticket",
-      selector: (row: any) => row.id,
+      selector: (row) => row.id,
       sortable: true,
-      cell: (row: any) => (
+      cell: (row) => (
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="font-mono text-sm font-medium">{row.id}</span>
@@ -191,8 +205,8 @@ export default function SupportTickets() {
     },
     {
       name: "Customer",
-      selector: (row: any) => row.customer,
-      cell: (row: any) => (
+      selector: (row) => row.customer,
+      cell: (row) => (
         <div className="flex items-center gap-2">
           <User className="h-4 w-4 text-gray-400" />
           <span>{row.customer}</span>
@@ -201,8 +215,8 @@ export default function SupportTickets() {
     },
     {
       name: "Priority",
-      selector: (row: any) => row.priority,
-      cell: (row: any) => (
+      selector: (row) => row.priority,
+      cell: (row) => (
         <span
           className={`px-2 py-1 rounded text-xs font-medium capitalize ${getPriorityColor(
             row.priority
@@ -214,8 +228,8 @@ export default function SupportTickets() {
     },
     {
       name: "Status",
-      selector: (row: any) => row.status,
-      cell: (row: any) => {
+      selector: (row) => row.status,
+      cell: (row) => {
         const StatusIcon = getStatusIcon(row.status);
         return (
           <div className="flex items-center gap-2">
@@ -233,14 +247,14 @@ export default function SupportTickets() {
     },
     {
       name: "Agent",
-      selector: (row: any) => row.agent,
-      cell: (row: any) =>
+      selector: (row) => row.agent,
+      cell: (row) =>
         row.agent !== "Unassigned" ? (
           <div className="flex items-center gap-2">
             <div className="h-6 w-6 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600">
               {row.agent
                 .split(" ")
-                .map((n: string) => n[0])
+                .map((n) => n[0])
                 .join("")}
             </div>
             <span>{row.agent}</span>
@@ -251,8 +265,8 @@ export default function SupportTickets() {
     },
     {
       name: "Activity",
-      selector: (row: any) => row.created,
-      cell: (row: any) => (
+      selector: (row) => row.created,
+      cell: (row) => (
         <div className="text-xs text-gray-500 space-y-1">
           <div className="flex items-center gap-1">
             <Calendar className="h-3 w-3" />
@@ -267,7 +281,7 @@ export default function SupportTickets() {
     },
     {
       name: "Actions",
-      cell: (row: any) => (
+      cell: (row) => (
         <div className="flex justify-end gap-2">
           <button className="p-2 border rounded hover:bg-gray-100">
             <Eye className="h-4 w-4" />
@@ -303,37 +317,12 @@ export default function SupportTickets() {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {[
-          {
-            title: "Open",
-            count: stats.open,
-            icon: AlertCircle,
-            color: "text-black",
-            bg: "bg-orange-100",
-          },
-          {
-            title: "In Progress",
-            count: stats.inProgress,
-            icon: Clock,
-            color: "text-black",
-            bg: "bg-orange-100",
-          },
-          {
-            title: "Resolved",
-            count: stats.resolved,
-            icon: CheckCircle,
-            color: "text-black",
-            bg: "bg-orange-100",
-          },
-          {
-            title: "Total",
-            count: stats.total,
-            icon: MessageSquare,
-            color: "text-black",
-            bg: "bg-orange-100",
-          },
+        {[{ title: "Open", count: stats.open, icon: AlertCircle },
+          { title: "In Progress", count: stats.inProgress, icon: Clock },
+          { title: "Resolved", count: stats.resolved, icon: CheckCircle },
+          { title: "Total", count: stats.total, icon: MessageSquare },
         ].map((stat, index) => (
           <motion.div
             key={stat.title}
@@ -342,8 +331,8 @@ export default function SupportTickets() {
             transition={{ duration: 0.3, delay: index * 0.1 }}
           >
             <div className="p-4 bg-white rounded-[10px] border shadow-sm flex items-center gap-3 hover:shadow-md transition">
-              <div className={`p-2 ${stat.bg} rounded-lg`}>
-                <stat.icon className={`h-5 w-5 ${stat.color}`} />
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <stat.icon className="h-5 w-5 text-black" />
               </div>
               <div>
                 <p className="text-xl font-bold">{stat.count}</p>

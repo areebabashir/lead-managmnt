@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from "react";
-import DataTable from "react-data-table-component";
+import DataTable, { TableColumn, TableStyles } from "react-data-table-component";
 import { Eye, Edit, Trash2 } from "lucide-react";
 
-// Staff Data
-const staffData = [
+// Staff Data Type
+interface Staff {
+  id: string;
+  name: string;
+  role: string;
+  status: string;
+  lastLogin: string;
+}
+
+// Sample Data
+const staffData: Staff[] = [
   {
     id: "ST-1001",
     name: "John Doe",
@@ -43,7 +52,7 @@ const staffData = [
 
 const SetupStaff: React.FC = () => {
   const [searchText, setSearchText] = useState("");
-  const [selectedRows, setSelectedRows] = useState<any[]>([]);
+  const [selectedRows, setSelectedRows] = useState<Staff[]>([]);
   const [toggleCleared, setToggleCleared] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [exportType, setExportType] = useState("");
@@ -58,62 +67,67 @@ const SetupStaff: React.FC = () => {
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
+  // Filtered Data
   const filteredData = staffData.filter((row) =>
     row.name.toLowerCase().includes(searchText.toLowerCase())
   );
 
-  // Responsive columns
-  const columns = isMobile
+  // Columns (Responsive)
+  const columns: TableColumn<Staff>[] = isMobile
     ? [
         {
           name: "ID",
-          selector: (row: any) => row.id,
+          selector: (row) => row.id,
           sortable: true,
           width: "80px",
           center: true,
         },
         {
           name: "Role",
-          selector: (row: any) => row.role,
+          selector: (row) => row.role,
           center: true,
         },
         {
           name: "Status",
-          selector: (row: any) => row.status,
+          selector: (row) => row.status,
           center: true,
         },
       ]
     : [
         {
           name: "Member",
-          selector: (row: any) => row.name,
+          selector: (row) => row.name,
           sortable: true,
           width: "180px",
           center: true,
         },
         {
           name: "Role",
-          selector: (row: any) => row.role,
+          selector: (row) => row.role,
           width: "160px",
           center: true,
         },
-        { name: "Status", selector: (row: any) => row.status, center: true },
+        {
+          name: "Status",
+          selector: (row) => row.status,
+          center: true,
+        },
         {
           name: "Last Login",
-          selector: (row: any) => row.lastLogin,
+          selector: (row) => row.lastLogin,
           center: true,
         },
         {
           name: "Action",
-          cell: (row: any) => (
+          cell: (row) => (
             <div className="flex justify-center gap-2">
               <button className="text-gray-600">
                 <Eye size={18} />
               </button>
-              <button className="text-orange-500 ">
+              <button className="text-orange-500">
                 <Edit size={18} />
               </button>
-              <button className="text-red-600 ">
+              <button className="text-red-600">
                 <Trash2 size={18} />
               </button>
             </div>
@@ -123,7 +137,8 @@ const SetupStaff: React.FC = () => {
         },
       ];
 
-  const customStyles = {
+  // ✅ Correctly Typed Custom Styles
+  const customStyles: TableStyles = {
     headCells: {
       style: {
         justifyContent: "center",
@@ -158,7 +173,7 @@ const SetupStaff: React.FC = () => {
 
   return (
     <div className="px-4 sm:px-8 pt-10">
-      {/* Header Section (Outside Card) */}
+      {/* Header Section */}
       <div className="flex justify-between items-center mb-2">
         <div className="mb-5">
           <h2 className="text-2xl font-bold text-black">Staff Management</h2>
@@ -166,12 +181,12 @@ const SetupStaff: React.FC = () => {
             Manage your team members and their permissions
           </p>
         </div>
-        <button className="bg-orange-500 text-white px-4 py-2.5 rounded-md text-base font-semibold ">
+        <button className="bg-orange-500 text-white px-4 py-2.5 rounded-md text-base font-semibold">
           Add Staff
         </button>
       </div>
 
-      {/* Filters Section (Outside Card) */}
+      {/* Filters Section */}
       <div className="flex flex-wrap gap-3 mb-4">
         {/* Search Input */}
         <input
@@ -206,7 +221,7 @@ const SetupStaff: React.FC = () => {
             persistTableHead
             selectableRows
             onSelectedRowsChange={({ selectedRows }) =>
-              setSelectedRows(selectedRows)
+              setSelectedRows(selectedRows as Staff[])
             }
             clearSelectedRows={toggleCleared}
             customStyles={customStyles}

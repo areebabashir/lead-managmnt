@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from "react";
-import DataTable from "react-data-table-component";
+import DataTable, { TableStyles } from "react-data-table-component";
 import { Eye, Edit, Trash2 } from "lucide-react";
 
-const transactionData = [
+interface Transaction {
+  id: string;
+  date: string;
+  client: string;
+  invoice: string;
+  activity: string;
+  currency: string;
+}
+
+const transactionData: Transaction[] = [
   {
     id: "LD-1001",
     date: "bassel.idris@example.com", // Contact Info (Email)
@@ -47,13 +56,13 @@ const transactionData = [
 
 const LeadManagerLeads: React.FC = () => {
   const [searchText, setSearchText] = useState("");
-  const [selectedRows, setSelectedRows] = useState<any[]>([]);
+  const [selectedRows, setSelectedRows] = useState<Transaction[]>([]);
   const [toggleCleared, setToggleCleared] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [status, setStatus] = useState("");
   const [exportType, setExportType] = useState("");
 
-  // Check screen size
+  // ✅ Check screen size
   useEffect(() => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -63,6 +72,7 @@ const LeadManagerLeads: React.FC = () => {
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
+  // ✅ Filter
   const filteredData = transactionData.filter((row) => {
     const matchesSearch = row.id
       .toLowerCase()
@@ -71,57 +81,57 @@ const LeadManagerLeads: React.FC = () => {
     return matchesSearch;
   });
 
-  // Responsive columns
+  // ✅ Responsive columns
   const columns = isMobile
     ? [
         {
           name: "ID",
-          selector: (row: any) => row.id,
+          selector: (row: Transaction) => row.id,
           sortable: true,
           width: "80px",
           center: true,
         },
         {
           name: "Status",
-          selector: (row: any) => row.client,
+          selector: (row: Transaction) => row.client,
           center: true,
         },
         {
           name: "Priority",
-          selector: (row: any) => row.invoice,
+          selector: (row: Transaction) => row.invoice,
           center: true,
         },
         {
           name: "Value",
-          selector: (row: any) => row.activity,
+          selector: (row: Transaction) => row.activity,
           center: true,
         },
       ]
     : [
         {
           name: "Lead Details",
-          selector: (row: any) => row.id,
+          selector: (row: Transaction) => row.id,
           sortable: true,
           width: "156px",
           center: true,
         },
         {
           name: "Contact Info",
-          selector: (row: any) => row.date, // Email
+          selector: (row: Transaction) => row.date, // Email
           width: "200px",
           center: true,
         },
-        { name: "Status", selector: (row: any) => row.client, center: true },
-        { name: "Priority", selector: (row: any) => row.invoice, center: true },
-        { name: "Value", selector: (row: any) => row.activity, center: true },
+        { name: "Status", selector: (row: Transaction) => row.client, center: true },
+        { name: "Priority", selector: (row: Transaction) => row.invoice, center: true },
+        { name: "Value", selector: (row: Transaction) => row.activity, center: true },
         {
           name: "Last Contact",
-          selector: (row: any) => row.currency,
+          selector: (row: Transaction) => row.currency,
           center: true,
         },
         {
           name: "Action",
-          cell: (row: any) => (
+          cell: (row: Transaction) => (
             <div className="flex justify-center gap-2">
               <button className="text-gray-600">
                 <Eye size={18} />
@@ -139,7 +149,8 @@ const LeadManagerLeads: React.FC = () => {
         },
       ];
 
-  const customStyles = {
+  // ✅ Fix: Properly typed customStyles
+  const customStyles: TableStyles = {
     headCells: {
       style: {
         justifyContent: "center",
@@ -174,7 +185,7 @@ const LeadManagerLeads: React.FC = () => {
 
   return (
     <div className="px-4 sm:px-8 pt-10">
-      {/* Header Section (Outside Card) */}
+      {/* Header Section */}
       <div className="flex justify-between items-center mb-2">
         <div className="mb-5">
           <h2 className="text-2xl font-bold text-black">Leads Management</h2>
@@ -185,7 +196,7 @@ const LeadManagerLeads: React.FC = () => {
         </button>
       </div>
 
-      {/* Filters Section (Outside Card) */}
+      {/* Filters Section */}
       <div className="flex flex-wrap gap-3 mb-4">
         {/* Search */}
         <input
@@ -200,7 +211,7 @@ const LeadManagerLeads: React.FC = () => {
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
-          className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:orange-100 outline-none"
+          className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-orange-100 outline-none"
         >
           <option value="">Select Status</option>
           <option value="New">New</option>
@@ -223,7 +234,7 @@ const LeadManagerLeads: React.FC = () => {
         </select>
       </div>
 
-      {/* Table Card */}
+      {/* Table */}
       <div className="p-4 sm:p-5 shadow-md border border-gray-200 rounded-lg bg-white">
         <div className="mt-2 overflow-x-auto">
           <DataTable
@@ -234,7 +245,7 @@ const LeadManagerLeads: React.FC = () => {
             persistTableHead
             selectableRows
             onSelectedRowsChange={({ selectedRows }) =>
-              setSelectedRows(selectedRows)
+              setSelectedRows(selectedRows as Transaction[])
             }
             clearSelectedRows={toggleCleared}
             customStyles={customStyles}

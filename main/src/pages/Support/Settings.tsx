@@ -3,14 +3,13 @@ import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Building, Mail, MessageSquare, Bell, Save } from 'lucide-react';
+import { Building, Mail, MessageSquare, Bell } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { toast } from '@/hooks/use-toast';
 
 const companySchema = z.object({
@@ -92,84 +91,106 @@ export default function SupportSettings() {
       description: 'Your SMS configuration has been updated.',
     });
   };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-5">
       <div>
         <h1 className="text-3xl font-bold text-foreground">System Settings</h1>
         <p className="text-muted-foreground">Configure your system preferences and integrations</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Equal layout grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         {/* Company Profile */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
+          className="flex"
         >
-          <Card className="dashboard-widget">
+          <Card className="dashboard-widget flex flex-col w-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Building className="h-5 w-5 accent-blue" />
+                <Building className="h-5 w-5 text-orange-500" />
                 Company Profile
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1">
               <Form {...companyForm}>
-                <form onSubmit={companyForm.handleSubmit(onCompanySubmit)} className="space-y-4">
-                  <FormField
-                    control={companyForm.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Company Name <span className="text-destructive">*</span></FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={companyForm.control}
-                    name="address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Address</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="Enter your company address" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={companyForm.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone</FormLabel>
-                        <FormControl>
-                          <Input placeholder="+1 (555) 123-4567" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={companyForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="contact@company.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" className="w-full gap-2">
-                    <Save className="h-4 w-4" />
+                <form onSubmit={companyForm.handleSubmit(onCompanySubmit)} className="space-y-4 h-full flex flex-col">
+                  <div className="flex-1 space-y-4">
+                    <FormField
+                      control={companyForm.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Company Name <span className="text-destructive">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              className="focus:ring-orange-500 focus:border-orange-500 border-orange-100"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={companyForm.control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Address</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Enter your company address"
+                              {...field}
+                              className="focus:ring-orange-500 focus:border-orange-500 border-orange-100"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={companyForm.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="+1 (555) 123-4567"
+                              {...field}
+                              className="focus:ring-orange-500 focus:border-orange-500 border-orange-100"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={companyForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="email"
+                              placeholder="contact@company.com"
+                              {...field}
+                              className="focus:ring-orange-500 focus:border-orange-500 border-orange-100"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full bg-orange-500 text-white font-semibold rounded-[10px]">
                     Save Profile
                   </Button>
                 </form>
@@ -183,39 +204,92 @@ export default function SupportSettings() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
+          className="flex"
         >
-          <Card className="dashboard-widget">
+          <Card className="dashboard-widget flex flex-col w-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Mail className="h-5 w-5 accent-green" />
+                <Mail className="h-5 w-5 text-orange-500" />
                 Email Settings
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1">
               <Form {...emailForm}>
-                <form onSubmit={emailForm.handleSubmit(onEmailSubmit)} className="space-y-4">
-                  <FormField
-                    control={emailForm.control}
-                    name="smtpHost"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>SMTP Host <span className="text-destructive">*</span></FormLabel>
-                        <FormControl>
-                          <Input placeholder="smtp.example.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="grid grid-cols-2 gap-4">
+                <form onSubmit={emailForm.handleSubmit(onEmailSubmit)} className="space-y-4 h-full flex flex-col">
+                  <div className="flex-1 space-y-4">
                     <FormField
                       control={emailForm.control}
-                      name="smtpPort"
+                      name="smtpHost"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Port <span className="text-destructive">*</span></FormLabel>
+                          <FormLabel>
+                            SMTP Host <span className="text-destructive">*</span>
+                          </FormLabel>
                           <FormControl>
-                            <Input placeholder="587" {...field} />
+                            <Input
+                              placeholder="smtp.example.com"
+                              {...field}
+                              className="focus:ring-orange-500 focus:border-orange-500 border-orange-100"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={emailForm.control}
+                        name="smtpPort"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              Port <span className="text-destructive">*</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="587"
+                                {...field}
+                                className="focus:ring-orange-500 focus:border-orange-500 border-orange-100"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={emailForm.control}
+                        name="smtpEncryption"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              Encryption <span className="text-destructive">*</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="TLS"
+                                {...field}
+                                className="focus:ring-orange-500 focus:border-orange-500 border-orange-100"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormField
+                      control={emailForm.control}
+                      name="smtpUsername"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Username <span className="text-destructive">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="your-email@example.com"
+                              {...field}
+                              className="focus:ring-orange-500 focus:border-orange-500 border-orange-100"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -223,46 +297,26 @@ export default function SupportSettings() {
                     />
                     <FormField
                       control={emailForm.control}
-                      name="smtpEncryption"
+                      name="smtpPassword"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Encryption <span className="text-destructive">*</span></FormLabel>
+                          <FormLabel>
+                            Password <span className="text-destructive">*</span>
+                          </FormLabel>
                           <FormControl>
-                            <Input placeholder="TLS" {...field} />
+                            <Input
+                              type="password"
+                              placeholder="••••••••"
+                              {...field}
+                              className="focus:ring-orange-500 focus:border-orange-500 border-orange-100"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
-                  <FormField
-                    control={emailForm.control}
-                    name="smtpUsername"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Username <span className="text-destructive">*</span></FormLabel>
-                        <FormControl>
-                          <Input placeholder="your-email@example.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={emailForm.control}
-                    name="smtpPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password <span className="text-destructive">*</span></FormLabel>
-                        <FormControl>
-                          <Input type="password" placeholder="••••••••" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" className="w-full gap-2">
-                    <Save className="h-4 w-4" />
+                  <Button type="submit" className="w-full bg-orange-500 text-white font-semibold rounded-[10px]">
                     Save Email Settings
                   </Button>
                 </form>
@@ -276,58 +330,79 @@ export default function SupportSettings() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
+          className="flex"
         >
-          <Card className="dashboard-widget">
+          <Card className="dashboard-widget flex flex-col w-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 accent-purple" />
+                <MessageSquare className="h-5 w-5 text-orange-500" />
                 SMS Settings
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1">
               <Form {...smsForm}>
-                <form onSubmit={smsForm.handleSubmit(onSMSSubmit)} className="space-y-4">
-                  <FormField
-                    control={smsForm.control}
-                    name="provider"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>SMS Provider <span className="text-destructive">*</span></FormLabel>
-                        <FormControl>
-                          <Input placeholder="Twilio / Zong / Custom" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={smsForm.control}
-                    name="apiKey"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>API Key <span className="text-destructive">*</span></FormLabel>
-                        <FormControl>
-                          <Input type="password" placeholder="Your SMS API Key" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={smsForm.control}
-                    name="senderId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Sender ID <span className="text-destructive">*</span></FormLabel>
-                        <FormControl>
-                          <Input placeholder="Your Business Name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" className="w-full gap-2">
-                    <Save className="h-4 w-4" />
+                <form onSubmit={smsForm.handleSubmit(onSMSSubmit)} className="space-y-4 h-full flex flex-col">
+                  <div className="flex-1 space-y-4">
+                    <FormField
+                      control={smsForm.control}
+                      name="provider"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            SMS Provider <span className="text-destructive">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Twilio / Zong / Custom"
+                              {...field}
+                              className="focus:ring-orange-500 focus:border-orange-500 border-orange-100"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={smsForm.control}
+                      name="apiKey"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            API Key <span className="text-destructive">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="password"
+                              placeholder="Your SMS API Key"
+                              {...field}
+                              className="focus:ring-orange-500 focus:border-orange-500 border-orange-100"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={smsForm.control}
+                      name="senderId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Sender ID <span className="text-destructive">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Your Business Name"
+                              {...field}
+                              className="focus:ring-orange-500 focus:border-orange-500 border-orange-100"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full bg-orange-500 text-white font-semibold rounded-[10px]">
                     Save SMS Settings
                   </Button>
                 </form>
@@ -341,32 +416,33 @@ export default function SupportSettings() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.3 }}
+          className="flex"
         >
-          <Card className="dashboard-widget">
+          <Card className="dashboard-widget flex flex-col w-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5 accent-orange" />
+                <Bell className="h-5 w-5 text-orange-500" />
                 Notification Settings
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {[
-                { label: 'New Lead Notifications', description: 'Get notified when new leads are added' },
-                { label: 'Task Reminders', description: 'Send reminders for upcoming tasks' },
-                { label: 'Support Ticket Alerts', description: 'Alert when new tickets are created' },
-                { label: 'System Updates', description: 'Notifications about system maintenance' },
-                { label: 'Email Reports', description: 'Send daily/weekly reports via email' },
-              ].map((setting, index) => (
-                <div key={setting.label} className="flex items-center justify-between p-3 bg-background rounded-lg">
-                  <div>
-                    <p className="font-medium text-foreground">{setting.label}</p>
-                    <p className="text-xs text-muted-foreground">{setting.description}</p>
+            <CardContent className="flex-1 flex flex-col space-y-4">
+              <div className="flex-1 space-y-4">
+                {[
+                  { label: 'New Lead Notifications', description: 'Get notified when new leads are added' },
+                  { label: 'Task Reminders', description: 'Send reminders for upcoming tasks' },
+                  { label: 'System Updates', description: 'Notifications about system maintenance' },
+                  { label: 'Email Reports', description: 'Send daily/weekly reports via email' },
+                ].map((setting, index) => (
+                  <div key={setting.label} className="flex items-center justify-between p-3 bg-background rounded-lg">
+                    <div>
+                      <p className="font-medium text-foreground">{setting.label}</p>
+                      <p className="text-xs text-muted-foreground">{setting.description}</p>
+                    </div>
+                    <Switch defaultChecked={index < 3} />
                   </div>
-                  <Switch defaultChecked={index < 3} />
-                </div>
-              ))}
-              <Button className="w-full gap-2">
-                <Save className="h-4 w-4" />
+                ))}
+              </div>
+              <Button className="w-full bg-orange-500 text-white font-semibold rounded-[10px]">
                 Save Preferences
               </Button>
             </CardContent>

@@ -1,211 +1,308 @@
 import React, { useState } from "react";
-import DataTable from "react-data-table-component";
+import { motion } from "framer-motion";
 import {
-  Eye,
-  Edit,
-  Trash2,
+  Shield,
   Plus,
-  Search,
-  Download,
+  Edit,
+  Users,
+  Trash2,
+  ClipboardList,
+  Settings,
+  LineChart,
+  MessageSquare,
+  Headphones,
 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AddRoleModal } from "@/components/forms/AddRoleModal";
+import { Button } from "@/components/ui/button";
+import DataTable, { TableColumn } from "react-data-table-component";
 
-// ✅ Dummy data
-const transactionData = [
+const mockRoles = [
   {
-    id: "LD-1001",
-    date: "bassel.idris@example.com",
-    client: "New",
-    invoice: "High",
-    activity: "$5,000",
-    currency: "28/05/2025",
+    id: 1,
+    name: "Super Admin",
+    description: "Full system access",
+    users: 2,
+    permissions: ["All Permissions"],
+    isSystem: true,
   },
   {
-    id: "LD-1002",
-    date: "said.tannir@example.com",
-    client: "Contacted",
-    invoice: "Medium",
-    activity: "$2,500",
-    currency: "30/05/2025",
+    id: 2,
+    name: "Manager",
+    description: "Team management",
+    users: 5,
+    permissions: ["Lead Management", "Team Management"],
+    isSystem: false,
   },
   {
-    id: "LD-1003",
-    date: "john@example.com",
-    client: "Qualified",
-    invoice: "Low",
-    activity: "$1,200",
-    currency: "01/06/2025",
+    id: 3,
+    name: "Sales Agent",
+    description: "Lead handling",
+    users: 15,
+    permissions: ["View Leads", "Update Leads"],
+    isSystem: false,
   },
   {
-    id: "LD-1004",
-    date: "maya@example.com",
-    client: "Proposal",
-    invoice: "High",
-    activity: "$8,700",
-    currency: "02/06/2025",
+    id: 4,
+    name: "Support Agent",
+    description: "Customer support",
+    users: 8,
+    permissions: ["View Tickets", "Update Tickets"],
+    isSystem: false,
   },
   {
-    id: "LD-1005",
-    date: "khan@example.com",
-    client: "Lost",
-    invoice: "Low",
-    activity: "$500",
-    currency: "01/06/2025",
+    id: 5,
+    name: "Viewer",
+    description: "Read-only access",
+    users: 3,
+    permissions: ["View Reports", "View Analytics"],
+    isSystem: false,
   },
 ];
 
-// ✅ Mobile check
-const isMobile = window.innerWidth < 768;
+export default function SupportRoles() {
+  const [roles, setRoles] = useState(mockRoles);
 
-// ✅ Columns
-const columns = isMobile
-  ? [
-      { name: "ID", selector: (row: any) => row.id, sortable: true, width: "80px", center: true },
-      { name: "Label", selector: (row: any) => row.client, center: true },
-      { name: "Time", selector: (row: any) => row.invoice, center: true },
-      { name: "Value", selector: (row: any) => row.activity, center: true },
-    ]
-  : [
-      { name: "From", selector: (row: any) => row.id, sortable: true, width: "156px", center: true },
-      { name: "Subject", selector: (row: any) => row.date, width: "200px", center: true },
-      { name: "Label", selector: (row: any) => row.client, center: true },
-      { name: "Time", selector: (row: any) => row.invoice, center: true },
-      {
-        name: "Action",
-        cell: (row: any) => (
-          <div className="flex justify-center gap-2">
-            <button className="text-gray-600"><Eye size={18} /></button>
-            <button className="text-orange-500"><Edit size={18} /></button>
-            <button className="text-red-600"><Trash2 size={18} /></button>
-          </div>
-        ),
-        center: true,
-        width: "150px",
-      },
-    ];
+  const handleDeleteRole = (roleId: number) => {
+    setRoles(roles.filter((role) => role.id !== roleId));
+  };
 
-// ✅ Custom styles
-const customStyles = {
-  headCells: { style: { justifyContent: "center", color: "#000" } },
-  cells: { style: { justifyContent: "center", textAlign: "center" } },
-  headRow: {
-    style: {
-      backgroundColor: "#FFEDD5",
-      color: "#000",
-      fontWeight: "600",
-      fontSize: "13px",
-      textTransform: "uppercase",
-      fontFamily: "Oswald, sans-serif",
-      borderRadius: "6px",
+  const totalUsers = roles.reduce((sum, role) => sum + role.users, 0);
+
+  const columns: TableColumn<(typeof roles)[0]>[] = [
+    {
+      name: <div className="text-center text-black text-base">Role</div>,
+      selector: (row) => row.name,
+      cell: (row) => (
+        <div className="text-center font-medium">{row.name}</div>
+      ),
+      center: true,
     },
-  },
-  rows: { style: { fontWeight: "500", color: "#000", fontFamily: "Oswald, sans-serif" } },
-};
+    {
+      name: <div className="text-center text-black text-base">Description</div>,
+      selector: (row) => row.description,
+      cell: (row) => <div className="text-center">{row.description}</div>,
+      center: true,
+    },
+    {
+      name: <div className="text-center text-black text-base">Users</div>,
+      selector: (row) => row.users.toString(),
+      cell: (row) => <div className="text-center">{row.users}</div>,
+      center: true,
+    },
+    {
+      name: <div className="text-center text-black text-base">Permissions</div>,
+      selector: (row) => row.permissions.join(", "),
+      cell: (row) => (
+        <div className="text-center">{row.permissions.join(", ")}</div>
+      ),
+      center: true,
+    },
+    {
+      name: <div className="text-center text-black text-base">Actions</div>,
+      cell: (row) => (
+        <div className="flex justify-center gap-2">
+          <Button variant="ghost" size="sm" className="text-orange-500">
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-red-600"
+            onClick={() => handleDeleteRole(row.id)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
+      center: true,
+    },
+  ];
 
-export default function LeadManagerMailbox() {
-  const [selectedRows, setSelectedRows] = useState<any[]>([]);
-  const [toggleCleared, setToggleCleared] = useState(false);
-  const [searchText, setSearchText] = useState("");
-  const [filterStatus, setFilterStatus] = useState("All Emails");
-
-  // ✅ Filtered data for search + dropdown
-  const filteredData = transactionData.filter((item) => {
-    const matchesSearch =
-      item.id.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.date.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.client.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.invoice.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.activity.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.currency.toLowerCase().includes(searchText.toLowerCase());
-
-    const matchesStatus =
-      filterStatus === "All Emails" || item.client === filterStatus;
-
-    return matchesSearch && matchesStatus;
-  });
-
-  // ✅ Export CSV
-  const handleExport = () => {
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      ["ID,Contact,Status,Priority,Value,Last Contact"]
-        .concat(
-          transactionData.map(
-            (row) =>
-              `${row.id},${row.date},${row.client},${row.invoice},${row.activity},${row.currency}`
-          )
-        )
-        .join("\n");
-
-    const link = document.createElement("a");
-    link.href = encodeURI(csvContent);
-    link.download = "mailbox_data.csv";
-    link.click();
+  const customStyles = {
+    headCells: {
+      style: {
+        backgroundColor: "#FFEDD5", // Tailwind bg-orange-100
+        color: "#000000",
+        fontSize: "16px",
+        fontWeight: "600",
+        justifyContent: "center",
+      },
+    },
+    cells: {
+      style: {
+        justifyContent: "center",
+      },
+    },
   };
 
   return (
-    <div className="p-6">
-      {/* ✅ Mailbox Top Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-        {/* Compose Button */}
-        <button className="flex items-center font-semibold gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-[10px] shadow">
-          <Plus size={18} /> Compose
-        </button>
-
-        {/* Search Bar + Dropdown + Export */}
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          {/* Search */}
-          <div className="relative w-full sm:w-64">
-            <input
-              type="text"
-              placeholder="Search emails..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-[10px] text-sm focus:ring-2 focus:ring-orange-200"
-            />
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-          </div>
-
-          {/* Dropdown */}
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2 border rounded-[10px] bg-white text-sm"
-          >
-            <option>All Emails</option>
-            <option>New</option>
-            <option>Contacted</option>
-            <option>Qualified</option>
-            <option>Proposal</option>
-            <option>Lost</option>
-          </select>
-
-          {/* Export */}
-          <button
-            onClick={handleExport}
-            className="flex items-center gap-2 px-3 py-2 border rounded-[10px] bg-white hover:bg-gray-50 text-sm"
-          >
-            <Download size={16} /> Export
-          </button>
+    <div className="space-y-6 px-10">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">
+            Roles & Permissions
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Manage user roles and access permissions
+          </p>
         </div>
+        <AddRoleModal
+          trigger={
+            <Button className="gap-2 shadow-sm font-semibold bg-orange-500 text-white">
+              <Plus className="h-4 w-4" />
+              Create Role
+            </Button>
+          }
+        />
       </div>
 
-      {/* ✅ Table Card */}
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border shadow-sm border-gray-200">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Shield className="h-5 w-5 text-black" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{roles.length}</p>
+                <p className="text-sm text-muted-foreground">Total Roles</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border shadow-sm border-gray-200">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Users className="h-5 w-5 text-black" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{totalUsers}</p>
+                <p className="text-sm text-muted-foreground">Total Users</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border shadow-sm border-gray-200">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Edit className="h-5 w-5 text-black" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">
+                  {roles.filter((r) => !r.isSystem).length}
+                </p>
+                <p className="text-sm text-muted-foreground">Custom Roles</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* DataTable */}
       <div className="p-4 sm:p-5 shadow-md border border-gray-200 rounded-lg bg-white">
-        <div className="mt-2 overflow-x-auto">
-          <DataTable
-            columns={columns}
-            data={filteredData}
-            pagination
-            paginationPerPage={isMobile ? 5 : 10}
-            persistTableHead
-            selectableRows
-            onSelectedRowsChange={({ selectedRows }) => setSelectedRows(selectedRows)}
-            clearSelectedRows={toggleCleared}
-            customStyles={customStyles}
-            responsive
-          />
-        </div>
+        <DataTable
+          columns={columns}
+          data={roles}
+          customStyles={customStyles}
+          highlightOnHover
+          striped
+        />
       </div>
+
+      {/* Permission Categories */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="bg-orange-50 rounded-t-lg">
+          <CardTitle>Permission Categories</CardTitle>
+          <p className="text-sm text-gray-500">
+            Available permission groups across the system
+          </p>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              {
+                name: "Lead Management",
+                permissions: 8,
+                description: "Create, edit, assign leads",
+                icon: <ClipboardList className="h-6 w-6 text-black" />,
+              },
+              {
+                name: "User Management",
+                permissions: 6,
+                description: "Manage team members",
+                icon: <Users className="h-6 w-6 text-black" />,
+              },
+              {
+                name: "System Settings",
+                permissions: 12,
+                description: "Configure system options",
+                icon: <Settings className="h-6 w-6 text-black" />,
+              },
+              {
+                name: "Reports & Analytics",
+                permissions: 5,
+                description: "View performance data",
+                icon: <LineChart className="h-6 w-6 text-black" />,
+              },
+              {
+                name: "Communication",
+                permissions: 4,
+                description: "SMS, email, chat features",
+                icon: <MessageSquare className="h-6 w-6 text-black" />,
+              },
+              {
+                name: "Support Features",
+                permissions: 7,
+                description: "Tickets, knowledge base",
+                icon: <Headphones className="h-6 w-6 text-black" />,
+              },
+            ].map((category, index) => (
+              <motion.div
+                key={category.name}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.2, delay: index * 0.05 }}
+                className="p-4 bg-white border border-gray-100 rounded-lg hover:shadow-sm transition-shadow cursor-pointer hover:border-orange-100"
+              >
+                <div className="flex items-start gap-3">
+                  {category.icon}
+                  <div className="flex-1">
+                    <h4 className="font-medium text-foreground">
+                      {category.name}
+                    </h4>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {category.description}
+                    </p>
+                    <div className="flex items-center mt-3">
+                      <div className="flex-1 h-1 bg-orange-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-orange-400"
+                          style={{
+                            width: `${Math.min(
+                              100,
+                              (category.permissions / 12) * 100
+                            )}%`,
+                          }}
+                        ></div>
+                      </div>
+                      <span className="text-xs text-muted-foreground ml-2">
+                        {category.permissions}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
