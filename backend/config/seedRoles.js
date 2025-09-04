@@ -368,7 +368,7 @@ export const seedDefaultRoles = async () => {
             
             const superAdminUser = new User({
                 name: 'Super Admin',
-                email: 'admin@vistabizhub.com',
+                email: 'admin@melnitz.com',
                 password: await hashPassword('admin123'),
                 phone: '1234567890',
                 address: 'System Address',

@@ -2,8 +2,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 import { AppLayout } from "./components/layout/AppLayout";
+import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Tasks from "./pages/Tasks";
 // Removed: Leads standalone and LeadManager/Dashboard
@@ -28,34 +31,102 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AppLayout>
+        <AuthProvider>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/tasks" element={<Tasks />} />
-            {/* Removed standalone Leads */}
+            {/* Public Routes */}
+            <Route path="/login" element={<Login />} />
+            
+            {/* Protected Routes */}
+            <Route path="/" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Dashboard />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/tasks" element={
+              <ProtectedRoute requiredPermission={{ resource: 'tasks', action: 'read' }}>
+                <AppLayout>
+                  <Tasks />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
             
             {/* Lead Manager Routes */}
-            {/* Removed Lead Manager Dashboard */}
-            <Route path="/lead-manager/leads" element={<LeadManagerLeads />} />
-            <Route path="/lead-manager/sms" element={<LeadManagerSMS />} />
-            <Route path="/lead-manager/mailbox" element={<LeadManagerMailbox />} />
+            <Route path="/lead-manager/leads" element={
+              <ProtectedRoute requiredPermission={{ resource: 'contacts', action: 'read' }}>
+                <AppLayout>
+                  <LeadManagerLeads />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/lead-manager/sms" element={
+              <ProtectedRoute requiredPermission={{ resource: 'contacts', action: 'read' }}>
+                <AppLayout>
+                  <LeadManagerSMS />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/lead-manager/mailbox" element={
+              <ProtectedRoute requiredPermission={{ resource: 'contacts', action: 'read' }}>
+                <AppLayout>
+                  <LeadManagerMailbox />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
             
             {/* Setup Routes */}
-            {/* Removed Setup Kunjiee and Zong Dialer */}
-            <Route path="/setup/staff" element={<SetupStaff />} />
+            <Route path="/setup/staff" element={
+              <ProtectedRoute requiredPermission={{ resource: 'users', action: 'read' }}>
+                <AppLayout>
+                  <SetupStaff />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
             
             {/* Support Routes */}
-            <Route path="/support/tickets" element={<SupportTickets />} />
-            <Route path="/support/knowledge-base" element={<SupportKnowledgeBase />} />
-            {/* Removed Support Leads */}
-            <Route path="/support/roles" element={<SupportRoles />} />
-            <Route path="/support/settings" element={<SupportSettings />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/support/tickets" element={
+              <ProtectedRoute requiredPermission={{ resource: 'tickets', action: 'read' }}>
+                <AppLayout>
+                  <SupportTickets />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/support/knowledge-base" element={
+              <ProtectedRoute requiredPermission={{ resource: 'settings', action: 'read' }}>
+                <AppLayout>
+                  <SupportKnowledgeBase />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/support/roles" element={
+              <ProtectedRoute requiredPermission={{ resource: 'roles', action: 'read' }}>
+                <AppLayout>
+                  <SupportRoles />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/support/settings" element={
+              <ProtectedRoute requiredPermission={{ resource: 'settings', action: 'read' }}>
+                <AppLayout>
+                  <SupportSettings />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
             
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Profile />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            
+            {/* Redirect root to dashboard if authenticated, otherwise to login */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </AppLayout>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
