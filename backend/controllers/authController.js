@@ -83,8 +83,8 @@ export const loginController = async (req, res) => {
             });
         }
 
-        // Check user
-        const user = await auth.findOne({ email });
+        // Check user and populate role
+        const user = await auth.findOne({ email }).populate('role', 'name');
         if (!user) {
             return res.status(404).send({
                 success: false,
@@ -113,7 +113,7 @@ export const loginController = async (req, res) => {
                 email: user.email,
                 phone: user.phone,
                 address: user.address,
-                role: user.role,
+                role: user.role?.name || user.role,
             },
             token,
         });

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useAuth } from "../contexts/AuthContext"
 import {
   PieChart as RechartsPieChart,
   Pie,
@@ -752,6 +753,8 @@ export const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSideba
 
 // Dashboard Page Component
 export default function Dashboard() {
+  const { user, hasPermission } = useAuth()
+
   return (
     <div className="min-h-screen  pl-3 md:pl-6 pt-6">
       {/* Hero Section */}
@@ -767,14 +770,14 @@ export default function Dashboard() {
               animate={{ opacity: 1, x: 0 }}
               className="text-2xl font-bold text-gray-900 mb-1"
             >
-              Welcome back!
+              Welcome back, {user?.name || 'User'}!
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               className="text-gray-600 text-sm"
             >
-              Here's what's happening with your business today.
+              Here's what's happening with your business today. Role: <span className="font-semibold text-orange-600">{user?.role}</span>
             </motion.p>
           </div>
 
@@ -783,14 +786,18 @@ export default function Dashboard() {
             animate={{ opacity: 1, x: 0 }}
             className="flex gap-2"
           >
-            <button className="flex items-center gap-1 px-3 py-2 bg-orange-500 font-semibold text-white rounded-[10px] transition-colors">
-              <Plus className="h-3 w-3 text-white" />
-              Add Lead
-            </button>
-            <button className="flex items-center gap-1 px-3 py-2 border border-orange-500 font-semibold text-gray-800 rounded-[10px] transition-colors">
-              <CheckSquare className="h-3 w-3" />
-              New Task
-            </button>
+            {hasPermission('contacts', 'create') && (
+              <button className="flex items-center gap-1 px-3 py-2 bg-orange-500 font-semibold text-white rounded-[10px] transition-colors hover:bg-orange-600">
+                <Plus className="h-3 w-3 text-white" />
+                Add Lead
+              </button>
+            )}
+            {hasPermission('tasks', 'create') && (
+              <button className="flex items-center gap-1 px-3 py-2 border border-orange-500 font-semibold text-gray-800 rounded-[10px] transition-colors hover:bg-orange-50">
+                <CheckSquare className="h-3 w-3" />
+                New Task
+              </button>
+            )}
           </motion.div>
         </div>
       </motion.div>

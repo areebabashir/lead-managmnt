@@ -17,53 +17,168 @@ import {
   Shield,
   Building,
   Sparkles,
+  BarChart3,
+  FileText,
+  Calendar,
+  Bot,
+  UserCog,
+  Database,
 } from "lucide-react"
+import { useAuth } from "../../contexts/AuthContext"
 
 interface SidebarProps {
   collapsed: boolean
   onToggle: () => void
 }
 
-const menuItems = [
-  {
-    title: "Dashboard",
-    icon: LayoutDashboard,
-    href: "/",
-    exact: true,
-    badge: "4",
-  },
-  {
-    title: "Lead Manager",
-    icon: TrendingUp,
-    badge: "New",
-    children: [
-      { title: "Leads", href: "/lead-manager/leads", icon: Users },
-      { title: "SMS", href: "/lead-manager/sms", icon: MessageSquare },
-      { title: "Mailbox", href: "/lead-manager/mailbox", icon: Mail },
-    ],
-  },
-  {
-    title: "Tasks",
-    icon: CheckSquare,
-    href: "/tasks",
-    badge: "12",
-  },
-  {
-    title: "Setup",
-    icon: Settings,
-    children: [{ title: "Staff", href: "/setup/staff", icon: Building }],
-  },
-  {
-    title: "Support",
-    icon: Headphones,
-    children: [
-      { title: "Tickets", href: "/support/tickets", icon: HelpCircle },
-      { title: "Knowledge Base", href: "/support/knowledge-base", icon: Shield },
-      { title: "Roles", href: "/support/roles", icon: Shield },
-      { title: "Settings", href: "/support/settings", icon: Settings },
-    ],
-  },
-]
+const getMenuItems = (hasPermission: (resource: string, action: string) => boolean, userRole?: string) => {
+  // Super Admin sees everything
+  const isSuperAdmin = userRole === 'Super Admin';
+  
+  return [
+    {
+      title: "Dashboard",
+      icon: LayoutDashboard,
+      href: "/",
+      exact: true,
+      badge: "4",
+      show: true, // Dashboard is always visible
+    },
+    {
+      title: "Lead Manager",
+      icon: TrendingUp,
+      badge: "New",
+      show: isSuperAdmin || hasPermission('contacts', 'read'),
+      children: [
+        { 
+          title: "Leads", 
+          href: "/lead-manager/leads", 
+          icon: Users,
+          show: isSuperAdmin || hasPermission('contacts', 'read')
+        },
+        { 
+          title: "SMS", 
+          href: "/lead-manager/sms", 
+          icon: MessageSquare,
+          show: isSuperAdmin || hasPermission('contacts', 'read')
+        },
+        { 
+          title: "Mailbox", 
+          href: "/lead-manager/mailbox", 
+          icon: Mail,
+          show: isSuperAdmin || hasPermission('contacts', 'read')
+        },
+      ],
+    },
+    {
+      title: "Tasks",
+      icon: CheckSquare,
+      href: "/tasks",
+      badge: "12",
+      show: isSuperAdmin || hasPermission('tasks', 'read'),
+    },
+    {
+      title: "Analytics",
+      icon: BarChart3,
+      show: isSuperAdmin || hasPermission('dashboards', 'read'),
+      children: [
+        { 
+          title: "Reports", 
+          href: "/analytics/reports", 
+          icon: FileText,
+          show: isSuperAdmin || hasPermission('reports', 'read')
+        },
+        { 
+          title: "Performance", 
+          href: "/analytics/performance", 
+          icon: TrendingUp,
+          show: isSuperAdmin || hasPermission('analytics', 'read')
+        },
+      ],
+    },
+    {
+      title: "AI Assistant",
+      icon: Bot,
+      show: isSuperAdmin || hasPermission('ai_generator', 'read'),
+      children: [
+        { 
+          title: "Email Generator", 
+          href: "/ai-assistant/email", 
+          icon: Mail,
+          show: isSuperAdmin || hasPermission('ai_generator', 'generate')
+        },
+        { 
+          title: "Meeting Notes", 
+          href: "/ai-assistant/meetings", 
+          icon: FileText,
+          show: isSuperAdmin || hasPermission('ai_generator', 'generate')
+        },
+        { 
+          title: "Custom Prompts", 
+          href: "/ai-assistant/prompts", 
+          icon: Bot,
+          show: isSuperAdmin || hasPermission('ai_generator', 'generate')
+        },
+      ],
+    },
+    {
+      title: "Setup",
+      icon: Settings,
+      show: isSuperAdmin || hasPermission('users', 'read'),
+      children: [
+        { 
+          title: "Staff", 
+          href: "/setup/staff", 
+          icon: Building,
+          show: isSuperAdmin || hasPermission('users', 'read')
+        },
+        { 
+          title: "User Management", 
+          href: "/setup/users", 
+          icon: UserCog,
+          show: isSuperAdmin || hasPermission('users', 'read')
+        },
+        { 
+          title: "Database", 
+          href: "/setup/database", 
+          icon: Database,
+          show: isSuperAdmin || hasPermission('settings', 'read')
+        },
+      ],
+    },
+    {
+      title: "Support",
+      icon: Headphones,
+      show: isSuperAdmin || hasPermission('tickets', 'read') || hasPermission('settings', 'read') || hasPermission('roles', 'read'),
+      children: [
+        { 
+          title: "Tickets", 
+          href: "/support/tickets", 
+          icon: HelpCircle,
+          show: isSuperAdmin || hasPermission('tickets', 'read')
+        },
+        { 
+          title: "Knowledge Base", 
+          href: "/support/knowledge-base", 
+          icon: Shield,
+          show: isSuperAdmin || hasPermission('settings', 'read')
+        },
+        { 
+          title: "Roles", 
+          href: "/support/roles", 
+          icon: Shield,
+          show: isSuperAdmin || hasPermission('roles', 'read')
+        },
+        { 
+          title: "Settings", 
+          href: "/support/settings", 
+          icon: Settings,
+          show: isSuperAdmin || hasPermission('settings', 'read')
+        },
+      ],
+    },
+  ];
+}
 
 const Badge = ({ children, variant = "default" }: { children: React.ReactNode; variant?: "default" | "new" }) => (
   <span
@@ -78,14 +193,17 @@ const Badge = ({ children, variant = "default" }: { children: React.ReactNode; v
 )
 
 export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
-  const [expandedItems, setExpandedItems] = React.useState<string[]>(["Lead Manager", "Setup", "Support"])
+  const [expandedItems, setExpandedItems] = React.useState<string[]>(["Lead Manager", "Analytics", "AI Assistant", "Setup", "Support"])
   const location = useLocation()
+  const { hasPermission, userRole } = useAuth()
 
   const toggleExpanded = (title: string) => {
     setExpandedItems((prev) =>
       prev.includes(title) ? prev.filter((item) => item !== title) : [...prev, title]
     )
   }
+
+  const menuItems = getMenuItems(hasPermission, userRole).filter(item => item.show)
 
   return (
     <motion.aside
@@ -176,7 +294,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                           transition={{ duration: 0.2 }}
                           className="ml-4 space-y-1 overflow-hidden"
                         >
-                          {item.children.map((child, childIndex) => (
+                          {item.children.filter(child => child.show).map((child, childIndex) => (
                             <motion.div
                               key={child.href}
                               initial={{ opacity: 0, x: -10 }}
