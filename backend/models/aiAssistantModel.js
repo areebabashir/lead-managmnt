@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const aiInteractionSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ['email', 'followup', 'summary', 'dictation', 'custom'],
+    enum: ['email', 'followup', 'summary', 'dictation', 'custom', 'meeting_notes', 'custom_prompt'],
     required: true
   },
   prompt: {
@@ -25,8 +25,8 @@ const aiInteractionSchema = new mongoose.Schema({
       required: true
     },
     context: {
-      type: String,
-      default: ''
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
     },
     tokens: {
       type: Number,

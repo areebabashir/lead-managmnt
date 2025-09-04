@@ -110,28 +110,34 @@ class GeminiService {
   async generatePersonalizedEmail(contactData, emailType = 'followup', context = '') {
     await this.ensureInitialized();
     
-    const prompt = `Generate a personalized ${emailType} email for a sales contact with the following details:
-    
+    // Handle case where no contact data is provided
+    const contactInfo = contactData ? `
 Contact Information:
 - Name: ${contactData.firstName} ${contactData.lastName}
 - Company: ${contactData.company || 'N/A'}
 - Lead Type: ${contactData.leadType || 'N/A'}
 - Last Interaction: ${contactData.lastInteractionDate || 'N/A'}
 - Search Area: ${contactData.searchArea || 'N/A'}
-- Price Range: ${contactData.priceRange || 'N/A'}
+- Price Range: ${contactData.priceRange || 'N/A'}` : `
+Contact Information:
+- General email (no specific contact provided)`;
+
+    const prompt = `Generate a personalized ${emailType} email for a sales contact with the following details:
+    
+${contactInfo}
 
 Context: ${context}
 
 Requirements:
 - Professional but friendly tone
-- Reference specific details from their profile
+- ${contactData ? 'Reference specific details from their profile' : 'Make it general but professional'}
 - Include a clear call-to-action
 - Keep it under 150 words
 - Make it personal and relevant to their situation
 
 Generate the email:`;
 
-    const cacheKey = `email:${contactData._id}:${emailType}:${context}`;
+    const cacheKey = `email:${contactData?._id || 'general'}:${emailType}:${JSON.stringify(context)}`;
     const cached = await this.checkCache(prompt, cacheKey);
     
     if (cached.isCached) {
@@ -191,26 +197,42 @@ Provide a specific recommendation with reasoning:`;
   }
 
   // Summarize meeting notes
-  async summarizeMeetingNotes(notes, context = '') {
+  async summarizeMeetingNotes(meetingData, context = '') {
     await this.ensureInitialized();
     
-    const prompt = `Summarize the following meeting notes in a clear, structured format:
+    const { meetingTitle, participants, agenda, keyPoints, actionItems, nextSteps, additionalNotes } = meetingData;
+    
+    const prompt = `Generate comprehensive meeting notes for the following meeting:
 
-Meeting Notes:
-${notes}
+Meeting Title: ${meetingTitle}
 
-Context: ${context}
+Participants: ${participants ? participants.join(', ') : 'Not specified'}
 
-Please provide:
-1. Key points discussed
-2. Action items and assignments
-3. Next steps
-4. Important decisions made
-5. Follow-up requirements
+Agenda Items:
+${agenda ? agenda.map((item, index) => `${index + 1}. ${item}`).join('\n') : 'No agenda items provided'}
 
-Format the summary in a professional, easy-to-read structure:`;
+Key Points Discussed:
+${keyPoints ? keyPoints.map((point, index) => `${index + 1}. ${point}`).join('\n') : 'No key points provided'}
 
-    const cacheKey = `summary:${notes.substring(0, 100)}:${context}`;
+Action Items:
+${actionItems ? actionItems.map((item, index) => `${index + 1}. ${item}`).join('\n') : 'No action items provided'}
+
+Next Steps:
+${nextSteps ? nextSteps.map((step, index) => `${index + 1}. ${step}`).join('\n') : 'No next steps provided'}
+
+Additional Notes: ${additionalNotes || 'None'}
+
+Please format this into a professional meeting summary with:
+1. Meeting overview
+2. Key discussion points
+3. Decisions made
+4. Action items with owners (if specified)
+5. Next steps and timeline
+6. Follow-up requirements
+
+Make it clear, organized, and actionable:`;
+
+    const cacheKey = `meeting:${meetingTitle}:${JSON.stringify({participants, agenda, keyPoints})}`;
     const cached = await this.checkCache(prompt, cacheKey);
     
     if (cached.isCached) {

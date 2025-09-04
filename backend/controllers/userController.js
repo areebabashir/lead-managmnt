@@ -1,53 +1,56 @@
-import User from '../models/authModel.js';
-import Role from '../models/roleModel.js';
-import { hashPassword } from '../helpers/authHelper.js';
+import auth from "../models/authModel.js";
+import Role from "../models/roleModel.js";
+import { hashPassword } from "../helpers/authHelper.js";
 
-// Get all users
+// Get all users with their roles
 export const getAllUsers = async (req, res) => {
     try {
-        const users = await User.find({ isActive: true })
-            .select('-password')
-            .populate('role', 'name description');
+        const users = await auth.find({})
+            .populate('role', 'name description')
+            .select('-password -answer')
+            .sort({ createdAt: -1 });
 
-        res.status(200).json({
+        res.status(200).send({
             success: true,
-            users
+            message: "Users fetched successfully",
+            users,
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({
+        res.status(500).send({
             success: false,
             message: "Error fetching users",
-            error: error.message
+            error: error.message,
         });
     }
 };
 
-// Get user by ID
+// Get single user by ID
 export const getUserById = async (req, res) => {
     try {
         const { id } = req.params;
-        const user = await User.findById(id)
-            .select('-password')
-            .populate('role', 'name description permissions');
+        const user = await auth.findById(id)
+            .populate('role', 'name description permissions')
+            .select('-password -answer');
 
         if (!user) {
-            return res.status(404).json({
+            return res.status(404).send({
                 success: false,
-                message: "User not found"
+                message: "User not found",
             });
         }
 
-        res.status(200).json({
+        res.status(200).send({
             success: true,
-            user
+            message: "User fetched successfully",
+            user,
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({
+        res.status(500).send({
             success: false,
             message: "Error fetching user",
-            error: error.message
+            error: error.message,
         });
     }
 };
@@ -55,65 +58,72 @@ export const getUserById = async (req, res) => {
 // Create new user
 export const createUser = async (req, res) => {
     try {
-        const { name, email, password, phone, address, answer, roleId } = req.body;
+        const { name, email, password, phone, address, roleId } = req.body;
 
         // Validations
-        if (!name || !email || !password || !phone || !address || !answer || !roleId) {
-            return res.status(400).json({
-                success: false,
-                message: "All fields are required"
-            });
-        }
+        if (!name) return res.status(400).send({ success: false, message: "Name is required" });
+        if (!email) return res.status(400).send({ success: false, message: "Email is required" });
+        if (!password) return res.status(400).send({ success: false, message: "Password is required" });
+        if (!phone) return res.status(400).send({ success: false, message: "Phone is required" });
+        if (!address) return res.status(400).send({ success: false, message: "Address is required" });
+        // Role is optional - users can be created without a role
 
-        // Check if user exists
-        const existingUser = await User.findOne({ email });
+        // Check if user already exists
+        const existingUser = await auth.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({
+            return res.status(400).send({
                 success: false,
-                message: "User with this email already exists"
+                message: "User with this email already exists",
             });
         }
 
-        // Check if role exists
-        const role = await Role.findById(roleId);
-        if (!role) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid role ID"
-            });
+        // Check if role exists (if provided)
+        if (roleId) {
+            const role = await Role.findById(roleId);
+            if (!role) {
+                return res.status(400).send({
+                    success: false,
+                    message: "Invalid role selected",
+                });
+            }
         }
 
         // Hash password
         const hashedPassword = await hashPassword(password);
 
         // Create user
-        const user = new User({
+        const user = await new auth({
             name,
             email,
             password: hashedPassword,
             phone,
             address,
-            answer,
-            role: roleId
-        });
+            role: roleId || null,
+            answer: "default" // Default security answer
+        }).save();
 
-        await user.save();
+        // Populate role for response
+        await user.populate('role', 'name description');
 
-        // Return user without password
-        const userResponse = user.toObject();
-        delete userResponse.password;
-
-        res.status(201).json({
+        res.status(201).send({
             success: true,
             message: "User created successfully",
-            user: userResponse
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone,
+                address: user.address,
+                role: user.role,
+                createdAt: user.createdAt
+            },
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({
+        res.status(500).send({
             success: false,
             message: "Error creating user",
-            error: error.message
+            error: error.message,
         });
     }
 };
@@ -122,29 +132,47 @@ export const createUser = async (req, res) => {
 export const updateUser = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, email, phone, address, roleId, isActive, isSuperAdmin } = req.body;
+        const { name, email, phone, address, roleId, password } = req.body;
 
-        const user = await User.findById(id);
+        // Check if user exists
+        const user = await auth.findById(id);
         if (!user) {
-            return res.status(404).json({
+            return res.status(404).send({
                 success: false,
-                message: "User not found"
+                message: "User not found",
             });
         }
 
-        // Check if role exists if roleId is provided
-        if (roleId) {
-            const role = await Role.findById(roleId);
-            if (!role) {
-                return res.status(400).json({
+        // Check if email is being changed and if it already exists
+        if (email && email !== user.email) {
+            const existingUser = await auth.findOne({ email });
+            if (existingUser) {
+                return res.status(400).send({
                     success: false,
-                    message: "Invalid role ID"
+                    message: "Email already exists",
                 });
             }
         }
 
+        // Check if role exists (if being updated)
+        if (roleId) {
+            const role = await Role.findById(roleId);
+            if (!role) {
+                return res.status(400).send({
+                    success: false,
+                    message: "Invalid role selected",
+                });
+            }
+        }
+
+        // Hash new password if provided
+        let hashedPassword = user.password;
+        if (password) {
+            hashedPassword = await hashPassword(password);
+        }
+
         // Update user
-        const updatedUser = await User.findByIdAndUpdate(
+        const updatedUser = await auth.findByIdAndUpdate(
             id,
             {
                 name: name || user.name,
@@ -152,143 +180,172 @@ export const updateUser = async (req, res) => {
                 phone: phone || user.phone,
                 address: address || user.address,
                 role: roleId || user.role,
-                isActive: isActive !== undefined ? isActive : user.isActive,
-                isSuperAdmin: isSuperAdmin !== undefined ? isSuperAdmin : user.isSuperAdmin
+                password: hashedPassword,
             },
-            { new: true, runValidators: true }
-        ).select('-password');
+            { new: true }
+        ).populate('role', 'name description');
 
-        res.status(200).json({
+        res.status(200).send({
             success: true,
             message: "User updated successfully",
-            user: updatedUser
+            user: {
+                _id: updatedUser._id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                phone: updatedUser.phone,
+                address: updatedUser.address,
+                role: updatedUser.role,
+                updatedAt: updatedUser.updatedAt
+            },
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({
+        res.status(500).send({
             success: false,
             message: "Error updating user",
-            error: error.message
+            error: error.message,
         });
     }
 };
 
-// Delete user (soft delete)
+// Delete user
 export const deleteUser = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const user = await User.findById(id);
+        // Check if user exists
+        const user = await auth.findById(id);
         if (!user) {
-            return res.status(404).json({
+            return res.status(404).send({
                 success: false,
-                message: "User not found"
+                message: "User not found",
             });
         }
 
-        // Prevent deleting super admin
-        if (user.isSuperAdmin) {
-            return res.status(400).json({
+        // Prevent deleting Super Admin
+        if (user.email === 'admin@melnitz.com') {
+            return res.status(400).send({
                 success: false,
-                message: "Super admin cannot be deleted"
+                message: "Cannot delete Super Admin user",
             });
         }
 
-        // Soft delete
-        await User.findByIdAndUpdate(id, { isActive: false });
+        // Delete user
+        await auth.findByIdAndDelete(id);
 
-        res.status(200).json({
+        res.status(200).send({
             success: true,
-            message: "User deleted successfully"
+            message: "User deleted successfully",
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({
+        res.status(500).send({
             success: false,
             message: "Error deleting user",
-            error: error.message
+            error: error.message,
         });
     }
 };
 
 // Assign role to user
-export const assignRoleToUser = async (req, res) => {
+export const assignRole = async (req, res) => {
     try {
         const { userId, roleId } = req.body;
 
-        if (!userId || !roleId) {
-            return res.status(400).json({
-                success: false,
-                message: "User ID and Role ID are required"
-            });
-        }
+        // Validations
+        if (!userId) return res.status(400).send({ success: false, message: "User ID is required" });
+        if (!roleId) return res.status(400).send({ success: false, message: "Role ID is required" });
 
         // Check if user exists
-        const user = await User.findById(userId);
+        const user = await auth.findById(userId);
         if (!user) {
-            return res.status(404).json({
+            return res.status(404).send({
                 success: false,
-                message: "User not found"
+                message: "User not found",
             });
         }
 
         // Check if role exists
         const role = await Role.findById(roleId);
         if (!role) {
-            return res.status(404).json({
+            return res.status(404).send({
                 success: false,
-                message: "Role not found"
+                message: "Role not found",
             });
         }
 
         // Update user role
-        await User.findByIdAndUpdate(userId, { role: roleId });
+        const updatedUser = await auth.findByIdAndUpdate(
+            userId,
+            { role: roleId },
+            { new: true }
+        ).populate('role', 'name description');
 
-        res.status(200).json({
+        res.status(200).send({
             success: true,
-            message: "Role assigned successfully"
+            message: "Role assigned successfully",
+            user: {
+                _id: updatedUser._id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                role: updatedUser.role,
+            },
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({
+        res.status(500).send({
             success: false,
             message: "Error assigning role",
-            error: error.message
+            error: error.message,
         });
     }
 };
 
-// Toggle super admin status
-export const toggleSuperAdmin = async (req, res) => {
+// Get user statistics
+export const getUserStats = async (req, res) => {
     try {
-        const { userId } = req.params;
+        const totalUsers = await auth.countDocuments();
+        const usersByRole = await auth.aggregate([
+            {
+                $lookup: {
+                    from: 'roles',
+                    localField: 'role',
+                    foreignField: '_id',
+                    as: 'roleInfo'
+                }
+            },
+            {
+                $unwind: '$roleInfo'
+            },
+            {
+                $group: {
+                    _id: '$roleInfo.name',
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
 
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found"
-            });
-        }
+        const recentUsers = await auth.find({})
+            .populate('role', 'name')
+            .select('name email role createdAt')
+            .sort({ createdAt: -1 })
+            .limit(5);
 
-        // Toggle super admin status
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            { isSuperAdmin: !user.isSuperAdmin },
-            { new: true }
-        ).select('-password');
-
-        res.status(200).json({
+        res.status(200).send({
             success: true,
-            message: `Super admin status ${updatedUser.isSuperAdmin ? 'enabled' : 'disabled'} successfully`,
-            user: updatedUser
+            message: "User statistics fetched successfully",
+            stats: {
+                totalUsers,
+                usersByRole,
+                recentUsers
+            }
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({
+        res.status(500).send({
             success: false,
-            message: "Error toggling super admin status",
-            error: error.message
+            message: "Error fetching user statistics",
+            error: error.message,
         });
     }
 };
