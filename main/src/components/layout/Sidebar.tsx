@@ -102,6 +102,12 @@ const getMenuItems = (hasPermission: (resource: string, action: string) => boole
       show: isSuperAdmin || hasPermission('ai_generator', 'read'),
       children: [
         { 
+          title: "Overview", 
+          href: "/ai-assistant", 
+          icon: BarChart3,
+          show: isSuperAdmin || hasPermission('ai_generator', 'read')
+        },
+        { 
           title: "Email Generator", 
           href: "/ai-assistant/email", 
           icon: Mail,
@@ -163,12 +169,18 @@ const getMenuItems = (hasPermission: (resource: string, action: string) => boole
           icon: Shield,
           show: isSuperAdmin || hasPermission('settings', 'read')
         },
-        { 
-          title: "Roles", 
-          href: "/support/roles", 
-          icon: Shield,
-          show: isSuperAdmin || hasPermission('roles', 'read')
-        },
+                         { 
+                   title: "Roles", 
+                   href: "/support/roles", 
+                   icon: Shield,
+                   show: isSuperAdmin || hasPermission('roles', 'read')
+                 },
+                 { 
+                   title: "Role Assignment", 
+                   href: "/support/role-assignment", 
+                   icon: UserCog,
+                   show: isSuperAdmin || hasPermission('users', 'assign')
+                 },
         { 
           title: "Settings", 
           href: "/support/settings", 

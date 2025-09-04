@@ -646,3 +646,255 @@ export const addAttachment = async (req, res) => {
         });
     }
 };
+
+// Get task statistics
+export const getTaskStats = async (req, res) => {
+    try {
+        // Check permission
+        if (!await hasPermission(req.user._id, 'tasks', 'read')) {
+            return res.status(403).json({
+                success: false,
+                message: 'Permission denied: Cannot read task statistics'
+            });
+        }
+
+        const total = await Task.countDocuments({ isActive: true });
+        const byStatus = await Task.aggregate([
+            { $match: { isActive: true } },
+            { $group: { _id: '$status', count: { $sum: 1 } } }
+        ]);
+        const byPriority = await Task.aggregate([
+            { $match: { isActive: true } },
+            { $group: { _id: '$priority', count: { $sum: 1 } } }
+        ]);
+        const byType = await Task.aggregate([
+            { $match: { isActive: true } },
+            { $group: { _id: '$type', count: { $sum: 1 } } }
+        ]);
+
+        const now = new Date();
+        const overdue = await Task.countDocuments({
+            dueDate: { $lt: now },
+            status: { $nin: ['done', 'cancelled'] },
+            isActive: true
+        });
+
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const dueToday = await Task.countDocuments({
+            dueDate: { $gte: today, $lt: tomorrow },
+            isActive: true
+        });
+
+        const assignedToMe = await Task.countDocuments({
+            assignedTo: req.user._id,
+            isActive: true
+        });
+
+        // Format the results
+        const statusStats = { todo: 0, in_progress: 0, review: 0, done: 0, cancelled: 0 };
+        byStatus.forEach(item => {
+            statusStats[item._id] = item.count;
+        });
+
+        const priorityStats = { low: 0, medium: 0, high: 0, urgent: 0 };
+        byPriority.forEach(item => {
+            priorityStats[item._id] = item.count;
+        });
+
+        const typeStats = { task: 0, lead: 0, follow_up: 0, meeting: 0, call: 0, email: 0, campaign: 0, other: 0 };
+        byType.forEach(item => {
+            typeStats[item._id] = item.count;
+        });
+
+        res.json({
+            success: true,
+            data: {
+                total,
+                byStatus: statusStats,
+                byPriority: priorityStats,
+                byType: typeStats,
+                overdue,
+                dueToday,
+                assignedToMe
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching task statistics:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching task statistics',
+            error: error.message
+        });
+    }
+};
+
+// Get task templates
+export const getTaskTemplates = async (req, res) => {
+    try {
+        // Check permission
+        if (!await hasPermission(req.user._id, 'tasks', 'read')) {
+            return res.status(403).json({
+                success: false,
+                message: 'Permission denied: Cannot read task templates'
+            });
+        }
+
+        const templates = await Task.find({ isTemplate: true, isActive: true })
+            .populate('createdBy', 'name email');
+
+        res.json({
+            success: true,
+            data: templates
+        });
+    } catch (error) {
+        console.error('Error fetching task templates:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching task templates',
+            error: error.message
+        });
+    }
+};
+
+// Create task from template
+export const createTaskFromTemplate = async (req, res) => {
+    try {
+        // Check permission
+        if (!await hasPermission(req.user._id, 'tasks', 'create')) {
+            return res.status(403).json({
+                success: false,
+                message: 'Permission denied: Cannot create tasks'
+            });
+        }
+
+        const { templateId } = req.params;
+        const template = await Task.findById(templateId);
+        
+        if (!template || !template.isTemplate) {
+            return res.status(404).json({
+                success: false,
+                message: 'Template not found'
+            });
+        }
+
+        const taskData = {
+            ...template.toObject(),
+            ...req.body,
+            _id: undefined,
+            isTemplate: false,
+            createdBy: req.user._id,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
+
+        const task = new Task(taskData);
+        await task.save();
+
+        const populatedTask = await Task.findById(task._id)
+            .populate('assignedTo', 'name email')
+            .populate('relatedContact', 'firstName lastName company');
+
+        res.status(201).json({
+            success: true,
+            message: 'Task created from template successfully',
+            data: populatedTask
+        });
+    } catch (error) {
+        console.error('Error creating task from template:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error creating task from template',
+            error: error.message
+        });
+    }
+};
+
+// Bulk update tasks
+export const bulkUpdateTasks = async (req, res) => {
+    try {
+        // Check permission
+        if (!await hasPermission(req.user._id, 'tasks', 'update')) {
+            return res.status(403).json({
+                success: false,
+                message: 'Permission denied: Cannot update tasks'
+            });
+        }
+
+        const { taskIds, updates } = req.body;
+
+        if (!taskIds || !Array.isArray(taskIds) || taskIds.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Task IDs are required'
+            });
+        }
+
+        const result = await Task.updateMany(
+            { _id: { $in: taskIds } },
+            { ...updates, updatedBy: req.user._id }
+        );
+
+        res.json({
+            success: true,
+            message: `${result.modifiedCount} tasks updated successfully`,
+            data: { modifiedCount: result.modifiedCount }
+        });
+    } catch (error) {
+        console.error('Error bulk updating tasks:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error bulk updating tasks',
+            error: error.message
+        });
+    }
+};
+
+// Get task activity log
+export const getTaskActivity = async (req, res) => {
+    try {
+        // Check permission
+        if (!await hasPermission(req.user._id, 'tasks', 'read')) {
+            return res.status(403).json({
+                success: false,
+                message: 'Permission denied: Cannot read task activity'
+            });
+        }
+
+        const { id } = req.params;
+        const task = await Task.findById(id)
+            .populate('comments.createdBy', 'name email')
+            .populate('createdBy', 'name email')
+            .populate('updatedBy', 'name email');
+
+        if (!task) {
+            return res.status(404).json({
+                success: false,
+                message: 'Task not found'
+            });
+        }
+
+        // For now, return comments as activity
+        // In a real implementation, you might want to track more detailed activity
+        const activity = task.comments.map(comment => ({
+            type: 'comment',
+            content: comment.content,
+            user: comment.createdBy,
+            timestamp: comment.createdAt,
+            attachments: comment.attachments
+        }));
+
+        res.json({
+            success: true,
+            data: activity
+        });
+    } catch (error) {
+        console.error('Error fetching task activity:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching task activity',
+            error: error.message
+        });
+    }
+};
