@@ -45,13 +45,16 @@ export const generatePersonalizedEmail = async (req, res) => {
       });
     }
 
-    // Get contact data
-    const contact = await Contact.findById(contactId);
-    if (!contact) {
-      return res.status(404).json({
-        success: false,
-        message: 'Contact not found'
-      });
+    // Get contact data (optional)
+    let contact = null;
+    if (contactId) {
+      contact = await Contact.findById(contactId);
+      if (!contact) {
+        return res.status(404).json({
+          success: false,
+          message: 'Contact not found'
+        });
+      }
     }
 
     // Generate email using Gemini
@@ -62,17 +65,18 @@ export const generatePersonalizedEmail = async (req, res) => {
     );
 
     // Save interaction
+    const contactName = contact ? `${contact.firstName} ${contact.lastName}` : 'General';
     const interaction = new AIInteraction({
       type: 'email',
-      prompt: `Generate ${emailType} email for ${contact.firstName} ${contact.lastName}`,
+      prompt: `Generate ${emailType} email for ${contactName}`,
       response: result.email,
       metadata: {
-        contactId,
+        contactId: contactId || null,
         userId,
         context,
         model: 'gemini-pro'
       },
-      cacheKey: `email:${contactId}:${emailType}:${context}`,
+      cacheKey: `email:${contactId || 'general'}:${emailType}:${JSON.stringify(context)}`,
       isCached: result.isCached
     });
     await interaction.save();
@@ -183,7 +187,7 @@ export const suggestFollowUpTime = async (req, res) => {
 export const summarizeMeetingNotes = async (req, res) => {
   try {
     const userId = req.user._id;
-    const { notes, context } = req.body;
+    const { meetingTitle, participants, agenda, keyPoints, actionItems, nextSteps, additionalNotes } = req.body;
 
     // Check permissions
     if (!await hasPermission(req.user._id, 'ai_generator', 'generate')) {
@@ -193,27 +197,41 @@ export const summarizeMeetingNotes = async (req, res) => {
       });
     }
 
-    if (!notes || notes.trim().length === 0) {
+    if (!meetingTitle || meetingTitle.trim().length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'Meeting notes are required'
+        message: 'Meeting title is required'
       });
     }
 
     // Generate summary using Gemini
-    const result = await geminiService.summarizeMeetingNotes(notes, context || '');
+    const result = await geminiService.summarizeMeetingNotes({
+      meetingTitle,
+      participants,
+      agenda,
+      keyPoints,
+      actionItems,
+      nextSteps,
+      additionalNotes
+    });
 
     // Save interaction
     const interaction = new AIInteraction({
-      type: 'summary',
-      prompt: `Summarize meeting notes: ${notes.substring(0, 100)}...`,
+      type: 'meeting_notes',
+      prompt: `Generate meeting notes for: ${meetingTitle}`,
       response: result.summary,
       metadata: {
         userId,
-        context,
+        meetingTitle,
+        participants,
+        agenda,
+        keyPoints,
+        actionItems,
+        nextSteps,
+        additionalNotes,
         model: 'gemini-pro'
       },
-      cacheKey: `summary:${notes.substring(0, 100)}:${context}`,
+      cacheKey: `meeting:${meetingTitle}:${JSON.stringify({participants, agenda, keyPoints})}`,
       isCached: result.isCached
     });
     await interaction.save();
@@ -339,7 +357,7 @@ export const processCustomPrompt = async (req, res) => {
 
     // Save interaction
     const interaction = new AIInteraction({
-      type: 'custom',
+      type: 'custom_prompt',
       prompt: prompt.substring(0, 200),
       response: result.response,
       metadata: {
@@ -347,7 +365,7 @@ export const processCustomPrompt = async (req, res) => {
         context,
         model: 'gemini-pro'
       },
-      cacheKey: `custom:${prompt.substring(0, 100)}:${context}`,
+      cacheKey: `custom:${prompt.substring(0, 100)}:${JSON.stringify(context)}`,
       isCached: result.isCached
     });
     await interaction.save();

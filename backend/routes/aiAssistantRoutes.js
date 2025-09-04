@@ -23,14 +23,29 @@ router.post('/initialize', initializeAssistant);
 
 // AI Content Generation
 router.post('/generate-email', generatePersonalizedEmail);
-router.post('/suggest-followup', suggestFollowUpTime);
-router.post('/summarize-notes', summarizeMeetingNotes);
-router.post('/process-dictation', processDictation);
+router.post('/meeting-notes', summarizeMeetingNotes);
 router.post('/custom-prompt', processCustomPrompt);
+router.post('/suggest-followup', suggestFollowUpTime);
+router.post('/process-dictation', processDictation);
 
 // Analytics and History
 router.get('/analytics', getAssistantAnalytics);
 router.get('/interactions', getInteractionHistory);
+router.get('/stats', getAssistantAnalytics);
+router.get('/info', getAssistantAnalytics);
+
+// Additional routes for frontend compatibility
+router.get('/templates', (req, res) => {
+  res.json({ success: true, data: [] });
+});
+
+router.post('/templates', (req, res) => {
+  res.json({ success: true, data: { id: Date.now(), ...req.body } });
+});
+
+router.get('/suggestions', (req, res) => {
+  res.json({ success: true, data: [] });
+});
 
 // Settings and Management
 router.put('/settings', updateAssistantSettings);

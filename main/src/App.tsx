@@ -20,6 +20,13 @@ import SupportKnowledgeBase from "./pages/Support/KnowledgeBase";
 // Removed: Support/Leads
 import SupportRoles from "./pages/Support/Roles";
 import SupportSettings from "./pages/Support/Settings";
+import UserManagement from "./pages/UserManagement";
+import RoleManagement from "./pages/RoleManagement";
+import RoleAssignment from "./pages/RoleAssignment";
+import AIAssistant from "./pages/AI/AIAssistant";
+import EmailGenerator from "./pages/AI/EmailGenerator";
+import MeetingNotes from "./pages/AI/MeetingNotes";
+import CustomPrompts from "./pages/AI/CustomPrompts";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
@@ -84,6 +91,23 @@ const App = () => (
                 </AppLayout>
               </ProtectedRoute>
             } />
+            <Route path="/setup/users" element={
+              <ProtectedRoute requiredPermission={{ resource: 'users', action: 'read' }}>
+                <AppLayout>
+                  <UserManagement />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/setup/database" element={
+              <ProtectedRoute requiredPermission={{ resource: 'settings', action: 'read' }}>
+                <AppLayout>
+                  <div className="p-6">
+                    <h1 className="text-2xl font-bold">Database Management</h1>
+                    <p className="text-gray-600 mt-2">Database management features coming soon...</p>
+                  </div>
+                </AppLayout>
+              </ProtectedRoute>
+            } />
             
             {/* Support Routes */}
             <Route path="/support/tickets" element={
@@ -103,7 +127,44 @@ const App = () => (
             <Route path="/support/roles" element={
               <ProtectedRoute requiredPermission={{ resource: 'roles', action: 'read' }}>
                 <AppLayout>
-                  <SupportRoles />
+                  <RoleManagement />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/support/role-assignment" element={
+              <ProtectedRoute requiredPermission={{ resource: 'users', action: 'assign' }}>
+                <AppLayout>
+                  <RoleAssignment />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            
+            {/* AI Assistant Routes */}
+            <Route path="/ai-assistant" element={
+              <ProtectedRoute requiredPermission={{ resource: 'ai_generator', action: 'read' }}>
+                <AppLayout>
+                  <AIAssistant />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/ai-assistant/email" element={
+              <ProtectedRoute requiredPermission={{ resource: 'ai_generator', action: 'generate' }}>
+                <AppLayout>
+                  <EmailGenerator />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/ai-assistant/meetings" element={
+              <ProtectedRoute requiredPermission={{ resource: 'ai_generator', action: 'generate' }}>
+                <AppLayout>
+                  <MeetingNotes />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/ai-assistant/prompts" element={
+              <ProtectedRoute requiredPermission={{ resource: 'ai_generator', action: 'generate' }}>
+                <AppLayout>
+                  <CustomPrompts />
                 </AppLayout>
               </ProtectedRoute>
             } />

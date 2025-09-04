@@ -1,36 +1,36 @@
-import express from 'express';
+import express from "express";
+import { requireSignIn, isAdmin } from "../Middlewares/authMiddlewares.js";
 import {
-    createRole,
     getAllRoles,
     getRoleById,
+    createRole,
     updateRole,
     deleteRole,
-    assignCustomPermissions,
-    removeCustomPermissions,
-    getUserPermissions
-} from '../controllers/roleController.js';
-import { requireSignIn } from '../Middlewares/authMiddlewares.js';
-import { requireSuperAdmin, requireAdmin } from '../Middlewares/permissionMiddleware.js';
+    getRoleStats,
+    getAvailablePermissions
+} from "../controllers/roleController.js";
 
 const router = express.Router();
 
-// All routes require authentication
-router.use(requireSignIn);
+// Get all roles (Admin only)
+router.get("/", requireSignIn, isAdmin, getAllRoles);
 
-// Role management routes (Super Admin only)
-router.post('/create', requireSuperAdmin, createRole);
-router.put('/:id', requireSuperAdmin, updateRole);
-router.delete('/:id', requireSuperAdmin, deleteRole);
+// Get available permissions for role creation (Admin only)
+router.get("/permissions", requireSignIn, isAdmin, getAvailablePermissions);
 
-// Role viewing routes (Admin and Super Admin)
-router.get('/', requireAdmin, getAllRoles);
-router.get('/:id', requireAdmin, getRoleById);
+// Get role statistics (Admin only)
+router.get("/stats", requireSignIn, isAdmin, getRoleStats);
 
-// Custom permission management (Super Admin only)
-router.post('/assign-permissions', requireSuperAdmin, assignCustomPermissions);
-router.delete('/permissions/:userId/:resource', requireSuperAdmin, removeCustomPermissions);
+// Get single role by ID (Admin only)
+router.get("/:id", requireSignIn, isAdmin, getRoleById);
 
-// Get user permissions (Admin and Super Admin)
-router.get('/user/:userId/permissions', requireAdmin, getUserPermissions);
+// Create new role (Admin only)
+router.post("/", requireSignIn, isAdmin, createRole);
+
+// Update role (Admin only)
+router.put("/:id", requireSignIn, isAdmin, updateRole);
+
+// Delete role (Admin only)
+router.delete("/:id", requireSignIn, isAdmin, deleteRole);
 
 export default router;
