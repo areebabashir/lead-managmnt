@@ -79,11 +79,11 @@ const mockSMSHistory = [
 
 const Badge = ({ children, variant = 'default' }: { children: React.ReactNode, variant?: string }) => {
   const variants = {
-    sent: 'bg-blue-100 text-blue-800 border-blue-200',
-    delivered: 'bg-green-100 text-green-800 border-green-200',
-    pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    failed: 'bg-red-100 text-red-800 border-red-200',
-    default: 'bg-gray-100 text-gray-800 border-gray-200'
+    sent: 'bg-orange-100 text-orange-500 ',
+    delivered: 'bg-orange-100 text-orange-500 ',
+    pending: 'bg-orange-100 text-orange-500',
+    failed: 'bg-orange-100 text-orange-500',
+    default: 'bg-orange-100 text-orange-500'
   };
   
   return (
@@ -95,10 +95,10 @@ const Badge = ({ children, variant = 'default' }: { children: React.ReactNode, v
 
 const StatusIcon = ({ status }: { status: string }) => {
   const icons = {
-    sent: <Send className="h-4 w-4 text-blue-600" />,
-    delivered: <CheckCircle className="h-4 w-4 text-green-600" />,
-    pending: <Clock className="h-4 w-4 text-yellow-600" />,
-    failed: <XCircle className="h-4 w-4 text-red-600" />
+    sent: <Send className="h-4 w-4 text-orange-500" />,
+    delivered: <CheckCircle className="h-4 w-4 text-orange-500" />,
+    pending: <Clock className="h-4 w-4 text-orange-500" />,
+    failed: <XCircle className="h-4 w-4 text-orange-500" />
   };
   
   return icons[status] || <AlertCircle className="h-4 w-4 text-gray-600" />;
@@ -126,7 +126,7 @@ export default function LeadManagerSMS() {
   const deliveryRate = ((totalDelivered / totalSent) * 100).toFixed(1);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen  p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -143,8 +143,8 @@ export default function LeadManagerSMS() {
               <p className="text-sm font-medium text-gray-600">Total Sent</p>
               <p className="text-2xl font-bold text-gray-900 mt-2">{totalSent.toLocaleString()}</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <Send className="h-6 w-6 text-blue-600" />
+            <div className="p-3 bg-orange-100 rounded-lg">
+              <Send className="h-6 w-6 text-black" />
             </div>
           </div>
         </div>
@@ -155,8 +155,8 @@ export default function LeadManagerSMS() {
               <p className="text-sm font-medium text-gray-600">Delivered</p>
               <p className="text-2xl font-bold text-gray-900 mt-2">{totalDelivered.toLocaleString()}</p>
             </div>
-            <div className="p-3 bg-green-100 rounded-lg">
-              <CheckCircle className="h-6 w-6 text-green-600" />
+            <div className="p-3 bg-orange-100 rounded-lg">
+              <CheckCircle className="h-6 w-6 text-black" />
             </div>
           </div>
         </div>
@@ -167,8 +167,8 @@ export default function LeadManagerSMS() {
               <p className="text-sm font-medium text-gray-600">Delivery Rate</p>
               <p className="text-2xl font-bold text-gray-900 mt-2">{deliveryRate}%</p>
             </div>
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <MessageSquare className="h-6 w-6 text-purple-600" />
+            <div className="p-3 bg-orange-100 rounded-lg">
+              <MessageSquare className="h-6 w-6 text-black" />
             </div>
           </div>
         </div>
@@ -180,7 +180,7 @@ export default function LeadManagerSMS() {
               <p className="text-2xl font-bold text-gray-900 mt-2">1,547</p>
             </div>
             <div className="p-3 bg-orange-100 rounded-lg">
-              <Users className="h-6 w-6 text-orange-600" />
+              <Users className="h-6 w-6 text-black" />
             </div>
           </div>
         </div>
@@ -190,7 +190,7 @@ export default function LeadManagerSMS() {
         {/* Send SMS Section */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-            <Send className="h-5 w-5 text-blue-600" />
+            <Send className="h-5 w-5 text-black" />
             Send New SMS
           </h2>
           
@@ -202,7 +202,7 @@ export default function LeadManagerSMS() {
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Type your message here..."
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-transparent resize-none"
               />
               <div className="flex justify-between items-center mt-2 text-xs">
                 <span className={`${characterCount > 160 ? 'text-red-600' : 'text-gray-500'}`}>
@@ -224,7 +224,7 @@ export default function LeadManagerSMS() {
                   <Users className="h-4 w-4 text-gray-500" />
                   <span className="text-sm text-gray-700">{selectedContacts} contacts selected</span>
                 </div>
-                <button className="text-blue-600 text-sm font-medium hover:text-blue-700">
+                <button className="text-blue-600 text-sm font-medium hover:text-gray-700">
                   Change Selection
                 </button>
               </div>
@@ -235,11 +235,11 @@ export default function LeadManagerSMS() {
               <div className="grid grid-cols-2 gap-3">
                 <input
                   type="date"
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-transparent"
                 />
                 <input
                   type="time"
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-transparent"
                 />
               </div>
             </div>
@@ -250,7 +250,7 @@ export default function LeadManagerSMS() {
               </button>
               <button 
                 disabled={!message.trim() || selectedContacts === 0}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-orange-500 text-white rounded-lg font-medium  transition-colors disabled:bg-orange-100 disabled:text-black disabled:cursor-not-allowed"
               >
                 <Send className="h-4 w-4" />
                 Send Now
@@ -263,7 +263,7 @@ export default function LeadManagerSMS() {
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-green-600" />
+              <MessageSquare className="h-5 w-5 text-black" />
               SMS History
             </h2>
             <div className="flex gap-2">
@@ -285,13 +285,13 @@ export default function LeadManagerSMS() {
                 placeholder="Search messages..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-transparent"
               />
             </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-100"
             >
               <option value="all">All Status</option>
               <option value="sent">Sent</option>
@@ -320,7 +320,7 @@ export default function LeadManagerSMS() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="p-1 text-gray-400 hover:text-blue-600 rounded">
+                    <button className="p-1 text-gray-400 hover:text-orange-500 rounded">
                       <Copy className="h-4 w-4" />
                     </button>
                     <button className="p-1 text-gray-400 hover:text-gray-600 rounded">
@@ -340,12 +340,12 @@ export default function LeadManagerSMS() {
                       {sms.recipients} sent
                     </span>
                     <span className="flex items-center gap-1">
-                      <CheckCircle className="h-3 w-3 text-green-500" />
+                      <CheckCircle className="h-3 w-3 text-black" />
                       {sms.delivered} delivered
                     </span>
                     {sms.failed > 0 && (
                       <span className="flex items-center gap-1">
-                        <XCircle className="h-3 w-3 text-red-500" />
+                        <XCircle className="h-3 w-3 text-black" />
                         {sms.failed} failed
                       </span>
                     )}
@@ -394,7 +394,7 @@ export default function LeadManagerSMS() {
                   <input
                     type="text"
                     placeholder="Search contacts..."
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-100"
                   />
                 </div>
 
@@ -422,7 +422,7 @@ export default function LeadManagerSMS() {
                 </div>
 
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <p className="text-sm text-blue-800">
+                  <p className="text-sm text-black">
                     <strong>254 contacts</strong> selected • Estimated cost: <strong>$12.70</strong>
                   </p>
                 </div>
@@ -437,7 +437,7 @@ export default function LeadManagerSMS() {
                 </button>
                 <button
                   onClick={() => setShowContactModal(false)}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-md  transition-colors"
                 >
                   Confirm Selection
                 </button>
