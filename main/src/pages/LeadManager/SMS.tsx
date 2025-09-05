@@ -224,7 +224,7 @@ export default function LeadManagerSMS() {
                   <Users className="h-4 w-4 text-gray-500" />
                   <span className="text-sm text-gray-700">{selectedContacts} contacts selected</span>
                 </div>
-                <button className="text-blue-600 text-sm font-medium hover:text-gray-700">
+                <button className="text-orange-500 text-sm font-medium ">
                   Change Selection
                 </button>
               </div>

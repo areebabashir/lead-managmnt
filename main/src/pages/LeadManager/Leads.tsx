@@ -235,7 +235,7 @@ const LeadManagerLeads: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="p-4 sm:p-5 shadow-md border border-gray-200 rounded-lg bg-white">
+      <div className="p-4 sm:p-5 shadow-md border border-gray-200 rounded-[10px] bg-white">
         <div className="mt-2 overflow-x-auto">
           <DataTable
             columns={columns}
