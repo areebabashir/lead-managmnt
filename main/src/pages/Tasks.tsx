@@ -47,6 +47,7 @@ import { taskAPI, Task, TaskCreateRequest } from '../services/taskAPI';
 import { userAPI, User as UserType } from '../services/userAPI';
 import { useAuth } from '../contexts/AuthContext';
 import { CreateTaskModal, TaskDetailModal } from '../components/TaskModals';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 
 // Sortable Task Item Component
 interface SortableTaskItemProps {
