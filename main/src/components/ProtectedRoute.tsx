@@ -50,6 +50,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       requiredPermission.resource,
       requiredPermission.action
     );
+    // console.log(hasRequiredPermission)
 
     if (!hasRequiredPermission) {
       return (
@@ -66,7 +67,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
             </div>
             <h2 className="text-2xl font-semibold text-gray-900 mb-2">Access Denied</h2>
             <p className="text-gray-600 mb-6">
-              You don't have permission to access this page. Your current role: <strong>{user?.role}</strong>
+              You don't have permission to access this page. Your current role: <strong>{user?.role?.name}</strong>
             </p>
             <div className="space-y-3">
               <button

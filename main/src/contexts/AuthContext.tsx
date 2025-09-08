@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authAPI } from '../services/authAPI';
+import { roleAPI, Role, Permission } from '../services/roleAPI';
 
 interface User {
   _id: string;
@@ -7,7 +8,9 @@ interface User {
   email: string;
   phone: string;
   address: string;
-  role: string;
+  role: Role;
+  isSuperAdmin: boolean;
+  isActive: boolean;
 }
 
 interface AuthContextType {
@@ -19,6 +22,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   hasPermission: (resource: string, action: string) => boolean;
   userRole: string | null;
+  userPermissions: Permission[];
+  refreshUserPermissions: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,7 +35,26 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [userPermissions, setUserPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Function to refresh user permissions
+  const refreshUserPermissions = async () => {
+    if (!user) return;
+    
+    try {
+      const response = await roleAPI.getUserPermissions(user._id);
+      if (response.success && response.permissions) {
+        setUserPermissions(response.permissions.rolePermissions || []);
+      }
+    } catch (error) {
+      console.error('Error refreshing user permissions:', error);
+      // If we can't fetch permissions, we'll rely on the role permissions from the user object
+      if (user.role && user.role.permissions) {
+        setUserPermissions(user.role.permissions || []);
+      }
+    }
+  };
 
   // Initialize auth state from localStorage
   useEffect(() => {
@@ -43,10 +67,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setToken(storedToken);
           setUser(JSON.parse(storedUser));
           
-          // Verify token is still valid
-          const isValid = await authAPI.verifyToken(storedToken);
-          if (!isValid) {
+          // Verify token is still valid and get fresh user data
+          const tokenResponse = await authAPI.verifyToken(storedToken);
+          if (!tokenResponse.success) {
             logout();
+          } else if (tokenResponse.user) {
+            // Update user data with fresh data from server
+            const userData: User = {
+              _id: tokenResponse.user._id,
+              name: tokenResponse.user.name,
+              email: tokenResponse.user.email,
+              phone: tokenResponse.user.phone,
+              address: tokenResponse.user.address,
+              role: tokenResponse.user.role as Role,
+              isSuperAdmin: tokenResponse.user.isSuperAdmin || false,
+              isActive: tokenResponse.user.isActive || true
+            };
+            setUser(userData);
+            localStorage.setItem('user', JSON.stringify(userData));
+            // Fetch user permissions (non-blocking)
+            refreshUserPermissions().catch(error => {
+              console.error('Failed to refresh permissions:', error);
+            });
           }
         }
       } catch (error) {
@@ -66,12 +108,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await authAPI.login(email, password);
       
       if (response.success) {
-        setUser(response.user);
+        const userData: User = {
+          _id: response.user._id,
+          name: response.user.name,
+          email: response.user.email,
+          phone: response.user.phone,
+          address: response.user.address,
+          role: response.user.role as Role,
+          isSuperAdmin: response.user.isSuperAdmin || false,
+          isActive: response.user.isActive || true
+        };
+        
+        setUser(userData);
         setToken(response.token);
         
         // Store in localStorage
         localStorage.setItem('token', response.token);
-        localStorage.setItem('user', JSON.stringify(response.user));
+        localStorage.setItem('user', JSON.stringify(userData));
+        
+        // Fetch user permissions (non-blocking)
+        refreshUserPermissions().catch(error => {
+          console.error('Failed to refresh permissions:', error);
+        });
         
         return { success: true, message: response.message };
       } else {
@@ -88,86 +146,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     setUser(null);
     setToken(null);
+    setUserPermissions([]);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
   };
 
   const hasPermission = (resource: string, action: string): boolean => {
-    if (!user || !user.role) return false;
+    if (!user) return false;
     
-    // Define role-based permissions
-    const rolePermissions: { [key: string]: { [key: string]: string[] } } = {
-      'Super Admin': {
-        'contacts': ['create', 'read', 'update', 'delete', 'export', 'import'],
-        'tasks': ['create', 'read', 'update', 'delete', 'assign'],
-        'campaigns': ['create', 'read', 'update', 'delete', 'send'],
-        'ai_generator': ['generate', 'analyze', 'configure'],
-        'dashboards': ['read', 'export'],
-        'users': ['create', 'read', 'update', 'delete', 'assign'],
-        'roles': ['create', 'read', 'update', 'delete'],
-        'settings': ['read', 'update']
-      },
-      'Sales Director': {
-        'contacts': ['create', 'read', 'update', 'export'],
-        'tasks': ['create', 'read', 'update', 'assign'],
-        'campaigns': ['create', 'read', 'update', 'send'],
-        'ai_generator': ['generate', 'analyze'],
-        'dashboards': ['read', 'export'],
-        'users': ['read', 'assign'],
-        'roles': ['read'],
-        'settings': ['read']
-      },
-      'Sales Manager': {
-        'contacts': ['create', 'read', 'update'],
-        'tasks': ['create', 'read', 'update', 'assign'],
-        'campaigns': ['create', 'read', 'update'],
-        'ai_generator': ['generate'],
-        'dashboards': ['read'],
-        'users': ['read'],
-        'roles': ['read'],
-        'settings': ['read']
-      },
-      'Sales Representative': {
-        'contacts': ['create', 'read', 'update'],
-        'tasks': ['create', 'read', 'update'],
-        'campaigns': ['read'],
-        'ai_generator': ['generate'],
-        'dashboards': ['read'],
-        'users': ['read'],
-        'roles': [],
-        'settings': []
-      },
-      'Marketing Specialist': {
-        'contacts': ['read'],
-        'tasks': ['read'],
-        'campaigns': ['create', 'read', 'update', 'send'],
-        'ai_generator': ['generate', 'analyze'],
-        'dashboards': ['read'],
-        'users': ['read'],
-        'roles': ['read'],
-        'settings': ['read']
-      },
-      'Customer Success Manager': {
-        'contacts': ['read', 'update'],
-        'tasks': ['create', 'read', 'update'],
-        'campaigns': ['read'],
-        'ai_generator': ['generate'],
-        'dashboards': ['read'],
-        'users': ['read'],
-        'roles': ['read'],
-        'settings': ['read']
-      }
-    };
-
-    const userRole = user.role;
-    const permissions = rolePermissions[userRole];
-    
-    if (!permissions || !permissions[resource]) {
-      return false;
+    // Super admin has all permissions
+    if (user.isSuperAdmin) {
+      return true;
     }
     
-    return permissions[resource].includes(action);
+    // First try to use the fetched userPermissions
+    if (userPermissions.length > 0) {
+      return userPermissions.some(permission => 
+        permission.resource === resource && permission.action === action
+      );
+    }
+    
+    // Fallback to role permissions from user object
+    if (user.role && user.role.permissions) {
+      return user.role.permissions.some((permission: any) => 
+        permission.resource === resource && permission.action === action
+      );
+    }
+    
+    return false;
   };
+
 
   const value: AuthContextType = {
     user,
@@ -177,7 +185,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loading,
     isAuthenticated: !!user && !!token,
     hasPermission,
-    userRole: user?.role || null
+    userRole: user?.role?.name || null,
+    userPermissions,
+    refreshUserPermissions
   };
 
   return (

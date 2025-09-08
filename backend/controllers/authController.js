@@ -1,4 +1,5 @@
 import auth from "../models/authModel.js";
+import Permission from "../models/permissionModel.js";
 import { hashPassword, comparePassword } from "../helpers/authHelper.js";
 import { generateToken } from "../helpers/tokenHelper.js";
 
@@ -83,8 +84,14 @@ export const loginController = async (req, res) => {
             });
         }
 
-        // Check user and populate role
-        const user = await auth.findOne({ email }).populate('role', 'name');
+        // Check user and populate role with permissions
+        const user = await auth.findOne({ email }).populate({
+            path: 'role',
+            populate: {
+                path: 'permissions',
+                model: 'Permission'
+            }
+        });
         if (!user) {
             return res.status(404).send({
                 success: false,
@@ -113,7 +120,7 @@ export const loginController = async (req, res) => {
                 email: user.email,
                 phone: user.phone,
                 address: user.address,
-                role: user.role?.name || user.role,
+                role: user.role,
             },
             token,
         });

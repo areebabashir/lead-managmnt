@@ -93,7 +93,7 @@ export const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSideba
             </div>
             <div className="text-left">
               <div className="text-sm font-medium text-gray-900">{user?.name || 'User'}</div>
-              <div className="text-xs text-gray-500">{user?.role || 'Guest'}</div>
+              <div className="text-xs text-gray-500">{user?.role?.name || 'Guest'}</div>
             </div>
           </button>
           
@@ -103,7 +103,7 @@ export const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSideba
                 <div className="px-3 py-2 border-b border-gray-100">
                   <div className="text-sm font-medium text-gray-900">{user?.name}</div>
                   <div className="text-xs text-gray-500">{user?.email}</div>
-                  <div className="text-xs text-orange-600 font-medium">{user?.role}</div>
+                  <div className="text-xs text-orange-600 font-medium">{user?.role?.name}</div>
                 </div>
                 
                 <button 

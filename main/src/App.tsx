@@ -126,6 +126,7 @@ const App = () => (
             } />
             <Route path="/support/roles" element={
               <ProtectedRoute requiredPermission={{ resource: 'roles', action: 'read' }}>
+                {/* {console.log('roles')} */}
                 <AppLayout>
                   <RoleManagement />
                 </AppLayout>

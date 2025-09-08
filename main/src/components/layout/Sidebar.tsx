@@ -179,7 +179,7 @@ const getMenuItems = (hasPermission: (resource: string, action: string) => boole
                    title: "Role Assignment", 
                    href: "/support/role-assignment", 
                    icon: UserCog,
-                   show: isSuperAdmin || hasPermission('users', 'assign')
+                   show: isSuperAdmin || hasPermission('roles', 'assign')
                  },
         { 
           title: "Settings", 
@@ -208,7 +208,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const [expandedItems, setExpandedItems] = React.useState<string[]>(["Lead Manager", "Analytics", "AI Assistant", "Setup", "Support"])
   const location = useLocation()
   const { hasPermission, userRole } = useAuth()
-
+  // console.log(hasPermission('contacts', 'read'))
   const toggleExpanded = (title: string) => {
     setExpandedItems((prev) =>
       prev.includes(title) ? prev.filter((item) => item !== title) : [...prev, title]

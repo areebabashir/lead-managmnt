@@ -1,40 +1,5 @@
 import mongoose from 'mongoose';
 
-const permissionSchema = new mongoose.Schema({
-    resource: {
-        type: String,
-        required: true,
-        enum: [
-            // Core CRM Resources
-            'contacts', 'leads', 'customers', 'referrals',
-            // Sales & Pipeline
-            'pipeline', 'opportunities', 'deals', 'campaigns',
-            // Communication
-            'emails', 'communications', 'templates', 'ai_generator',
-            // Calendar & Scheduling
-            'calendar', 'appointments', 'meetings', 'reminders',
-            // Task & Workflow
-            'tasks', 'workflows', 'boards', 'automations',
-            // Analytics & Reporting
-            'reports', 'analytics', 'dashboards', 'kpis',
-            // System & Admin
-            'users', 'roles', 'permissions', 'integrations', 'settings',
-            // Notes & Documents
-            'notes', 'documents', 'files', 'dictation'
-        ]
-    },
-    actions: [{
-        type: String,
-        enum: [
-            'create', 'read', 'update', 'delete',
-            'approve', 'reject', 'assign', 'export',
-            'import', 'schedule', 'send', 'generate',
-            'analyze', 'configure', 'integrate', 'dictate',
-            'automate'
-        ]
-    }]
-});
-
 const roleSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -51,7 +16,10 @@ const roleSchema = new mongoose.Schema({
         enum: ['system', 'sales', 'management', 'support'],
         default: 'sales'
     },
-    permissions: [permissionSchema],
+    permissions: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Permission'
+    }],
     isActive: {
         type: Boolean,
         default: true

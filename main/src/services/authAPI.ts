@@ -1,6 +1,11 @@
 
 const API_BASE_URL = 'http://localhost:8000/api/auth';
 
+export interface Role {
+  _id: string;
+  name: string;
+}
+
 export interface LoginResponse {
   success: boolean;
   message: string;
@@ -10,7 +15,9 @@ export interface LoginResponse {
     email: string;
     phone: string;
     address: string;
-    role: string;
+    role: Role;
+    isSuperAdmin?: boolean;
+    isActive?: boolean;
   };
   token?: string;
 }
@@ -82,17 +89,17 @@ class AuthAPI {
     });
   }
 
-  async verifyToken(token: string): Promise<boolean> {
+  async verifyToken(token: string): Promise<{ success: boolean; user?: any }> {
     try {
-      await this.makeRequest('/user-auth', {
+      const response = await this.makeRequest<{ success: boolean; user?: any }>('/user-auth', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
-      return true;
+      return { success: true, user: response.user };
     } catch (error) {
-      return false;
+      return { success: false };
     }
   }
 

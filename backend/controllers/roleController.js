@@ -3,7 +3,9 @@ import Role from "../models/roleModel.js";
 // Get all roles
 export const getAllRoles = async (req, res) => {
     try {
-        const roles = await Role.find({}).sort({ createdAt: -1 });
+        const roles = await Role.find({})
+            .populate('permissions')
+            .sort({ createdAt: -1 });
 
         res.status(200).send({
             success: true,
@@ -24,7 +26,7 @@ export const getAllRoles = async (req, res) => {
 export const getRoleById = async (req, res) => {
     try {
         const { id } = req.params;
-        const role = await Role.findById(id);
+        const role = await Role.findById(id).populate('permissions');
 
         if (!role) {
             return res.status(404).send({
@@ -69,27 +71,31 @@ export const createRole = async (req, res) => {
             });
         }
 
-        // Validate permissions structure
-        for (const permission of permissions) {
-            if (!permission.resource || !permission.actions || !Array.isArray(permission.actions)) {
-                return res.status(400).send({
-                    success: false,
-                    message: "Invalid permission structure. Each permission must have 'resource' and 'actions' array",
-                });
-            }
+        // Validate that all permission IDs exist
+        const Permission = (await import('../models/permissionModel.js')).default;
+        const existingPermissions = await Permission.find({ _id: { $in: permissions } });
+        
+        if (existingPermissions.length !== permissions.length) {
+            return res.status(400).send({
+                success: false,
+                message: "One or more permission IDs are invalid",
+            });
         }
 
-        // Create role
+        // Create role with permission ObjectIds
         const role = await new Role({
             name,
             description,
-            permissions
+            permissions: permissions // Array of Permission ObjectIds
         }).save();
+
+        // Populate permissions for response
+        const populatedRole = await Role.findById(role._id).populate('permissions');
 
         res.status(201).send({
             success: true,
             message: "Role created successfully",
-            role,
+            role: populatedRole,
         });
     } catch (error) {
         console.error(error);
@@ -135,7 +141,7 @@ export const updateRole = async (req, res) => {
             }
         }
 
-        // Validate permissions structure if provided
+        // Validate permissions if provided
         if (permissions) {
             if (!Array.isArray(permissions)) {
                 return res.status(400).send({
@@ -144,13 +150,15 @@ export const updateRole = async (req, res) => {
                 });
             }
 
-            for (const permission of permissions) {
-                if (!permission.resource || !permission.actions || !Array.isArray(permission.actions)) {
-                    return res.status(400).send({
-                        success: false,
-                        message: "Invalid permission structure. Each permission must have 'resource' and 'actions' array",
-                    });
-                }
+            // Validate that all permission IDs exist
+            const Permission = (await import('../models/permissionModel.js')).default;
+            const existingPermissions = await Permission.find({ _id: { $in: permissions } });
+            
+            if (existingPermissions.length !== permissions.length) {
+                return res.status(400).send({
+                    success: false,
+                    message: "One or more permission IDs are invalid",
+                });
             }
         }
 
@@ -163,7 +171,7 @@ export const updateRole = async (req, res) => {
                 permissions: permissions || role.permissions,
             },
             { new: true }
-        );
+        ).populate('permissions');
 
         res.status(200).send({
             success: true,
@@ -274,41 +282,27 @@ export const getRoleStats = async (req, res) => {
 // Get available resources and actions for role creation
 export const getAvailablePermissions = async (req, res) => {
     try {
-        const availableResources = [
-            'contacts',
-            'tasks',
-            'campaigns',
-            'ai_generator',
-            'dashboards',
-            'reports',
-            'analytics',
-            'users',
-            'roles',
-            'settings',
-            'tickets'
-        ];
+        // Get all permissions from the database
+        const Permission = (await import('../models/permissionModel.js')).default;
+        const permissions = await Permission.find({}).sort({ resource: 1, action: 1 });
 
-        const availableActions = [
-            'create',
-            'read',
-            'update',
-            'delete',
-            'export',
-            'import',
-            'assign',
-            'send',
-            'generate',
-            'analyze',
-            'configure'
-        ];
+        // Group permissions by resource for easier frontend handling
+        const permissionsByResource = {};
+        permissions.forEach(permission => {
+            if (!permissionsByResource[permission.resource]) {
+                permissionsByResource[permission.resource] = [];
+            }
+            permissionsByResource[permission.resource].push({
+                _id: permission._id,
+                action: permission.action
+            });
+        });
 
         res.status(200).send({
             success: true,
             message: "Available permissions fetched successfully",
-            permissions: {
-                resources: availableResources,
-                actions: availableActions
-            }
+            permissions: permissions,
+            permissionsByResource: permissionsByResource
         });
     } catch (error) {
         console.error(error);

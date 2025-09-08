@@ -1,5 +1,6 @@
 import express from "express";
-import { requireSignIn, isAdmin } from "../Middlewares/authMiddlewares.js";
+import { requireSignIn } from "../Middlewares/authMiddlewares.js";
+import { hasPermission, requireSuperAdmin } from "../Middlewares/hasPermissionMiddleware.js";
 import {
     getAllUsers,
     getUserById,
@@ -7,30 +8,34 @@ import {
     updateUser,
     deleteUser,
     assignRole,
-    getUserStats
+    getUserStats,
+    getUserPermissions
 } from "../controllers/userController.js";
 
 const router = express.Router();
 
 // Get all users (Admin only)
-router.get("/", requireSignIn, isAdmin, getAllUsers);
+router.get("/", requireSignIn, hasPermission('users', 'read'), getAllUsers);
 
 // Get user statistics (Admin only)
-router.get("/stats", requireSignIn, isAdmin, getUserStats);
+router.get("/stats", requireSignIn, hasPermission('users', 'read'), getUserStats);
+
+// Get user permissions (Admin only)
+router.get("/:id/permissions", requireSignIn, hasPermission('users', 'read'), getUserPermissions);
 
 // Get single user by ID (Admin only)
-router.get("/:id", requireSignIn, isAdmin, getUserById);
+router.get("/:id", requireSignIn, hasPermission('users', 'read'), getUserById);
 
-// Create new user (Admin only)
-router.post("/", requireSignIn, isAdmin, createUser);
+// Create new user (Super Admin only)
+router.post("/", requireSignIn, requireSuperAdmin, createUser);
 
-// Update user (Admin only)
-router.put("/:id", requireSignIn, isAdmin, updateUser);
+// Update user (Super Admin only)
+router.put("/:id", requireSignIn, requireSuperAdmin, updateUser);
 
-// Delete user (Admin only)
-router.delete("/:id", requireSignIn, isAdmin, deleteUser);
+// Delete user (Super Admin only)
+router.delete("/:id", requireSignIn, requireSuperAdmin, deleteUser);
 
-// Assign role to user (Admin only)
-router.post("/assign-role", requireSignIn, isAdmin, assignRole);
+// Assign role to user (Super Admin only)
+router.post("/assign-role", requireSignIn, requireSuperAdmin, assignRole);
 
 export default router;
