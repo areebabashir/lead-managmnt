@@ -485,7 +485,7 @@ const pieOptions = {
           </div> */}
 
           {/* Monthly Performance Bar Chart */}
-          <div className="lg:col-span-1 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-gray-200">
+          <div className="lg:col-span-1 backdrop-blur-sm p-6 rounded-xl  border border-gray-200">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-xl font-bold text-black">Monthly Performance</h3>
