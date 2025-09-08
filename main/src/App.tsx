@@ -28,7 +28,10 @@ import EmailGenerator from "./pages/AI/EmailGenerator";
 import MeetingNotes from "./pages/AI/MeetingNotes";
 import CustomPrompts from "./pages/AI/CustomPrompts";
 import Profile from "./pages/Profile";
+
 import NotFound from "./pages/NotFound";
+import Performance from "./pages/Analytics/Performance";
+import Reports from "./pages/Analytics/Reports";
 
 const queryClient = new QueryClient();
 
@@ -79,6 +82,20 @@ const App = () => (
               <ProtectedRoute requiredPermission={{ resource: 'contacts', action: 'read' }}>
                 <AppLayout>
                   <LeadManagerMailbox />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+             <Route path="/anylatics/performance" element={
+              <ProtectedRoute requiredPermission={{ resource: 'contacts', action: 'read' }}>
+                <AppLayout>
+                  <Performance />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+              <Route path="/analytics/reports" element={
+              <ProtectedRoute requiredPermission={{ resource: 'contacts', action: 'read' }}>
+                <AppLayout>
+                  <Reports />
                 </AppLayout>
               </ProtectedRoute>
             } />

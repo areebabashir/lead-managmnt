@@ -90,7 +90,7 @@ const getMenuItems = (hasPermission: (resource: string, action: string) => boole
         },
         { 
           title: "Performance", 
-          href: "/analytics/performance", 
+          href: "/anylatics/performance", 
           icon: TrendingUp,
           show: isSuperAdmin || hasPermission('analytics', 'read')
         },
