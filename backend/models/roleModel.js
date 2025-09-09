@@ -23,6 +23,9 @@ const permissionSchema = new mongoose.Schema({
             'notes', 'documents', 'files', 'dictation'
         ]
     },
+
+
+    
     actions: [{
         type: String,
         enum: [

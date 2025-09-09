@@ -487,11 +487,25 @@ export const updateStatus = async (req, res) => {
         }
 
         const { status } = req.body;
+        
+        // Debug logging
+        console.log('UpdateStatus - Task ID:', req.params.id);
+        console.log('UpdateStatus - Request body:', req.body);
+        console.log('UpdateStatus - Status value:', status);
 
         if (!status) {
             return res.status(400).json({
                 success: false,
                 message: 'Status is required'
+            });
+        }
+
+        // Validate status value
+        const validStatuses = ['todo', 'in_progress', 'review', 'done', 'cancelled'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: `Invalid status. Must be one of: ${validStatuses.join(', ')}`
             });
         }
 

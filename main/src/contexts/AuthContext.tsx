@@ -105,7 +105,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         'dashboards': ['read', 'export'],
         'users': ['create', 'read', 'update', 'delete', 'assign'],
         'roles': ['create', 'read', 'update', 'delete'],
-        'settings': ['read', 'update']
+        'settings': ['read', 'update'],
+        'calendar': ['create', 'read', 'update', 'delete', 'schedule', 'integrate'],
+        'meetings': ['create', 'read', 'update', 'delete', 'schedule', 'approve'],
+        'appointments': ['create', 'read', 'update', 'delete', 'schedule', 'approve'],
+        'reminders': ['create', 'read', 'update', 'delete', 'schedule', 'configure']
       },
       'Sales Director': {
         'contacts': ['create', 'read', 'update', 'export'],
@@ -115,7 +119,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         'dashboards': ['read', 'export'],
         'users': ['read', 'assign'],
         'roles': ['read'],
-        'settings': ['read']
+        'settings': ['read'],
+        'calendar': ['create', 'read', 'update', 'delete', 'schedule'],
+        'meetings': ['create', 'read', 'update', 'delete', 'schedule', 'approve'],
+        'appointments': ['create', 'read', 'update', 'delete', 'schedule', 'approve'],
+        'reminders': ['create', 'read', 'update', 'delete', 'schedule']
       },
       'Sales Manager': {
         'contacts': ['create', 'read', 'update'],
@@ -125,7 +133,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         'dashboards': ['read'],
         'users': ['read'],
         'roles': ['read'],
-        'settings': ['read']
+        'settings': ['read'],
+        'calendar': ['create', 'read', 'update', 'schedule'],
+        'meetings': ['create', 'read', 'update', 'schedule', 'approve'],
+        'appointments': ['create', 'read', 'update', 'schedule', 'approve'],
+        'reminders': ['create', 'read', 'update', 'schedule']
       },
       'Sales Representative': {
         'contacts': ['create', 'read', 'update'],
@@ -135,7 +147,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         'dashboards': ['read'],
         'users': ['read'],
         'roles': [],
-        'settings': []
+        'settings': [],
+        'calendar': ['create', 'read', 'update', 'schedule'],
+        'meetings': ['create', 'read', 'update', 'schedule'],
+        'appointments': ['create', 'read', 'update', 'schedule'],
+        'reminders': ['create', 'read', 'update', 'schedule']
       },
       'Marketing Specialist': {
         'contacts': ['read'],

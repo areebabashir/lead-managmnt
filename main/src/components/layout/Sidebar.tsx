@@ -41,13 +41,11 @@ const getMenuItems = (hasPermission: (resource: string, action: string) => boole
       icon: LayoutDashboard,
       href: "/",
       exact: true,
-      badge: "4",
       show: true, // Dashboard is always visible
     },
     {
       title: "Lead Manager",
       icon: TrendingUp,
-      badge: "New",
       show: isSuperAdmin || hasPermission('contacts', 'read'),
       children: [
         { 
@@ -74,8 +72,13 @@ const getMenuItems = (hasPermission: (resource: string, action: string) => boole
       title: "Tasks",
       icon: CheckSquare,
       href: "/tasks",
-      badge: "12",
       show: isSuperAdmin || hasPermission('tasks', 'read'),
+    },
+    {
+      title: "Meeting Scheduling",
+      icon: Calendar,
+      href: "/meeting-scheduling",
+      show: isSuperAdmin || hasPermission('calendar', 'read'),
     },
     {
       title: "Analytics",
@@ -133,54 +136,30 @@ const getMenuItems = (hasPermission: (resource: string, action: string) => boole
       show: isSuperAdmin || hasPermission('users', 'read'),
       children: [
         { 
-          title: "Staff", 
-          href: "/setup/staff", 
-          icon: Building,
-          show: isSuperAdmin || hasPermission('users', 'read')
-        },
-        { 
           title: "User Management", 
           href: "/setup/users", 
           icon: UserCog,
           show: isSuperAdmin || hasPermission('users', 'read')
-        },
-        { 
-          title: "Database", 
-          href: "/setup/database", 
-          icon: Database,
-          show: isSuperAdmin || hasPermission('settings', 'read')
         },
       ],
     },
     {
       title: "Support",
       icon: Headphones,
-      show: isSuperAdmin || hasPermission('tickets', 'read') || hasPermission('settings', 'read') || hasPermission('roles', 'read'),
+      show: isSuperAdmin || hasPermission('settings', 'read') || hasPermission('roles', 'read'),
       children: [
         { 
-          title: "Tickets", 
-          href: "/support/tickets", 
-          icon: HelpCircle,
-          show: isSuperAdmin || hasPermission('tickets', 'read')
+          title: "Roles", 
+          href: "/support/roles", 
+          icon: Shield,
+          show: isSuperAdmin || hasPermission('roles', 'read')
         },
         { 
-          title: "Knowledge Base", 
-          href: "/support/knowledge-base", 
-          icon: Shield,
-          show: isSuperAdmin || hasPermission('settings', 'read')
+          title: "Role Assignment", 
+          href: "/support/role-assignment", 
+          icon: UserCog,
+          show: isSuperAdmin || hasPermission('users', 'assign')
         },
-                         { 
-                   title: "Roles", 
-                   href: "/support/roles", 
-                   icon: Shield,
-                   show: isSuperAdmin || hasPermission('roles', 'read')
-                 },
-                 { 
-                   title: "Role Assignment", 
-                   href: "/support/role-assignment", 
-                   icon: UserCog,
-                   show: isSuperAdmin || hasPermission('users', 'assign')
-                 },
         { 
           title: "Settings", 
           href: "/support/settings", 
@@ -205,7 +184,7 @@ const Badge = ({ children, variant = "default" }: { children: React.ReactNode; v
 )
 
 export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
-  const [expandedItems, setExpandedItems] = React.useState<string[]>(["Lead Manager", "Analytics", "AI Assistant", "Setup", "Support"])
+  const [expandedItems, setExpandedItems] = React.useState<string[]>([])
   const location = useLocation()
   const { hasPermission, userRole } = useAuth()
 

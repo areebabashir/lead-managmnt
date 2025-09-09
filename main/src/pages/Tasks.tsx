@@ -8,6 +8,9 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+  useDroppable,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -48,6 +51,24 @@ import { userAPI, User as UserType } from '../services/userAPI';
 import { useAuth } from '../contexts/AuthContext';
 import { CreateTaskModal, TaskDetailModal } from '../components/TaskModals';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+
+// Droppable Column Component
+interface DroppableColumnProps {
+  status: string;
+  children: React.ReactNode;
+}
+
+const DroppableColumn: React.FC<DroppableColumnProps> = ({ status, children }) => {
+  const { setNodeRef } = useDroppable({
+    id: status,
+  });
+
+  return (
+    <div ref={setNodeRef} className="h-full">
+      {children}
+    </div>
+  );
+};
 
 // Sortable Task Item Component
 interface SortableTaskItemProps {
@@ -111,11 +132,21 @@ const SortableTaskItem: React.FC<SortableTaskItemProps> = ({
       {/* Drag Handle */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-gray-200 rounded cursor-grab active:cursor-grabbing">
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-              <div className="w-1 h-1 bg-gray-400 rounded-full ml-1"></div>
-              <div className="w-1 h-1 bg-gray-400 rounded-full ml-1"></div>
+          <div 
+            className="w-5 h-5 bg-gray-200 hover:bg-gray-300 rounded cursor-grab active:cursor-grabbing flex items-center justify-center transition-colors"
+            title="Drag to move task"
+          >
+            <div className="flex flex-col gap-0.5">
+              <div className="flex gap-0.5">
+                <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+              </div>
+              <div className="flex gap-0.5">
+                <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+              </div>
             </div>
           </div>
           <h4 className="font-medium text-gray-900 text-sm leading-tight flex-1">
@@ -384,16 +415,33 @@ export default function Tasks() {
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (!over || active.id === over.id) {
+    if (!over) {
       return;
     }
 
     const taskId = active.id as string;
     const newStatus = over.id as 'todo' | 'in_progress' | 'review' | 'done' | 'cancelled';
 
+    // Debug logging
+    console.log('DragEnd - Active ID:', active.id);
+    console.log('DragEnd - Over ID:', over.id);
+    console.log('DragEnd - Task ID:', taskId);
+    console.log('DragEnd - New Status:', newStatus);
+
     // Find the task being moved
     const task = tasks.find(t => t._id === taskId);
-    if (!task) return;
+    if (!task) {
+      console.error('Task not found with ID:', taskId);
+      return;
+    }
+
+    // Don't update if the task is already in the same status
+    if (task.status === newStatus) {
+      console.log('Task already in status:', newStatus);
+      return;
+    }
+
+    console.log('Updating task from', task.status, 'to', newStatus);
 
     // Update the task status optimistically
     const updatedTasks = tasks.map(t => 
@@ -403,7 +451,9 @@ export default function Tasks() {
 
     try {
       // Update the task status on the server
-      await taskAPI.updateTask(taskId, { status: newStatus });
+      console.log('Calling updateTaskStatus with:', taskId, newStatus);
+      await taskAPI.updateTaskStatus(taskId, newStatus);
+      console.log('Task status updated successfully');
     } catch (error) {
       console.error('Error updating task status:', error);
       // Revert the optimistic update on error
@@ -743,70 +793,73 @@ export default function Tasks() {
               const progressPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
               
               return (
-                <div key={status.value} className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
-                  {/* Column Header with Progress */}
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${getStatusColor(status.value).replace('bg-', 'bg-').replace('text-', 'text-')}`}></div>
-                        {status.label}
-                      </h3>
-                      <span className="text-sm text-gray-500 bg-white px-2 py-1 rounded-full">
-                        {totalTasks}
-                      </span>
-                    </div>
-                    
-                    {/* Progress Bar */}
-                    {status.value === 'done' && (
-                      <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                        <div 
-                          className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${progressPercentage}%` }}
-                        ></div>
+                <DroppableColumn key={status.value} status={status.value}>
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200 h-full">
+                    {/* Column Header with Progress */}
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                          <div className={`w-3 h-3 rounded-full ${getStatusColor(status.value).replace('bg-', 'bg-').replace('text-', 'text-')}`}></div>
+                          {status.label}
+                        </h3>
+                        <span className="text-sm text-gray-500 bg-white px-2 py-1 rounded-full">
+                          {totalTasks}
+                        </span>
                       </div>
-                    )}
-                    
-                    {/* Progress Text */}
-                    {status.value === 'done' && (
-                      <p className="text-xs text-gray-600">
-                        {completedTasks} of {totalTasks} completed ({Math.round(progressPercentage)}%)
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Tasks Container */}
-                  <SortableContext 
-                    items={statusTasks.map(task => task._id)} 
-                    strategy={verticalListSortingStrategy}
-                  >
-                    <div className="space-y-3 min-h-[200px]">
-                      {statusTasks.map((task, taskIndex) => (
-                        <SortableTaskItem
-                          key={task._id}
-                          task={task}
-                          taskIndex={taskIndex}
-                          statusIndex={statusIndex}
-                          onTaskClick={(task) => {
-                            setSelectedTask(task);
-                            setShowTaskModal(true);
-                          }}
-                          getPriorityColor={getPriorityColor}
-                          getPriorityLabel={getPriorityLabel}
-                        />
-                      ))}
-                    
-                      {/* Empty State */}
-                      {statusTasks.length === 0 && (
-                        <div className="flex flex-col items-center justify-center py-8 text-gray-400">
-                          <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mb-2">
-                            <Plus className="h-6 w-6" />
-                          </div>
-                          <p className="text-sm">No tasks</p>
+                      
+                      {/* Progress Bar */}
+                      {status.value === 'done' && (
+                        <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                          <div 
+                            className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${progressPercentage}%` }}
+                          ></div>
                         </div>
                       )}
+                      
+                      {/* Progress Text */}
+                      {status.value === 'done' && (
+                        <p className="text-xs text-gray-600">
+                          {completedTasks} of {totalTasks} completed ({Math.round(progressPercentage)}%)
+                        </p>
+                      )}
                     </div>
-                  </SortableContext>
-                </div>
+
+                    {/* Tasks Container */}
+                    <SortableContext 
+                      items={statusTasks.map(task => task._id)} 
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="space-y-3 min-h-[200px]">
+                        {statusTasks.map((task, taskIndex) => (
+                          <SortableTaskItem
+                            key={task._id}
+                            task={task}
+                            taskIndex={taskIndex}
+                            statusIndex={statusIndex}
+                            onTaskClick={(task) => {
+                              setSelectedTask(task);
+                              setShowTaskModal(true);
+                            }}
+                            getPriorityColor={getPriorityColor}
+                            getPriorityLabel={getPriorityLabel}
+                          />
+                        ))}
+                      
+                        {/* Empty State */}
+                        {statusTasks.length === 0 && (
+                          <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+                            <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mb-2">
+                              <Plus className="h-6 w-6" />
+                            </div>
+                            <p className="text-sm">No tasks</p>
+                            <p className="text-xs text-gray-400 mt-1">Drop tasks here</p>
+                          </div>
+                        )}
+                      </div>
+                    </SortableContext>
+                  </div>
+                </DroppableColumn>
               );
             })}
           </div>

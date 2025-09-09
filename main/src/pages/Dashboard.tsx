@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "../contexts/AuthContext"
+import MonthCalendar from "../components/dashboard/MonthCalendar"
 import {
   PieChart as RechartsPieChart,
   Pie,
@@ -80,23 +81,6 @@ type ActivityItemType = {
   type: ActivityType
 }
 
-interface CalendarEvent {
-  id: string;
-  title: string;
-  time: string;
-  type: 'meeting' | 'call' | 'task' | 'personal';
-  color: string;
-  attendees?: number;
-  priority?: 'high' | 'medium' | 'low';
-}
-
-interface CalendarDayData {
-  date: Date;
-  events: CalendarEvent[];
-  isCurrentMonth: boolean;
-  isToday: boolean;
-  isSelected: boolean;
-}
 
 // Mock Data
 const mockLeadsData = [
@@ -164,64 +148,7 @@ const recentActivities: ActivityItemType[] = [
   { id: 3, action: "Support ticket resolved", user: "Mike Johnson", time: "1 hour ago", type: "support" },
 ]
 
-const eventTypes = {
-  meeting: { icon: Users, bg: 'bg-orange-100', text: 'text-black' },
-  call: { icon: Phone, bg: 'bg-orange-100', text: 'text-black' },
-  task: { icon: Target, bg: 'bg-orange-100', text: 'text-black' },
-  personal: { icon: Coffee, bg: 'bg-orange-100', text: 'text-black' }
-};
 
-const mockCalendarEvents: { [key: string]: CalendarEvent[] } = {
-  '2024-12-15': [
-    { id: '1', title: 'Team Standup', time: '9:00 AM', type: 'meeting', color: 'orange', attendees: 8, priority: 'high' },
-  ],
-  '2024-12-16': [
-    { id: '3', title: 'Project Review', time: '10:00 AM', type: 'meeting', color: 'orange', attendees: 5, priority: 'high' },
-  ],
-  '2024-12-20': [
-    { id: '5', title: 'Sprint Planning', time: '9:00 AM', type: 'meeting', color: 'orange', attendees: 12, priority: 'high' },
-  ]
-};
-
-// Utility Functions
-function addMonths(date: Date, amount: number): Date {
-  const d = new Date(date);
-  d.setMonth(d.getMonth() + amount);
-  return d;
-}
-
-function formatMonthTitle(date: Date): string {
-  return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
-}
-
-function getDaysInMonth(date: Date): CalendarDayData[] {
-  const year = date.getFullYear();
-  const month = date.getMonth();
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const startDate = new Date(firstDay);
-  startDate.setDate(startDate.getDate() - firstDay.getDay());
-
-  const today = new Date();
-  const days: CalendarDayData[] = [];
-
-  for (let i = 0; i < 42; i++) {
-    const day = new Date(startDate);
-    day.setDate(startDate.getDate() + i);
-    
-    const dateKey = day.toISOString().split('T')[0];
-    const events = mockCalendarEvents[dateKey] || [];
-    
-    days.push({
-      date: day,
-      events,
-      isCurrentMonth: day.getMonth() === month,
-      isToday: day.toDateString() === today.toDateString(),
-      isSelected: false
-    });
-  }
-  return days;
-}
 
 // Components
 const Badge = ({ children }: { children: React.ReactNode }) => (
@@ -346,86 +273,6 @@ const ActivityRow = ({ activity, index }: { activity: ActivityItemType; index: n
   </motion.div>
 )
 
-const CalendarDay = ({ dayData }: { dayData: CalendarDayData }) => {
-  return (
-    <div
-      className={`
-        relative p-1 min-h-[60px] text-xs
-        ${dayData.isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}
-        ${dayData.isToday ? 'bg-orange-100 font-bold rounded' : ''}
-      `}
-    >
-      <span className="block p-1">{dayData.date.getDate()}</span>
-      
-      {dayData.events.length > 0 && (
-        <div className="absolute top-0 right-0 w-2 h-2 bg-orange-600 rounded-full" />
-      )}
-    </div>
-  );
-};
-
-const MonthCalendar = () => {
-  const [month, setMonth] = useState<Date>(new Date());
-  const [days, setDays] = useState<CalendarDayData[]>([]);
-
-  React.useEffect(() => {
-    setDays(getDaysInMonth(month));
-  }, [month]);
-
-  const handlePrev = () => setMonth((m) => addMonths(m, -1));
-  const handleNext = () => setMonth((m) => addMonths(m, 1));
-  const handleToday = () => setMonth(new Date());
-
-  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-  return (
-    <div className="w-full">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-gray-900">{formatMonthTitle(month)}</h3>
-        <div className="flex items-center gap-1">
-          <button onClick={handlePrev} className="p-1 hover:bg-gray-100 rounded">
-            <ChevronLeft className="h-3 w-3" />
-          </button>
-          <button onClick={handleToday} className="text-xs px-2 py-1 bg-orange-600 text-white rounded">
-            Today
-          </button>
-          <button onClick={handleNext} className="p-1 hover:bg-gray-100 rounded">
-            <ChevronRight className="h-3 w-3" />
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-7 gap-1 text-xs text-gray-600 text-center mb-1">
-        {weekDays.map((day) => (
-          <div key={day} className="font-medium">{day}</div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-7 gap-1">
-        {days.map((dayData) => (
-          <CalendarDay key={dayData.date.toISOString()} dayData={dayData} />
-        ))}
-      </div>
-
-      <div className="mt-3 p-2 bg-orange-100 rounded-lg border border-orange-200">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs font-semibold text-black">Upcoming Events</span>
-          <span className="text-xs text-black">2 today</span>
-        </div>
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-orange-600 rounded-full"></div>
-            <span className="text-xs text-black">Team Standup - 9:00 AM</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-orange-600 rounded-full"></div>
-            <span className="text-xs text-black">Client Call - 2:30 PM</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // Sidebar Component
 interface SidebarProps {

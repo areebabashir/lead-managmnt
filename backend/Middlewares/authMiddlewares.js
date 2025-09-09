@@ -49,6 +49,15 @@ export const requireSignIn = async (req, res, next) => {
 export const isAdmin = async (req, res, next) => {
   try {
     const user = await userModel.findById(req.user._id).populate('role', 'name');
+    
+    // Check if user exists
+    if (!user) {
+      return res.status(401).send({
+        success: false,
+        message: "User not found",
+      });
+    }
+    
     if (!user.isSuperAdmin && (!user.role || (user.role.name !== 'Admin' && user.role.name !== 'Super Admin'))) {
       return res.status(401).send({
         success: false,
