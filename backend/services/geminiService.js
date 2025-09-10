@@ -19,11 +19,11 @@ class GeminiService {
     console.log('Initializing GeminiService...');
     console.log('API Key present:', !!process.env.GEMINI_API_KEY);
     console.log('API Key length:', process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.length : 0);
-    
+
     if (!process.env.GEMINI_API_KEY) {
       throw new Error('GEMINI_API_KEY environment variable is not set');
     }
-    
+
     try {
       this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
       this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
@@ -51,7 +51,7 @@ class GeminiService {
   // Check cache first
   async checkCache(prompt, context = '') {
     const hash = this.generatePromptHash(prompt, context);
-    
+
     // Check in-memory cache first
     if (this.cache.has(hash)) {
       const cached = this.cache.get(hash);
@@ -83,7 +83,7 @@ class GeminiService {
   // Save to cache
   async saveToCache(prompt, response, context = '') {
     const hash = this.generatePromptHash(prompt, context);
-    
+
     try {
       // Save to in-memory cache
       this.cache.set(hash, {
@@ -109,7 +109,7 @@ class GeminiService {
   // Generate personalized email
   async generatePersonalizedEmail(contactData, emailType = 'followup', context = '') {
     await this.ensureInitialized();
-    
+
     // Handle case where no contact data is provided
     const contactInfo = contactData ? `
 Contact Information:
@@ -139,7 +139,7 @@ Generate the email:`;
 
     const cacheKey = `email:${contactData?._id || 'general'}:${emailType}:${JSON.stringify(context)}`;
     const cached = await this.checkCache(prompt, cacheKey);
-    
+
     if (cached.isCached) {
       return { email: cached.response, isCached: true };
     }
@@ -147,7 +147,7 @@ Generate the email:`;
     try {
       const result = await this.model.generateContent(prompt);
       const response = result.response.text();
-      
+
       await this.saveToCache(prompt, response, cacheKey);
       return { email: response, isCached: false };
     } catch (error) {
@@ -159,7 +159,7 @@ Generate the email:`;
   // Suggest follow-up time
   async suggestFollowUpTime(contactData, lastInteraction, urgency = 'normal') {
     await this.ensureInitialized();
-    
+
     const prompt = `Based on the following contact information, suggest the optimal follow-up time:
 
 Contact Details:
@@ -179,7 +179,7 @@ Provide a specific recommendation with reasoning:`;
 
     const cacheKey = `followup:${contactData._id}:${urgency}:${lastInteraction}`;
     const cached = await this.checkCache(prompt, cacheKey);
-    
+
     if (cached.isCached) {
       return { suggestion: cached.response, isCached: true };
     }
@@ -187,7 +187,7 @@ Provide a specific recommendation with reasoning:`;
     try {
       const result = await this.model.generateContent(prompt);
       const response = result.response.text();
-      
+
       await this.saveToCache(prompt, response, cacheKey);
       return { suggestion: response, isCached: false };
     } catch (error) {
@@ -199,9 +199,9 @@ Provide a specific recommendation with reasoning:`;
   // Summarize meeting notes
   async summarizeMeetingNotes(meetingData, context = '') {
     await this.ensureInitialized();
-    
+
     const { meetingTitle, participants, agenda, keyPoints, actionItems, nextSteps, additionalNotes } = meetingData;
-    
+
     const prompt = `Generate comprehensive meeting notes for the following meeting:
 
 Meeting Title: ${meetingTitle}
@@ -232,9 +232,9 @@ Please format this into a professional meeting summary with:
 
 Make it clear, organized, and actionable:`;
 
-    const cacheKey = `meeting:${meetingTitle}:${JSON.stringify({participants, agenda, keyPoints})}`;
+    const cacheKey = `meeting:${meetingTitle}:${JSON.stringify({ participants, agenda, keyPoints })}`;
     const cached = await this.checkCache(prompt, cacheKey);
-    
+
     if (cached.isCached) {
       return { summary: cached.response, isCached: true };
     }
@@ -242,7 +242,7 @@ Make it clear, organized, and actionable:`;
     try {
       const result = await this.model.generateContent(prompt);
       const response = result.response.text();
-      
+
       await this.saveToCache(prompt, response, cacheKey);
       return { summary: response, isCached: false };
     } catch (error) {
@@ -254,7 +254,7 @@ Make it clear, organized, and actionable:`;
   // Process dictation to text
   async processDictation(audioText, context = '') {
     await this.ensureInitialized();
-    
+
     const prompt = `Process and improve the following dictated text. Make it more professional and readable while maintaining the original meaning:
 
 Dictated Text:
@@ -273,7 +273,7 @@ Improved text:`;
 
     const cacheKey = `dictation:${audioText.substring(0, 100)}:${context}`;
     const cached = await this.checkCache(prompt, cacheKey);
-    
+
     if (cached.isCached) {
       return { processedText: cached.response, isCached: true };
     }
@@ -281,7 +281,7 @@ Improved text:`;
     try {
       const result = await this.model.generateContent(prompt);
       const response = result.response.text();
-      
+
       await this.saveToCache(prompt, response, cacheKey);
       return { processedText: response, isCached: false };
     } catch (error) {
@@ -293,10 +293,10 @@ Improved text:`;
   // Custom AI prompt
   async processCustomPrompt(prompt, context = '') {
     await this.ensureInitialized();
-    
+
     const cacheKey = `custom:${prompt.substring(0, 100)}:${context}`;
     const cached = await this.checkCache(prompt, context);
-    
+
     if (cached.isCached) {
       return { response: cached.response, isCached: true };
     }
@@ -304,7 +304,7 @@ Improved text:`;
     try {
       const result = await this.model.generateContent(prompt);
       const response = result.response.text();
-      
+
       await this.saveToCache(prompt, response, cacheKey);
       return { response, isCached: false };
     } catch (error) {
@@ -320,7 +320,7 @@ Improved text:`;
       const validCached = await AIPromptCache.countDocuments({
         lastUsed: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
       });
-      
+
       return {
         totalCached,
         validCached,
@@ -339,14 +339,14 @@ Improved text:`;
       const result = await AIPromptCache.deleteMany({
         lastUsed: { $lt: sevenDaysAgo }
       });
-      
+
       // Clear expired in-memory cache
       for (const [key, value] of this.cache.entries()) {
         if (Date.now() - value.timestamp > 3600000) { // 1 hour
           this.cache.delete(key);
         }
       }
-      
+
       return result.deletedCount;
     } catch (error) {
       console.error('Cache cleanup error:', error);
