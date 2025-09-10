@@ -24,6 +24,8 @@ dist-ssr
 *.sw?
 
 // i want to ignore all .env files
-.env*
+.env
+backend/helpers/.env
+
 
 
