@@ -10,7 +10,7 @@ import {
     updateMeetingStatus
 } from '../controllers/meetingController.js';
 import { requireSignIn } from '../Middlewares/authMiddlewares.js';
-import { checkPermission } from '../Middlewares/permissionMiddleware.js';
+import { hasPermission } from '../Middlewares/hasPermissionMiddleware.js';
 
 const router = express.Router();
 
@@ -19,49 +19,49 @@ router.use(requireSignIn);
 
 // Create a new meeting
 router.post('/',
-    checkPermission('calendar', 'create'),
+    hasPermission('calendar', 'create'),
     createMeeting
 );
 
 // Get all meetings with optional filters
 router.get('/',
-    checkPermission('calendar', 'read'),
+    hasPermission('calendar', 'read'),
     getMeetings
 );
 
 // Get upcoming meetings
 router.get('/upcoming',
-    checkPermission('calendar', 'read'),
+    hasPermission('calendar', 'read'),
     getUpcomingMeetings
 );
 
 // Get today's meetings
 router.get('/today',
-    checkPermission('calendar', 'read'),
+    hasPermission('calendar', 'read'),
     getTodayMeetings
 );
 
 // Get a specific meeting by ID
 router.get('/:id',
-    checkPermission('calendar', 'read'),
+    hasPermission('calendar', 'read'),
     getMeetingById
 );
 
 // Update a meeting
 router.put('/:id',
-    checkPermission('calendar', 'update'),
+    hasPermission('calendar', 'update'),
     updateMeeting
 );
 
 // Update meeting status
 router.patch('/:id/status',
-    checkPermission('calendar', 'update'),
+    hasPermission('calendar', 'update'),
     updateMeetingStatus
 );
 
 // Delete a meeting
 router.delete('/:id',
-    checkPermission('calendar', 'delete'),
+    hasPermission('calendar', 'delete'),
     deleteMeeting
 );
 
