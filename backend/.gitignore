@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+// i want to ignore all .env files
+.env*
+
+
