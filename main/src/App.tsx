@@ -14,9 +14,6 @@ import LeadManagerLeads from "./pages/LeadManager/Leads";
 import LeadManagerSMS from "./pages/LeadManager/SMS";
 import LeadManagerMailbox from "./pages/LeadManager/Mailbox";
 // Removed: Setup/Kunjiee and Setup/ZongDialer
-import SetupStaff from "./pages/Setup/Staff";
-import SupportTickets from "./pages/Support/Tickets";
-import SupportKnowledgeBase from "./pages/Support/KnowledgeBase";
 // Removed: Support/Leads
 import SupportRoles from "./pages/Support/Roles";
 import SupportSettings from "./pages/Support/Settings";
@@ -28,7 +25,11 @@ import EmailGenerator from "./pages/AI/EmailGenerator";
 import MeetingNotes from "./pages/AI/MeetingNotes";
 import CustomPrompts from "./pages/AI/CustomPrompts";
 import Profile from "./pages/Profile";
+import MeetingScheduling from "./pages/MeetingScheduling";
+
 import NotFound from "./pages/NotFound";
+import Performance from "./pages/Analytics/Performance";
+import Reports from "./pages/Analytics/Reports";
 
 const queryClient = new QueryClient();
 
@@ -82,15 +83,22 @@ const App = () => (
                 </AppLayout>
               </ProtectedRoute>
             } />
-            
-            {/* Setup Routes */}
-            <Route path="/setup/staff" element={
-              <ProtectedRoute requiredPermission={{ resource: 'users', action: 'read' }}>
+             <Route path="/anylatics/performance" element={
+              <ProtectedRoute requiredPermission={{ resource: 'contacts', action: 'read' }}>
                 <AppLayout>
-                  <SetupStaff />
+                  <Performance />
                 </AppLayout>
               </ProtectedRoute>
             } />
+              <Route path="/analytics/reports" element={
+              <ProtectedRoute requiredPermission={{ resource: 'contacts', action: 'read' }}>
+                <AppLayout>
+                  <Reports />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            
+            {/* Setup Routes */}
             <Route path="/setup/users" element={
               <ProtectedRoute requiredPermission={{ resource: 'users', action: 'read' }}>
                 <AppLayout>
@@ -98,32 +106,8 @@ const App = () => (
                 </AppLayout>
               </ProtectedRoute>
             } />
-            <Route path="/setup/database" element={
-              <ProtectedRoute requiredPermission={{ resource: 'settings', action: 'read' }}>
-                <AppLayout>
-                  <div className="p-6">
-                    <h1 className="text-2xl font-bold">Database Management</h1>
-                    <p className="text-gray-600 mt-2">Database management features coming soon...</p>
-                  </div>
-                </AppLayout>
-              </ProtectedRoute>
-            } />
             
             {/* Support Routes */}
-            <Route path="/support/tickets" element={
-              <ProtectedRoute requiredPermission={{ resource: 'tickets', action: 'read' }}>
-                <AppLayout>
-                  <SupportTickets />
-                </AppLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/support/knowledge-base" element={
-              <ProtectedRoute requiredPermission={{ resource: 'settings', action: 'read' }}>
-                <AppLayout>
-                  <SupportKnowledgeBase />
-                </AppLayout>
-              </ProtectedRoute>
-            } />
             <Route path="/support/roles" element={
               <ProtectedRoute requiredPermission={{ resource: 'roles', action: 'read' }}>
                 {/* {console.log('roles')} */}
@@ -181,6 +165,14 @@ const App = () => (
               <ProtectedRoute>
                 <AppLayout>
                   <Profile />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/meeting-scheduling" element={
+              <ProtectedRoute requiredPermission={{ resource: 'calendar', action: 'read' }}>
+                <AppLayout>
+                  <MeetingScheduling />
                 </AppLayout>
               </ProtectedRoute>
             } />

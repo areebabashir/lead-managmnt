@@ -199,8 +199,37 @@ const contactSchema = new mongoose.Schema({
     },
     source: {
         type: String,
-        enum: ['website', 'referral', 'cold_call', 'social_media', 'advertising', 'event', 'other'],
+        enum: ['website', 'referral', 'cold_call', 'social_media', 'advertising', 'event', 'facebook', 'zapier', 'other'],
         default: 'website'
+    },
+    // Facebook Lead Ads specific fields
+    facebookLeadId: {
+        type: String,
+        trim: true
+    },
+    facebookAdId: {
+        type: String,
+        trim: true
+    },
+    facebookFormId: {
+        type: String,
+        trim: true
+    },
+    facebookPageId: {
+        type: String,
+        trim: true
+    },
+    // Zapier integration fields
+    zapierWebhookId: {
+        type: String,
+        trim: true
+    },
+    leadSourceDetails: {
+        platform: String, // 'facebook', 'instagram', 'google', etc.
+        campaign: String,
+        adSet: String,
+        ad: String,
+        form: String
     },
     
     // System Fields

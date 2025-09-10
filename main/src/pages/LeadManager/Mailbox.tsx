@@ -15,7 +15,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AddRoleModal } from "@/components/forms/AddRoleModal";
 import { Button } from "@/components/ui/button";
-import DataTable, { TableColumn } from "react-data-table-component";
+import DataTable, { TableColumn, TableStyles } from "react-data-table-component";
 
 const mockRoles = [
   {
@@ -71,7 +71,7 @@ export default function SupportRoles() {
 
   const columns: TableColumn<(typeof roles)[0]>[] = [
     {
-      name: <div className="text-center text-black text-base">Role</div>,
+      name: <div className="text-center text-black text-[13px] font-semibold">Role</div>,
       selector: (row) => row.name,
       cell: (row) => (
         <div className="text-center font-medium">{row.name}</div>
@@ -79,19 +79,19 @@ export default function SupportRoles() {
       center: true,
     },
     {
-      name: <div className="text-center text-black text-base">Description</div>,
+      name: <div className="text-center text-black text-[13px] font-semibold">Description</div>,
       selector: (row) => row.description,
       cell: (row) => <div className="text-center">{row.description}</div>,
       center: true,
     },
     {
-      name: <div className="text-center text-black text-base">Users</div>,
+      name: <div className="text-center text-black text-[13px] font-semibold">Users</div>,
       selector: (row) => row.users.toString(),
       cell: (row) => <div className="text-center">{row.users}</div>,
       center: true,
     },
     {
-      name: <div className="text-center text-black text-base">Permissions</div>,
+      name: <div className="text-center text-black text-[13px] font-semibold">Permissions</div>,
       selector: (row) => row.permissions.join(", "),
       cell: (row) => (
         <div className="text-center">{row.permissions.join(", ")}</div>
@@ -99,7 +99,7 @@ export default function SupportRoles() {
       center: true,
     },
     {
-      name: <div className="text-center text-black text-base">Actions</div>,
+      name: <div className="text-center text-black text-[13px] font-semibold">Actions</div>,
       cell: (row) => (
         <div className="flex justify-center gap-2">
           <Button variant="ghost" size="sm" className="text-orange-500">
@@ -119,19 +119,36 @@ export default function SupportRoles() {
     },
   ];
 
-  const customStyles = {
+  // ✅ Fix: Properly typed customStyles (removed duplicate "cells" block)
+  const customStyles: TableStyles = {
     headCells: {
       style: {
-        backgroundColor: "#FFEDD5", // Tailwind bg-orange-100
-        color: "#000000",
-        fontSize: "16px",
-        fontWeight: "600",
         justifyContent: "center",
+        color: "#000",
       },
     },
     cells: {
       style: {
         justifyContent: "center",
+        textAlign: "center",
+      },
+    },
+    headRow: {
+      style: {
+        backgroundColor: "#FFEDD5", // orange-100
+        color: "#000",
+        fontWeight: "600",
+        fontSize: "13px",
+        textTransform: "uppercase",
+        fontFamily: "Oswald, sans-serif",
+        borderRadius: "6px",
+      },
+    },
+    rows: {
+      style: {
+        fontWeight: "500",
+        color: "#000",
+        fontFamily: "Oswald, sans-serif",
       },
     },
   };
@@ -205,15 +222,20 @@ export default function SupportRoles() {
         </Card>
       </div>
 
-      {/* DataTable */}
-      <div className="p-4 sm:p-5 shadow-md border border-gray-200 rounded-lg bg-white">
-        <DataTable
-          columns={columns}
-          data={roles}
-          customStyles={customStyles}
-          highlightOnHover
-          striped
-        />
+      {/* Table */}
+      <div className="p-4 sm:p-5 shadow-md border border-gray-200 rounded-[10px] bg-white">
+        <div className="mt-2 overflow-x-auto">
+          <DataTable
+            columns={columns}
+            data={roles} // 🔹 using roles directly
+            pagination
+            paginationPerPage={10}
+            persistTableHead
+            selectableRows
+            customStyles={customStyles}
+            responsive
+          />
+        </div>
       </div>
 
       {/* Permission Categories */}

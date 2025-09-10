@@ -9,6 +9,8 @@ import contactRoutes from './routes/contactRoutes.js'; // Importing contact rout
 import taskRoutes from './routes/taskRoutes.js'; // Importing task routes
 import dashboardRoutes from './routes/dashboardRoutes.js'; // Importing dashboard routes
 import aiAssistantRoutes from './routes/aiAssistantRoutes.js'; // Importing AI Assistant routes
+import meetingRoutes from './routes/meetingRoutes.js'; // Importing meeting routes
+import webhookRoutes from './routes/webhookRoutes.js'; // Importing webhook routes
 import { seedDefaultRoles } from './config/seedRoles.js'; // Import role seeder
 
 // Load environment variables
@@ -35,6 +37,8 @@ app.use('/api/contacts', contactRoutes); // Mount contact routes
 app.use('/api/tasks', taskRoutes); // Mount task routes
 app.use('/api/dashboard', dashboardRoutes); // Mount dashboard routes
 app.use('/api/ai-assistant', aiAssistantRoutes); // Mount AI Assistant routes
+app.use('/api/meetings', meetingRoutes); // Mount meeting routes
+app.use('/api/webhooks', webhookRoutes); // Mount webhook routes
 
 // Basic route
 app.get('/', (req, res) => {

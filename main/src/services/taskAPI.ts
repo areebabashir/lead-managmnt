@@ -298,9 +298,13 @@ class TaskAPI {
 
   // Update task status
   async updateTaskStatus(id: string, status: string): Promise<TaskResponse> {
+    console.log('TaskAPI.updateTaskStatus called with:', { id, status });
+    const requestBody = { status };
+    console.log('Request body:', requestBody);
+    
     return this.makeRequest(`/tasks/${id}/status`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status }),
+      method: 'PUT',
+      body: JSON.stringify(requestBody),
     });
   }
 
