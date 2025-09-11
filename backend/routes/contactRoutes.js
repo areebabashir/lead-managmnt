@@ -5,10 +5,8 @@ import {
     getContact,
     updateContact,
     deleteContact,
-    addNote,
     updateStatus,
     getContactsByStatus,
-    getContactsNeedingFollowUp,
     getReferralContacts,
     importContacts,
     exportContacts
@@ -28,13 +26,11 @@ router.get('/:id', hasResourceAccess('contacts'), getContact);
 router.put('/:id', hasPermission('contacts', 'update'), updateContact);
 router.delete('/:id', hasPermission('contacts', 'delete'), deleteContact);
 
-// Contact notes and status
-router.post('/:id/notes', hasPermission('contacts', 'update'), addNote);
+// Contact status
 router.put('/:id/status', hasPermission('contacts', 'update'), updateStatus);
 
 // Contact queries and filters
 router.get('/status/:status', hasResourceAccess('contacts'), getContactsByStatus);
-router.get('/follow-up/needed', hasResourceAccess('contacts'), getContactsNeedingFollowUp);
 router.get('/referrals/all', hasResourceAccess('contacts'), getReferralContacts);
 
 // Import and export

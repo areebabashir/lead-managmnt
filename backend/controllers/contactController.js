@@ -1,28 +1,34 @@
 import Contact from '../models/contactModel.js';
-import { hasPermission } from '../helpers/permissionHelper.js';
 
 // Create new contact
 export const createContact = async (req, res) => {
     try {
-        // Check permission
-        if (!await hasPermission(req.user._id, 'contacts', 'create')) {
-            return res.status(403).json({
-                success: false,
-                message: 'Permission denied: Cannot create contacts'
-            });
-        }
-
+        // Clean up the data before saving
         const contactData = {
             ...req.body,
             createdBy: req.user._id
         };
 
+        // Handle empty referral referrer field
+        if (contactData.referral && contactData.referral.referrer === '') {
+            contactData.referral.referrer = undefined;
+        }
+
+        // Handle empty referral date field
+        if (contactData.referral && contactData.referral.referralDate === '') {
+            contactData.referral.referralDate = undefined;
+        }
+
+        // Handle empty anniversary field
+        if (contactData.anniversary === '') {
+            contactData.anniversary = undefined;
+        }
+
         const contact = new Contact(contactData);
         await contact.save();
 
         const populatedContact = await Contact.findById(contact._id)
-            .populate('assignedTo', 'name email')
-            .populate('referral.referrer', 'firstName lastName email');
+            .populate('referral.referrer', 'fullName email');
 
         res.status(201).json({
             success: true,
@@ -42,13 +48,6 @@ export const createContact = async (req, res) => {
 // Get all contacts with filtering and pagination
 export const getContacts = async (req, res) => {
     try {
-        // Check permission
-        if (!await hasPermission(req.user._id, 'contacts', 'read')) {
-            return res.status(403).json({
-                success: false,
-                message: 'Permission denied: Cannot read contacts'
-            });
-        }
 
         const {
             page = 1,
@@ -57,9 +56,7 @@ export const getContacts = async (req, res) => {
             status,
             leadType,
             source,
-            assignedTo,
             tags,
-            industry,
             sortBy = 'createdAt',
             sortOrder = 'desc'
         } = req.query;
@@ -69,20 +66,17 @@ export const getContacts = async (req, res) => {
 
         if (search) {
             filter.$or = [
-                { firstName: { $regex: search, $options: 'i' } },
-                { lastName: { $regex: search, $options: 'i' } },
+                { fullName: { $regex: search, $options: 'i' } },
                 { email: { $regex: search, $options: 'i' } },
-                { company: { $regex: search, $options: 'i' } },
-                { phone: { $regex: search, $options: 'i' } }
+                { phoneNumber: { $regex: search, $options: 'i' } },
+                { city: { $regex: search, $options: 'i' } },
+                { province: { $regex: search, $options: 'i' } }
             ];
         }
 
         if (status) filter.status = status;
         if (leadType) filter.leadType = leadType;
         if (source) filter.source = source;
-        if (assignedTo) filter.assignedTo = assignedTo;
-        if (tags) filter.tags = { $in: tags.split(',') };
-        if (industry) filter.industry = industry;
 
         // Build sort object
         const sort = {};
@@ -91,8 +85,7 @@ export const getContacts = async (req, res) => {
         // Execute query with pagination
         const skip = (page - 1) * limit;
         const contacts = await Contact.find(filter)
-            .populate('assignedTo', 'name email')
-            .populate('referral.referrer', 'firstName lastName email')
+            .populate('referral.referrer', 'fullName email')
             .sort(sort)
             .skip(skip)
             .limit(parseInt(limit));
@@ -122,17 +115,9 @@ export const getContacts = async (req, res) => {
 // Get single contact by ID
 export const getContact = async (req, res) => {
     try {
-        // Check permission
-        if (!await hasPermission(req.user._id, 'contacts', 'read')) {
-            return res.status(403).json({
-                success: false,
-                message: 'Permission denied: Cannot read contacts'
-            });
-        }
 
         const contact = await Contact.findById(req.params.id)
-            .populate('assignedTo', 'name email')
-            .populate('referral.referrer', 'firstName lastName email')
+            .populate('referral.referrer', 'fullName email')
             .populate('createdBy', 'name email')
             .populate('updatedBy', 'name email');
 
@@ -160,25 +145,32 @@ export const getContact = async (req, res) => {
 // Update contact
 export const updateContact = async (req, res) => {
     try {
-        // Check permission
-        if (!await hasPermission(req.user._id, 'contacts', 'update')) {
-            return res.status(403).json({
-                success: false,
-                message: 'Permission denied: Cannot update contacts'
-            });
-        }
-
+        // Clean up the data before updating
         const contactData = {
             ...req.body,
             updatedBy: req.user._id
         };
 
+        // Handle empty referral referrer field
+        if (contactData.referral && contactData.referral.referrer === '') {
+            contactData.referral.referrer = undefined;
+        }
+
+        // Handle empty referral date field
+        if (contactData.referral && contactData.referral.referralDate === '') {
+            contactData.referral.referralDate = undefined;
+        }
+
+        // Handle empty anniversary field
+        if (contactData.anniversary === '') {
+            contactData.anniversary = undefined;
+        }
+
         const contact = await Contact.findByIdAndUpdate(
             req.params.id,
             contactData,
             { new: true, runValidators: true }
-        ).populate('assignedTo', 'name email')
-         .populate('referral.referrer', 'firstName lastName email');
+        ).populate('referral.referrer', 'fullName email');
 
         if (!contact) {
             return res.status(404).json({
@@ -205,13 +197,6 @@ export const updateContact = async (req, res) => {
 // Delete contact (soft delete)
 export const deleteContact = async (req, res) => {
     try {
-        // Check permission
-        if (!await hasPermission(req.user._id, 'contacts', 'delete')) {
-            return res.status(403).json({
-                success: false,
-                message: 'Permission denied: Cannot delete contacts'
-            });
-        }
 
         const contact = await Contact.findByIdAndUpdate(
             req.params.id,
@@ -240,61 +225,9 @@ export const deleteContact = async (req, res) => {
     }
 };
 
-// Add note to contact
-export const addNote = async (req, res) => {
-    try {
-        // Check permission
-        if (!await hasPermission(req.user._id, 'contacts', 'update')) {
-            return res.status(403).json({
-                success: false,
-                message: 'Permission denied: Cannot update contacts'
-            });
-        }
-
-        const { content, type = 'general' } = req.body;
-
-        if (!content) {
-            return res.status(400).json({
-                success: false,
-                message: 'Note content is required'
-            });
-        }
-
-        const contact = await Contact.findById(req.params.id);
-        if (!contact) {
-            return res.status(404).json({
-                success: false,
-                message: 'Contact not found'
-            });
-        }
-
-        await contact.addNote(content, type, req.user._id);
-
-        res.json({
-            success: true,
-            message: 'Note added successfully',
-            data: contact
-        });
-    } catch (error) {
-        console.error('Error adding note:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error adding note',
-            error: error.message
-        });
-    }
-};
-
 // Update contact status
 export const updateStatus = async (req, res) => {
     try {
-        // Check permission
-        if (!await hasPermission(req.user._id, 'contacts', 'update')) {
-            return res.status(403).json({
-                success: false,
-                message: 'Permission denied: Cannot update contacts'
-            });
-        }
 
         const { status } = req.body;
 
@@ -333,13 +266,6 @@ export const updateStatus = async (req, res) => {
 // Get contacts by status
 export const getContactsByStatus = async (req, res) => {
     try {
-        // Check permission
-        if (!await hasPermission(req.user._id, 'contacts', 'read')) {
-            return res.status(403).json({
-                success: false,
-                message: 'Permission denied: Cannot read contacts'
-            });
-        }
 
         const { status } = req.params;
         const contacts = await Contact.getContactsByStatus(status);
@@ -358,43 +284,9 @@ export const getContactsByStatus = async (req, res) => {
     }
 };
 
-// Get contacts needing follow-up
-export const getContactsNeedingFollowUp = async (req, res) => {
-    try {
-        // Check permission
-        if (!await hasPermission(req.user._id, 'contacts', 'read')) {
-            return res.status(403).json({
-                success: false,
-                message: 'Permission denied: Cannot read contacts'
-            });
-        }
-
-        const contacts = await Contact.getContactsNeedingFollowUp();
-
-        res.json({
-            success: true,
-            data: contacts
-        });
-    } catch (error) {
-        console.error('Error fetching contacts needing follow-up:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching contacts needing follow-up',
-            error: error.message
-        });
-    }
-};
-
 // Get referral contacts
 export const getReferralContacts = async (req, res) => {
     try {
-        // Check permission
-        if (!await hasPermission(req.user._id, 'contacts', 'read')) {
-            return res.status(403).json({
-                success: false,
-                message: 'Permission denied: Cannot read contacts'
-            });
-        }
 
         const contacts = await Contact.getReferralContacts();
 
@@ -415,13 +307,6 @@ export const getReferralContacts = async (req, res) => {
 // Import contacts from CSV/Excel
 export const importContacts = async (req, res) => {
     try {
-        // Check permission
-        if (!await hasPermission(req.user._id, 'contacts', 'import')) {
-            return res.status(403).json({
-                success: false,
-                message: 'Permission denied: Cannot import contacts'
-            });
-        }
 
         // This would typically handle file upload and parsing
         // For now, we'll expect the data in req.body
@@ -439,10 +324,28 @@ export const importContacts = async (req, res) => {
 
         for (const contactData of contacts) {
             try {
-                const contact = new Contact({
+                // Clean up the data before saving
+                const cleanedContactData = {
                     ...contactData,
                     createdBy: req.user._id
-                });
+                };
+
+                // Handle empty referral referrer field
+                if (cleanedContactData.referral && cleanedContactData.referral.referrer === '') {
+                    cleanedContactData.referral.referrer = undefined;
+                }
+
+                // Handle empty referral date field
+                if (cleanedContactData.referral && cleanedContactData.referral.referralDate === '') {
+                    cleanedContactData.referral.referralDate = undefined;
+                }
+
+                // Handle empty anniversary field
+                if (cleanedContactData.anniversary === '') {
+                    cleanedContactData.anniversary = undefined;
+                }
+
+                const contact = new Contact(cleanedContactData);
                 await contact.save();
                 importedContacts.push(contact);
             } catch (error) {
@@ -475,13 +378,6 @@ export const importContacts = async (req, res) => {
 // Export contacts
 export const exportContacts = async (req, res) => {
     try {
-        // Check permission
-        if (!await hasPermission(req.user._id, 'contacts', 'export')) {
-            return res.status(403).json({
-                success: false,
-                message: 'Permission denied: Cannot export contacts'
-            });
-        }
 
         const { format = 'json', filters } = req.query;
 
@@ -492,8 +388,7 @@ export const exportContacts = async (req, res) => {
         }
 
         const contacts = await Contact.find(filter)
-            .populate('assignedTo', 'name email')
-            .populate('referral.referrer', 'firstName lastName email');
+            .populate('referral.referrer', 'fullName email');
 
         if (format === 'csv') {
             // Convert to CSV format
@@ -520,25 +415,27 @@ export const exportContacts = async (req, res) => {
 // Helper function to convert contacts to CSV
 const convertToCSV = (contacts) => {
     const headers = [
-        'First Name', 'Last Name', 'Email', 'Phone', 'Company', 'Job Title',
-        'Status', 'Lead Type', 'Source', 'Industry', 'Assigned To'
+        'Full Name', 'Email', 'Phone Number', 'Street Address', 'City', 'Province', 'Country',
+        'Date of Birth', 'Status', 'Anniversary', 'Lead Type', 'Source', 'Last Interaction Date'
     ];
 
     const csvRows = [headers.join(',')];
 
     contacts.forEach(contact => {
         const row = [
-            contact.firstName || '',
-            contact.lastName || '',
+            contact.fullName || '',
             contact.email || '',
-            contact.phone || '',
-            contact.company || '',
-            contact.jobTitle || '',
+            contact.phoneNumber || '',
+            contact.streetAddress || '',
+            contact.city || '',
+            contact.province || '',
+            contact.country || '',
+            contact.dateOfBirth ? contact.dateOfBirth.toISOString().split('T')[0] : '',
             contact.status || '',
+            contact.anniversary ? contact.anniversary.toISOString().split('T')[0] : '',
             contact.leadType || '',
             contact.source || '',
-            contact.industry || '',
-            contact.assignedTo ? contact.assignedTo.name : ''
+            contact.lastInteractionDate ? contact.lastInteractionDate.toISOString().split('T')[0] : ''
         ].map(field => `"${field}"`).join(',');
         
         csvRows.push(row);
