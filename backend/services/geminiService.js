@@ -19,11 +19,11 @@ class GeminiService {
     console.log('Initializing GeminiService...');
     console.log('API Key present:', !!process.env.GEMINI_API_KEY);
     console.log('API Key length:', process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.length : 0);
-    
+
     if (!process.env.GEMINI_API_KEY) {
       throw new Error('GEMINI_API_KEY environment variable is not set');
     }
-    
+
     try {
       this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
       this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
@@ -51,7 +51,7 @@ class GeminiService {
   // Check cache first
   async checkCache(prompt, context = '') {
     const hash = this.generatePromptHash(prompt, context);
-    
+
     // Check in-memory cache first
     if (this.cache.has(hash)) {
       const cached = this.cache.get(hash);
@@ -83,7 +83,7 @@ class GeminiService {
   // Save to cache
   async saveToCache(prompt, response, context = '') {
     const hash = this.generatePromptHash(prompt, context);
-    
+
     try {
       // Save to in-memory cache
       this.cache.set(hash, {
@@ -107,13 +107,14 @@ class GeminiService {
   }
 
   // Generate personalized email
-  async generatePersonalizedEmail(contactData, emailType = 'followup', context = '') {
+  async generatePersonalizedEmail(contactData, emailType = 'followup', context = '', senderData = null) {
     await this.ensureInitialized();
-    
+    console.log('contactData', contactData);
+
     // Handle case where no contact data is provided
     const contactInfo = contactData ? `
 Contact Information:
-- Name: ${contactData.firstName} ${contactData.lastName}
+- Name: ${contactData.fullName}
 - Company: ${contactData.company || 'N/A'}
 - Lead Type: ${contactData.leadType || 'N/A'}
 - Last Interaction: ${contactData.lastInteractionDate || 'N/A'}
@@ -122,11 +123,32 @@ Contact Information:
 Contact Information:
 - General email (no specific contact provided)`;
 
+console.log('contactInfo', contactInfo);
+
+    // Format context properly - handle both string and object
+    const formattedContext = typeof context === 'object' && context !== null 
+      ? JSON.stringify(context, null, 2) 
+      : context || 'No additional context provided';
+
+    // Format sender information
+    const senderInfo = senderData ? `
+Sender Information:
+- Name: ${senderData.name }
+- Email: ${senderData.email || 'your.email@company.com'}
+- Company: ${senderData.company || 'Your Company'}
+- Phone: ${senderData.phone || 'Your Phone Number'}` : `
+Sender Information:
+- Use generic sender information if not provided`;
+
+    console.log('senderInfo', senderInfo);
+
     const prompt = `Generate a personalized ${emailType} email for a sales contact with the following details:
     
 ${contactInfo}
 
-Context: ${context}
+${senderInfo}
+
+Context: ${formattedContext}
 
 Requirements:
 - Professional but friendly tone
@@ -134,12 +156,32 @@ Requirements:
 - Include a clear call-to-action
 - Keep it under 150 words
 - Make it personal and relevant to their situation
+- DO NOT use placeholders like [Your Name], [Your Title], [mention keyPoint], [cta - e.g., ...] - fill in actual content
+- Use the provided context information to create specific, actionable content
+
+Sample Email Format (DO NOT COPY EXACTLY, but follow this structure):
+Subject: Follow-up on Your Property Search in Abbottabad
+
+Hi Zain,
+
+I hope this email finds you well! I wanted to follow up on our conversation about your property search in Abbottabad.
+
+Based on your interest in properties within the USD price range and your location at 3554/3-C Siddiquia Street, I have some excellent options that might be perfect for you. I can arrange a property viewing at your convenience.
+
+Would you be available for a quick call this week to discuss these opportunities? I can be reached at +1-234-567-8900 or simply reply to this email.
+
+Looking forward to helping you find the perfect property!
+
+Best regards,
+John Smith
+Senior Property Consultant
+ABC Real Estate
 
 Generate the email:`;
 
     const cacheKey = `email:${contactData?._id || 'general'}:${emailType}:${JSON.stringify(context)}`;
     const cached = await this.checkCache(prompt, cacheKey);
-    
+
     if (cached.isCached) {
       return { email: cached.response, isCached: true };
     }
@@ -147,7 +189,7 @@ Generate the email:`;
     try {
       const result = await this.model.generateContent(prompt);
       const response = result.response.text();
-      
+      console.log('prompt', prompt);
       await this.saveToCache(prompt, response, cacheKey);
       return { email: response, isCached: false };
     } catch (error) {
@@ -159,11 +201,14 @@ Generate the email:`;
   // Suggest follow-up time
   async suggestFollowUpTime(contactData, lastInteraction, urgency = 'normal') {
     await this.ensureInitialized();
-    
+
     const prompt = `Based on the following contact information, suggest the optimal follow-up time:
 
 Contact Details:
 - Name: ${contactData.firstName} ${contactData.lastName}
+- Address: ${contactData.streetAddress} ${contactData.city} ${contactData.province} ${contactData.country}
+- Email: ${contactData.email}
+- Phone: ${contactData.phoneNumber}
 - Lead Type: ${contactData.leadType || 'N/A'}
 - Status: ${contactData.status || 'N/A'}
 - Last Interaction: ${lastInteraction}
@@ -179,7 +224,7 @@ Provide a specific recommendation with reasoning:`;
 
     const cacheKey = `followup:${contactData._id}:${urgency}:${lastInteraction}`;
     const cached = await this.checkCache(prompt, cacheKey);
-    
+
     if (cached.isCached) {
       return { suggestion: cached.response, isCached: true };
     }
@@ -187,7 +232,7 @@ Provide a specific recommendation with reasoning:`;
     try {
       const result = await this.model.generateContent(prompt);
       const response = result.response.text();
-      
+
       await this.saveToCache(prompt, response, cacheKey);
       return { suggestion: response, isCached: false };
     } catch (error) {
@@ -199,9 +244,9 @@ Provide a specific recommendation with reasoning:`;
   // Summarize meeting notes
   async summarizeMeetingNotes(meetingData, context = '') {
     await this.ensureInitialized();
-    
+
     const { meetingTitle, participants, agenda, keyPoints, actionItems, nextSteps, additionalNotes } = meetingData;
-    
+
     const prompt = `Generate comprehensive meeting notes for the following meeting:
 
 Meeting Title: ${meetingTitle}
@@ -232,9 +277,9 @@ Please format this into a professional meeting summary with:
 
 Make it clear, organized, and actionable:`;
 
-    const cacheKey = `meeting:${meetingTitle}:${JSON.stringify({participants, agenda, keyPoints})}`;
+    const cacheKey = `meeting:${meetingTitle}:${JSON.stringify({ participants, agenda, keyPoints })}`;
     const cached = await this.checkCache(prompt, cacheKey);
-    
+
     if (cached.isCached) {
       return { summary: cached.response, isCached: true };
     }
@@ -242,7 +287,7 @@ Make it clear, organized, and actionable:`;
     try {
       const result = await this.model.generateContent(prompt);
       const response = result.response.text();
-      
+
       await this.saveToCache(prompt, response, cacheKey);
       return { summary: response, isCached: false };
     } catch (error) {
@@ -254,7 +299,7 @@ Make it clear, organized, and actionable:`;
   // Process dictation to text
   async processDictation(audioText, context = '') {
     await this.ensureInitialized();
-    
+
     const prompt = `Process and improve the following dictated text. Make it more professional and readable while maintaining the original meaning:
 
 Dictated Text:
@@ -273,7 +318,7 @@ Improved text:`;
 
     const cacheKey = `dictation:${audioText.substring(0, 100)}:${context}`;
     const cached = await this.checkCache(prompt, cacheKey);
-    
+
     if (cached.isCached) {
       return { processedText: cached.response, isCached: true };
     }
@@ -281,7 +326,7 @@ Improved text:`;
     try {
       const result = await this.model.generateContent(prompt);
       const response = result.response.text();
-      
+
       await this.saveToCache(prompt, response, cacheKey);
       return { processedText: response, isCached: false };
     } catch (error) {
@@ -293,10 +338,10 @@ Improved text:`;
   // Custom AI prompt
   async processCustomPrompt(prompt, context = '') {
     await this.ensureInitialized();
-    
+
     const cacheKey = `custom:${prompt.substring(0, 100)}:${context}`;
     const cached = await this.checkCache(prompt, context);
-    
+
     if (cached.isCached) {
       return { response: cached.response, isCached: true };
     }
@@ -304,7 +349,7 @@ Improved text:`;
     try {
       const result = await this.model.generateContent(prompt);
       const response = result.response.text();
-      
+
       await this.saveToCache(prompt, response, cacheKey);
       return { response, isCached: false };
     } catch (error) {
@@ -320,7 +365,7 @@ Improved text:`;
       const validCached = await AIPromptCache.countDocuments({
         lastUsed: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
       });
-      
+
       return {
         totalCached,
         validCached,
@@ -339,14 +384,14 @@ Improved text:`;
       const result = await AIPromptCache.deleteMany({
         lastUsed: { $lt: sevenDaysAgo }
       });
-      
+
       // Clear expired in-memory cache
       for (const [key, value] of this.cache.entries()) {
         if (Date.now() - value.timestamp > 3600000) { // 1 hour
           this.cache.delete(key);
         }
       }
-      
+
       return result.deletedCount;
     } catch (error) {
       console.error('Cache cleanup error:', error);

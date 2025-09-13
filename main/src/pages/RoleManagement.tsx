@@ -30,7 +30,7 @@ interface RoleFormData {
 
 const RoleManagement: React.FC = () => {
   const [roles, setRoles] = useState<Role[]>([]);
-  const [availablePermissions, setAvailablePermissions] = useState<{ resources: string[]; actions: string[] }>({ resources: [], actions: [] });
+  const [availablePermissions, setAvailablePermissions] = useState<{ permissions: any[]; permissionsByResource: any }>({ permissions: [], permissionsByResource: {} });
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -52,6 +52,40 @@ const RoleManagement: React.FC = () => {
     fetchAvailablePermissions();
   }, []);
 
+  // Transform form permissions to Permission IDs
+  const transformPermissionsToIds = (permissions: Permission[]): string[] => {
+    const permissionIds: string[] = [];
+    
+    permissions.forEach(permission => {
+      if (availablePermissions.permissionsByResource[permission.resource]) {
+        availablePermissions.permissionsByResource[permission.resource].forEach((perm: any) => {
+          if (permission.actions.includes(perm.action)) {
+            permissionIds.push(perm._id);
+          }
+        });
+      }
+    });
+    
+    return permissionIds;
+  };
+
+  // Transform role permissions from backend format to form format
+  const transformRolePermissionsToForm = (rolePermissions: any[]): Permission[] => {
+    const formPermissions: { [resource: string]: string[] } = {};
+    
+    rolePermissions.forEach((perm: any) => {
+      if (!formPermissions[perm.resource]) {
+        formPermissions[perm.resource] = [];
+      }
+      formPermissions[perm.resource].push(perm.action);
+    });
+    
+    return Object.entries(formPermissions).map(([resource, actions]) => ({
+      resource,
+      actions
+    }));
+  };
+
   const fetchRoles = async () => {
     try {
       setLoading(true);
@@ -70,8 +104,12 @@ const RoleManagement: React.FC = () => {
   const fetchAvailablePermissions = async () => {
     try {
       const response = await userAPI.getAvailablePermissions();
+      console.log("response", response)
       if (response.success) {
-        setAvailablePermissions(response.permissions);
+        setAvailablePermissions({
+          permissions: response.permissions || [],
+          permissionsByResource: response.permissionsByResource || {}
+        });
       }
     } catch (error) {
       console.error('Error fetching permissions:', error);
@@ -82,7 +120,17 @@ const RoleManagement: React.FC = () => {
     e.preventDefault();
     try {
       setError('');
-      const response = await userAPI.createRole(formData);
+      
+      // Transform permissions to IDs
+      const permissionIds = transformPermissionsToIds(formData.permissions);
+      
+      const roleData = {
+        name: formData.name,
+        description: formData.description,
+        permissions: permissionIds
+      };
+      
+      const response = await userAPI.createRole(roleData);
       if (response.success) {
         setSuccess('Role created successfully');
         setShowCreateModal(false);
@@ -100,7 +148,17 @@ const RoleManagement: React.FC = () => {
 
     try {
       setError('');
-      const response = await userAPI.updateRole(editingRole._id, formData);
+      
+      // Transform permissions to IDs
+      const permissionIds = transformPermissionsToIds(formData.permissions);
+      
+      const roleData = {
+        name: formData.name,
+        description: formData.description,
+        permissions: permissionIds
+      };
+      
+      const response = await userAPI.updateRole(editingRole._id, roleData);
       if (response.success) {
         setSuccess('Role updated successfully');
         setShowEditModal(false);
@@ -130,10 +188,14 @@ const RoleManagement: React.FC = () => {
 
   const handleEditRole = (role: Role) => {
     setEditingRole(role);
+    
+    // Transform role permissions to form format
+    const formPermissions = transformRolePermissionsToForm(role.permissions || []);
+    
     setFormData({
       name: role.name,
       description: role.description,
-      permissions: role.permissions
+      permissions: formPermissions
     });
     setShowEditModal(true);
   };
@@ -260,7 +322,7 @@ const RoleManagement: React.FC = () => {
             </div>
             <div>
               <p className="text-sm text-gray-600">Resources</p>
-              <p className="text-2xl font-bold text-gray-900">{availablePermissions.resources.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{Object.keys(availablePermissions.permissionsByResource || {}).length}</p>
             </div>
           </div>
         </div>
@@ -342,23 +404,40 @@ const RoleManagement: React.FC = () => {
 
               {showPermissions[role._id] && (
                 <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {role.permissions.map((permission, index) => (
-                    <div key={index} className="bg-gray-50 rounded-lg p-3">
-                      <div className="font-medium text-sm text-gray-900 capitalize">
-                        {permission.resource}
-                      </div>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {permission.actions.map((action) => (
-                          <span
-                            key={action}
-                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800"
-                          >
-                            {action}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+                  {role.permissions && role.permissions.length > 0 ? (
+                    (() => {
+                      // Group permissions by resource
+                      const groupedPermissions = role.permissions.reduce((acc: { [key: string]: string[] }, permission: any) => {
+                        if (permission.resource) {
+                          if (!acc[permission.resource]) {
+                            acc[permission.resource] = [];
+                          }
+                          acc[permission.resource].push(permission.action);
+                        }
+                        return acc;
+                      }, {});
+
+                      return Object.entries(groupedPermissions).map(([resource, actions]) => (
+                        <div key={resource} className="bg-gray-50 rounded-lg p-3">
+                          <div className="font-medium text-sm text-gray-900 capitalize">
+                            {resource}
+                          </div>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {actions.map((action) => (
+                              <span
+                                key={action}
+                                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800"
+                              >
+                                {action}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ));
+                    })()
+                  ) : (
+                    <div className="text-sm text-gray-500 italic">No permissions assigned</div>
+                  )}
                 </div>
               )}
 
@@ -442,7 +521,7 @@ const RoleManagement: React.FC = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                           >
                             <option value="">Select Resource</option>
-                            {availablePermissions.resources.map(resource => (
+                            {Object.keys(availablePermissions.permissionsByResource || {}).map(resource => (
                               <option key={resource} value={resource}>{resource}</option>
                             ))}
                           </select>
@@ -451,18 +530,18 @@ const RoleManagement: React.FC = () => {
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">Actions</label>
                           <div className="flex flex-wrap gap-2">
-                            {availablePermissions.actions.map(action => (
+                            {(availablePermissions.permissionsByResource[permission.resource] || []).map((perm: any) => (
                               <button
-                                key={action}
+                                key={perm.action}
                                 type="button"
-                                onClick={() => toggleAction(index, action)}
+                                onClick={() => toggleAction(index, perm.action)}
                                 className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                                  permission.actions.includes(action)
+                                  permission.actions.includes(perm.action)
                                     ? 'bg-orange-100 text-orange-800'
                                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
                               >
-                                {action}
+                                {perm.action}
                               </button>
                             ))}
                           </div>
@@ -572,7 +651,7 @@ const RoleManagement: React.FC = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                           >
                             <option value="">Select Resource</option>
-                            {availablePermissions.resources.map(resource => (
+                            {Object.keys(availablePermissions.permissionsByResource || {}).map(resource => (
                               <option key={resource} value={resource}>{resource}</option>
                             ))}
                           </select>
@@ -581,18 +660,18 @@ const RoleManagement: React.FC = () => {
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">Actions</label>
                           <div className="flex flex-wrap gap-2">
-                            {availablePermissions.actions.map(action => (
+                            {(availablePermissions.permissionsByResource[permission.resource] || []).map((perm: any) => (
                               <button
-                                key={action}
+                                key={perm.action}
                                 type="button"
-                                onClick={() => toggleAction(index, action)}
+                                onClick={() => toggleAction(index, perm.action)}
                                 className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                                  permission.actions.includes(action)
+                                  permission.actions.includes(perm.action)
                                     ? 'bg-orange-100 text-orange-800'
                                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
                               >
-                                {action}
+                                {perm.action}
                               </button>
                             ))}
                           </div>

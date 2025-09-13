@@ -117,6 +117,12 @@ const getMenuItems = (hasPermission: (resource: string, action: string) => boole
           show: isSuperAdmin || hasPermission('ai_generator', 'generate')
         },
         { 
+          title: "Email Manager", 
+          href: "/ai-assistant/email-manager", 
+          icon: Database,
+          show: isSuperAdmin || hasPermission('ai_generator', 'read')
+        },
+        { 
           title: "Meeting Notes", 
           href: "/ai-assistant/meetings", 
           icon: FileText,
@@ -149,17 +155,29 @@ const getMenuItems = (hasPermission: (resource: string, action: string) => boole
       show: isSuperAdmin || hasPermission('settings', 'read') || hasPermission('roles', 'read'),
       children: [
         { 
-          title: "Roles", 
-          href: "/support/roles", 
-          icon: Shield,
-          show: isSuperAdmin || hasPermission('roles', 'read')
+          title: "Tickets", 
+          href: "/support/tickets", 
+          icon: HelpCircle,
+          show: isSuperAdmin || hasPermission('tickets', 'read')
         },
         { 
-          title: "Role Assignment", 
-          href: "/support/role-assignment", 
-          icon: UserCog,
-          show: isSuperAdmin || hasPermission('users', 'assign')
+          title: "Knowledge Base", 
+          href: "/support/knowledge-base", 
+          icon: Shield,
+          show: isSuperAdmin || hasPermission('settings', 'read')
         },
+                         { 
+                   title: "Roles", 
+                   href: "/support/roles", 
+                   icon: Shield,
+                   show: isSuperAdmin || hasPermission('roles', 'read')
+                 },
+                 { 
+                   title: "Role Assignment", 
+                   href: "/support/role-assignment", 
+                   icon: UserCog,
+                   show: isSuperAdmin || hasPermission('roles', 'assign')
+                 },
         { 
           title: "Settings", 
           href: "/support/settings", 
@@ -187,7 +205,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const [expandedItems, setExpandedItems] = React.useState<string[]>([])
   const location = useLocation()
   const { hasPermission, userRole } = useAuth()
-
+  // console.log(hasPermission('contacts', 'read'))
   const toggleExpanded = (title: string) => {
     setExpandedItems((prev) =>
       prev.includes(title) ? prev.filter((item) => item !== title) : [...prev, title]

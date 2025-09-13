@@ -11,7 +11,9 @@ import dashboardRoutes from './routes/dashboardRoutes.js'; // Importing dashboar
 import aiAssistantRoutes from './routes/aiAssistantRoutes.js'; // Importing AI Assistant routes
 import meetingRoutes from './routes/meetingRoutes.js'; // Importing meeting routes
 import webhookRoutes from './routes/webhookRoutes.js'; // Importing webhook routes
+import emailRoutes from './routes/emailRoutes.js'; // Importing email routes
 import { seedDefaultRoles } from './config/seedRoles.js'; // Import role seeder
+import emailScheduler from './services/emailScheduler.js'; // Import email scheduler
 
 // Load environment variables
 dotenv.config({ path: './.env' });
@@ -39,6 +41,7 @@ app.use('/api/dashboard', dashboardRoutes); // Mount dashboard routes
 app.use('/api/ai-assistant', aiAssistantRoutes); // Mount AI Assistant routes
 app.use('/api/meetings', meetingRoutes); // Mount meeting routes
 app.use('/api/webhooks', webhookRoutes); // Mount webhook routes
+app.use('/api/emails', emailRoutes); // Mount email routes
 
 // Basic route
 app.get('/', (req, res) => {
@@ -51,4 +54,5 @@ const PORT = process.env.PORT || 8000;
 // Start server
 app.listen(PORT, () => {
   console.log(`Server Running on port ${PORT}`);
+  console.log('📧 Email scheduler initialized');
 });

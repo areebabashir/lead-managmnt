@@ -1,5 +1,7 @@
 import auth from "../models/authModel.js";
 import Role from "../models/roleModel.js";
+// import UserPermission from "../models/userPermissionModel.js";
+import Permission from "../models/permissionModel.js";
 import { hashPassword } from "../helpers/authHelper.js";
 
 // Get all users with their roles
@@ -345,6 +347,59 @@ export const getUserStats = async (req, res) => {
         res.status(500).send({
             success: false,
             message: "Error fetching user statistics",
+            error: error.message,
+        });
+    }
+};
+
+// Get user permissions (role permissions + custom permissions)
+export const getUserPermissions = async (req, res) => {
+    // console.log("getUserPermissions")
+    try {
+        const { id } = req.params;
+        
+        // Get user with populated role and permissions
+        const user = await auth.findById(id)
+            .populate({
+                path: 'role',
+                populate: {
+                    path: 'permissions',
+                    model: 'Permission'
+                }
+            })
+            .select('-password -answer');
+
+        if (!user) {
+            return res.status(404).send({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        // Get custom permissions for the user
+        const customPermissions = await Permission.find({
+            userId: id,
+            isActive: true,
+            $or: [
+                { expiresAt: null },
+                { expiresAt: { $gt: new Date() } }
+            ]
+        });
+        console.log(user.role?.permissions)
+        res.status(200).send({
+            success: true,
+            message: "User permissions fetched successfully",
+            permissions: {
+                rolePermissions: user.role?.permissions || [],
+                customPermissions,
+                isSuperAdmin: user.isSuperAdmin
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({
+            success: false,
+            message: "Error fetching user permissions",
             error: error.message,
         });
     }

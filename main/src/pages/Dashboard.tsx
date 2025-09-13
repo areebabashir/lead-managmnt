@@ -624,7 +624,7 @@ export default function Dashboard() {
               animate={{ opacity: 1, x: 0 }}
               className="text-gray-600 text-sm"
             >
-              Here's what's happening with your business today. Role: <span className="font-semibold text-orange-600">{user?.role}</span>
+              Here's what's happening with your business today. Role: <span className="font-semibold text-orange-600">{user?.role?.name}</span>
             </motion.p>
           </div>
 

@@ -47,10 +47,7 @@ interface UpdateUserData {
 interface CreateRoleData {
   name: string;
   description: string;
-  permissions: Array<{
-    resource: string;
-    actions: string[];
-  }>;
+  permissions: string[]; // Array of Permission IDs
 }
 
 interface UserStats {
@@ -177,7 +174,7 @@ class UserAPI {
     return this.makeRequest('/roles/stats');
   }
 
-  async getAvailablePermissions(): Promise<{ success: boolean; permissions: { resources: string[]; actions: string[] } }> {
+  async getAvailablePermissions(): Promise<{ success: boolean; permissions: any[]; permissionsByResource: any }> {
     return this.makeRequest('/roles/permissions');
   }
 }
