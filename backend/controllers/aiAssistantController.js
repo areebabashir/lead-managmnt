@@ -34,6 +34,7 @@ export const initializeAssistant = async (req, res) => {
 // Generate personalized email
 export const generatePersonalizedEmail = async (req, res) => {
   try {
+    console.log('req.body hit');
     const userId = req.user._id;
     const { contactId, emailType, context } = req.body;
 
@@ -57,15 +58,18 @@ export const generatePersonalizedEmail = async (req, res) => {
       }
     }
 
+    console.log("contact from controller" , contact);
+    
+
     // Generate email using Gemini
-    const result = await geminiService.generatePersonalizedEmail(
-      contact,
-      emailType || 'followup',
-      context || ''
-    );
+    // const result = await geminiService.generatePersonalizedEmail(
+    //   contact,
+    //   emailType || 'followup',
+    //   context || ''
+    // );
 
     // Save interaction
-    const contactName = contact ? `${contact.firstName} ${contact.lastName}` : 'General';
+    const contactName = contact ? `${contact.fullName}` : 'General';
     const interaction = new AIInteraction({
       type: 'email',
       prompt: `Generate ${emailType} email for ${contactName}`,

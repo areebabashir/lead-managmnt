@@ -117,6 +117,12 @@ const getMenuItems = (hasPermission: (resource: string, action: string) => boole
           show: isSuperAdmin || hasPermission('ai_generator', 'generate')
         },
         { 
+          title: "Email Manager", 
+          href: "/ai-assistant/email-manager", 
+          icon: Database,
+          show: isSuperAdmin || hasPermission('ai_generator', 'read')
+        },
+        { 
           title: "Meeting Notes", 
           href: "/ai-assistant/meetings", 
           icon: FileText,

@@ -22,6 +22,7 @@ import RoleManagement from "./pages/RoleManagement";
 import RoleAssignment from "./pages/RoleAssignment";
 import AIAssistant from "./pages/AI/AIAssistant";
 import EmailGenerator from "./pages/AI/EmailGenerator";
+import EmailManager from "./pages/AI/EmailManager";
 import MeetingNotes from "./pages/AI/MeetingNotes";
 import CustomPrompts from "./pages/AI/CustomPrompts";
 import Profile from "./pages/Profile";
@@ -136,6 +137,13 @@ const App = () => (
               <ProtectedRoute requiredPermission={{ resource: 'ai_generator', action: 'generate' }}>
                 <AppLayout>
                   <EmailGenerator />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/ai-assistant/email-manager" element={
+              <ProtectedRoute requiredPermission={{ resource: 'ai_generator', action: 'read' }}>
+                <AppLayout>
+                  <EmailManager />
                 </AppLayout>
               </ProtectedRoute>
             } />
