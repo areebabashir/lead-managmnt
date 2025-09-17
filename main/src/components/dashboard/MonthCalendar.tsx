@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Video, ExternalLink } from 'lucide-react';
 import AddMeetingModal from '../forms/AddMeetingModal';
 import { getMeetings, Meeting } from '@/services/meetingAPI';
 
@@ -12,6 +12,9 @@ interface CalendarEvent {
   color: string;
   attendees?: number;
   priority?: 'high' | 'medium' | 'low';
+  googleMeetLink?: string;
+  googleEventLink?: string;
+  googleCalendarCreated?: boolean;
 }
 
 interface CalendarDayData {
@@ -103,9 +106,23 @@ const EventDot = ({ event }: { event: CalendarEvent }) => {
   };
 
   return (
-    <div className={`text-xs px-2 py-1 rounded-full text-white ${getEventColor(event.type)} flex items-center gap-1`}>
+    <div className={`text-xs px-2 py-1 rounded-full text-white ${getEventColor(event.type)} flex items-center gap-1 group relative`}>
       <span className="text-xs">{getEventIcon(event.type)}</span>
       <span className="truncate">{event.title}</span>
+      {event.googleMeetLink && (
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            window.open(event.googleMeetLink, '_blank');
+          }}
+          className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+          title="Join Google Meet"
+        >
+          <Video className="h-3 w-3" />
+        </motion.button>
+      )}
     </div>
   );
 };
@@ -211,7 +228,10 @@ export default function MonthCalendar() {
           type: meeting.type,
           color: getEventColor(meeting.type),
           attendees: meeting.attendees?.length || 0,
-          priority: meeting.priority
+          priority: meeting.priority,
+          googleMeetLink: meeting.googleMeetLink,
+          googleEventLink: meeting.googleEventLink,
+          googleCalendarCreated: meeting.googleCalendarCreated
         };
         
         eventsMap[dateKey].push(calendarEvent);
@@ -363,14 +383,25 @@ export default function MonthCalendar() {
             </div>
             <div className="space-y-1">
               {upcomingEvents.map((event, index) => (
-                <div key={index} className="flex items-center gap-2">
+                <div key={index} className="flex items-center gap-2 group">
                   <div className={`w-2 h-2 rounded-full ${
                     event.type === 'meeting' ? 'bg-blue-500' :
                     event.type === 'appointment' ? 'bg-green-500' :
                     event.type === 'call' ? 'bg-purple-500' :
                     event.type === 'personal' ? 'bg-orange-500' : 'bg-gray-500'
                   }`}></div>
-                  <span className="text-xs text-black">{event.title} - {event.time}</span>
+                  <span className="text-xs text-black flex-1">{event.title} - {event.time}</span>
+                  {event.googleMeetLink && (
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => window.open(event.googleMeetLink, '_blank')}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                      title="Join Google Meet"
+                    >
+                      <Video className="h-3 w-3 text-black" />
+                    </motion.button>
+                  )}
                 </div>
               ))}
             </div>

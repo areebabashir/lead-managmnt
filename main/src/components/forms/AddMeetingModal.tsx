@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, Calendar, Clock, Users, MapPin, FileText, AlertCircle } from 'lucide-react';
+import { X, Calendar, Clock, Users, MapPin, FileText, AlertCircle, Video, ExternalLink, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { createMeeting, CreateMeetingData } from '@/services/meetingAPI';
+import { createMeeting, CreateMeetingData, Meeting } from '@/services/meetingAPI';
+import { GoogleCalendarIntegration } from '@/services/googleCalendarAPI';
+import GoogleCalendarAuth from './GoogleCalendarAuth';
 
 interface AddMeetingModalProps {
   isOpen: boolean;
@@ -43,6 +45,25 @@ const initialFormData: MeetingFormData = {
 export default function AddMeetingModal({ isOpen, onClose, selectedDate, onMeetingAdded }: AddMeetingModalProps) {
   const [formData, setFormData] = useState<MeetingFormData>(initialFormData);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleCalendarConnected, setIsGoogleCalendarConnected] = useState(false);
+  const [createdMeeting, setCreatedMeeting] = useState<Meeting | null>(null);
+
+  // Check Google Calendar connection status when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      checkGoogleCalendarStatus();
+    }
+  }, [isOpen]);
+
+  const checkGoogleCalendarStatus = async () => {
+    try {
+      const connected = await GoogleCalendarIntegration.isConnected();
+      setIsGoogleCalendarConnected(connected);
+    } catch (error) {
+      console.error('Error checking Google Calendar status:', error);
+      setIsGoogleCalendarConnected(false);
+    }
+  };
 
   const handleInputChange = (field: keyof MeetingFormData, value: string) => {
     setFormData(prev => ({
@@ -98,15 +119,22 @@ export default function AddMeetingModal({ isOpen, onClose, selectedDate, onMeeti
 
       // Create meeting via API
       const meeting = await createMeeting(meetingData);
+      setCreatedMeeting(meeting);
 
-      toast({
-        title: "Success",
-        description: `${formData.type === 'meeting' ? 'Meeting' : 'Appointment'} scheduled successfully!`,
-      });
+      // Show success message with Google Calendar info
+      if (meeting.googleCalendarCreated && meeting.googleMeetLink) {
+        toast({
+          title: "Success",
+          description: `${formData.type === 'meeting' ? 'Meeting' : 'Appointment'} scheduled successfully with Google Meet link!`,
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: `${formData.type === 'meeting' ? 'Meeting' : 'Appointment'} scheduled successfully!`,
+        });
+      }
 
       onMeetingAdded(meeting);
-      setFormData(initialFormData);
-      onClose();
 
     } catch (error) {
       console.error('Error creating meeting:', error);
@@ -162,6 +190,31 @@ export default function AddMeetingModal({ isOpen, onClose, selectedDate, onMeeti
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Google Calendar Integration */}
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-orange-600" />
+                <span className="text-sm font-medium text-orange-800">Google Calendar Integration</span>
+              </div>
+              <GoogleCalendarAuth 
+                onConnectionChange={setIsGoogleCalendarConnected}
+                className="text-xs"
+              />
+            </div>
+            {isGoogleCalendarConnected ? (
+              <div className="flex items-center gap-2 text-sm text-green-700">
+                <CheckCircle className="h-4 w-4" />
+                <span>Meetings will be automatically added to Google Calendar with Google Meet links</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-sm text-orange-700">
+                <AlertCircle className="h-4 w-4" />
+                <span>Connect Google Calendar to automatically create events with Google Meet links</span>
+              </div>
+            )}
+          </div>
+
           {/* Title and Type */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -309,33 +362,89 @@ export default function AddMeetingModal({ isOpen, onClose, selectedDate, onMeeti
             </Select>
           </div>
 
+          {/* Success Section - Show Google Meet Link */}
+          {createdMeeting && createdMeeting.googleMeetLink && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-green-50 border border-green-200 rounded-lg p-4"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                <span className="text-sm font-medium text-green-800">Meeting Created Successfully!</span>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-green-700">
+                  <Video className="h-4 w-4" />
+                  <span>Google Meet Link:</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={createdMeeting.googleMeetLink}
+                    readOnly
+                    className="text-sm bg-white border-green-300"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => window.open(createdMeeting.googleMeetLink, '_blank')}
+                    className="border-green-300 text-green-700 hover:bg-green-50"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </Button>
+                </div>
+                {createdMeeting.googleEventLink && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => window.open(createdMeeting.googleEventLink, '_blank')}
+                      className="border-green-300 text-green-700 hover:bg-green-50"
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Open in Google Calendar
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
           {/* Action Buttons */}
           <div className="flex items-center justify-end gap-3 pt-4 border-t">
             <Button
               type="button"
               variant="outline"
-              onClick={onClose}
+              onClick={() => {
+                setFormData(initialFormData);
+                setCreatedMeeting(null);
+                onClose();
+              }}
               disabled={isLoading}
             >
-              Cancel
+              {createdMeeting ? 'Close' : 'Cancel'}
             </Button>
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {isLoading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Scheduling...
-                </>
-              ) : (
-                <>
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Schedule {formData.type === 'meeting' ? 'Meeting' : 'Appointment'}
-                </>
-              )}
-            </Button>
+            {!createdMeeting && (
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="bg-orange-600 hover:bg-orange-700"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Scheduling...
+                  </>
+                ) : (
+                  <>
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Schedule {formData.type === 'meeting' ? 'Meeting' : 'Appointment'}
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </form>
       </motion.div>

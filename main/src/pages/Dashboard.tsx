@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "../contexts/AuthContext"
 import MonthCalendar from "../components/dashboard/MonthCalendar"
+import GoogleCalendarAuth from "../components/forms/GoogleCalendarAuth"
 import {
   PieChart as RechartsPieChart,
   Pie,
@@ -684,7 +685,28 @@ export default function Dashboard() {
           </ChartCard>
 
           <ChartCard title="Calendar & Schedule" icon={CalendarDays}>
-            <MonthCalendar />
+            <div className="space-y-4">
+              {/* Google Calendar Integration */}
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4 text-orange-600" />
+                    <span className="text-sm font-medium text-orange-800">Google Calendar Integration</span>
+                  </div>
+                  <GoogleCalendarAuth 
+                    onConnectionChange={(connected) => {
+                      // You can add any additional logic here when connection status changes
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-orange-700">
+                  Connect Google Calendar to automatically create events with Google Meet links when scheduling meetings.
+                </p>
+              </div>
+              
+              {/* Calendar Component */}
+              <MonthCalendar />
+            </div>
           </ChartCard>
         </div>
 

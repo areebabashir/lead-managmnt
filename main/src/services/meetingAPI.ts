@@ -31,6 +31,11 @@ export interface Meeting {
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  // Google Calendar integration fields
+  googleEventId?: string;
+  googleMeetLink?: string;
+  googleEventLink?: string;
+  googleCalendarCreated?: boolean;
 }
 
 export interface CreateMeetingData {

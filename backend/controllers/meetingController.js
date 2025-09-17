@@ -1,4 +1,6 @@
 import Meeting from '../models/meetingModel.js';
+import googleCalendarService from '../services/googleCalendarService.js';
+import User from '../models/authModel.js';
 
 // Create a new meeting
 export const createMeeting = async (req, res) => {
@@ -16,13 +18,63 @@ export const createMeeting = async (req, res) => {
             });
         }
 
+        // Get user information for Google Calendar integration
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Create meeting in database first
         const meeting = new Meeting(meetingData);
         await meeting.save();
+
+        // Try to create Google Calendar event if refresh token is available
+        let googleCalendarResult = null;
+        try {
+            // Check if we have valid Google Calendar credentials
+            const hasValidCredentials = await googleCalendarService.hasValidCredentials();
+            
+            if (hasValidCredentials) {
+                // Create Google Calendar event
+                googleCalendarResult = await googleCalendarService.createCalendarEvent(
+                    meetingData, 
+                    user.email
+                );
+
+                if (googleCalendarResult.success) {
+                    // Update meeting with Google Calendar information
+                    meeting.googleEventId = googleCalendarResult.eventId;
+                    meeting.googleMeetLink = googleCalendarResult.meetLink;
+                    meeting.googleEventLink = googleCalendarResult.eventLink;
+                    await meeting.save();
+
+                    // Send meeting invitation email if attendees are provided
+                    if (meetingData.attendees && meetingData.attendees.length > 0) {
+                        await googleCalendarService.sendMeetingInvitation(
+                            meetingData,
+                            googleCalendarResult.meetLink,
+                            googleCalendarResult.eventLink,
+                            meetingData.attendees
+                        );
+                    }
+                }
+            }
+        } catch (googleError) {
+            console.error('Google Calendar integration error:', googleError);
+            // Don't fail the meeting creation if Google Calendar fails
+        }
 
         res.status(201).json({
             success: true,
             message: 'Meeting created successfully',
-            data: meeting
+            data: {
+                ...meeting.toObject(),
+                googleCalendarCreated: googleCalendarResult?.success || false,
+                googleMeetLink: meeting.googleMeetLink
+            }
         });
     } catch (error) {
         console.error('Error creating meeting:', error);
@@ -165,11 +217,11 @@ export const getMeetingById = async (req, res) => {
 // Update a meeting
 export const updateMeeting = async (req, res) => {
     try {
-        const meeting = await Meeting.findOneAndUpdate(
-            { _id: req.params.id, createdBy: req.user._id, isActive: true },
-            req.body,
-            { new: true, runValidators: true }
-        );
+        const meeting = await Meeting.findOne({
+            _id: req.params.id, 
+            createdBy: req.user._id, 
+            isActive: true
+        });
 
         if (!meeting) {
             return res.status(404).json({
@@ -178,10 +230,43 @@ export const updateMeeting = async (req, res) => {
             });
         }
 
+        // Update meeting in database
+        const updatedMeeting = await Meeting.findOneAndUpdate(
+            { _id: req.params.id, createdBy: req.user._id, isActive: true },
+            req.body,
+            { new: true, runValidators: true }
+        );
+
+        // Update Google Calendar event if it exists and refresh token is available
+        if (meeting.googleEventId) {
+            try {
+                const hasValidCredentials = await googleCalendarService.hasValidCredentials();
+                if (hasValidCredentials) {
+                    const user = await User.findById(req.user._id);
+                    const googleCalendarResult = await googleCalendarService.updateCalendarEvent(
+                        meeting.googleEventId,
+                        req.body,
+                        user.email
+                    );
+
+                    if (googleCalendarResult.success) {
+                        // Update Google Meet link if it changed
+                        if (googleCalendarResult.meetLink) {
+                            updatedMeeting.googleMeetLink = googleCalendarResult.meetLink;
+                            await updatedMeeting.save();
+                        }
+                    }
+                }
+            } catch (googleError) {
+                console.error('Google Calendar update error:', googleError);
+                // Don't fail the meeting update if Google Calendar fails
+            }
+        }
+
         res.status(200).json({
             success: true,
             message: 'Meeting updated successfully',
-            data: meeting
+            data: updatedMeeting
         });
     } catch (error) {
         console.error('Error updating meeting:', error);
@@ -196,11 +281,11 @@ export const updateMeeting = async (req, res) => {
 // Delete a meeting (soft delete)
 export const deleteMeeting = async (req, res) => {
     try {
-        const meeting = await Meeting.findOneAndUpdate(
-            { _id: req.params.id, createdBy: req.user._id, isActive: true },
-            { isActive: false },
-            { new: true }
-        );
+        const meeting = await Meeting.findOne({
+            _id: req.params.id, 
+            createdBy: req.user._id, 
+            isActive: true
+        });
 
         if (!meeting) {
             return res.status(404).json({
@@ -208,6 +293,26 @@ export const deleteMeeting = async (req, res) => {
                 message: 'Meeting not found'
             });
         }
+
+        // Delete from Google Calendar if it exists
+        if (meeting.googleEventId) {
+            try {
+                const hasValidCredentials = await googleCalendarService.hasValidCredentials();
+                if (hasValidCredentials) {
+                    await googleCalendarService.deleteCalendarEvent(meeting.googleEventId);
+                }
+            } catch (googleError) {
+                console.error('Google Calendar delete error:', googleError);
+                // Don't fail the meeting deletion if Google Calendar fails
+            }
+        }
+
+        // Soft delete the meeting
+        await Meeting.findOneAndUpdate(
+            { _id: req.params.id, createdBy: req.user._id, isActive: true },
+            { isActive: false },
+            { new: true }
+        );
 
         res.status(200).json({
             success: true,
