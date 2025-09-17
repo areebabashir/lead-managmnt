@@ -109,7 +109,7 @@ class GeminiService {
   // Generate personalized email
   async generatePersonalizedEmail(contactData, emailType = 'followup', context = '', senderData = null) {
     await this.ensureInitialized();
-    console.log('contactData', contactData);
+    // console.log('contactData', contactData);
 
     // Handle case where no contact data is provided
     const contactInfo = contactData ? `
@@ -123,7 +123,7 @@ Contact Information:
 Contact Information:
 - General email (no specific contact provided)`;
 
-console.log('contactInfo', contactInfo);
+// console.log('contactInfo', contactInfo);
 
     // Format context properly - handle both string and object
     const formattedContext = typeof context === 'object' && context !== null 
@@ -140,7 +140,7 @@ Sender Information:
 Sender Information:
 - Use generic sender information if not provided`;
 
-    console.log('senderInfo', senderInfo);
+    // console.log('senderInfo', senderInfo);
 
     const prompt = `Generate a personalized ${emailType} email for a sales contact with the following details:
     
@@ -164,13 +164,7 @@ Subject: Follow-up on Your Property Search in Abbottabad
 
 Hi Zain,
 
-I hope this email finds you well! I wanted to follow up on our conversation about your property search in Abbottabad.
-
-Based on your interest in properties within the USD price range and your location at 3554/3-C Siddiquia Street, I have some excellent options that might be perfect for you. I can arrange a property viewing at your convenience.
-
-Would you be available for a quick call this week to discuss these opportunities? I can be reached at +1-234-567-8900 or simply reply to this email.
-
-Looking forward to helping you find the perfect property!
+body of the email
 
 Best regards,
 John Smith
@@ -178,6 +172,7 @@ Senior Property Consultant
 ABC Real Estate
 
 Generate the email:`;
+
 
     const cacheKey = `email:${contactData?._id || 'general'}:${emailType}:${JSON.stringify(context)}`;
     const cached = await this.checkCache(prompt, cacheKey);
@@ -187,9 +182,9 @@ Generate the email:`;
     }
 
     try {
+      console.log('prompt', prompt);
       const result = await this.model.generateContent(prompt);
       const response = result.response.text();
-      console.log('prompt', prompt);
       await this.saveToCache(prompt, response, cacheKey);
       return { email: response, isCached: false };
     } catch (error) {
