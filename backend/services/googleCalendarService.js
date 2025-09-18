@@ -3,21 +3,18 @@ import nodemailer from 'nodemailer';
 
 class GoogleCalendarService {
     constructor() {
+        // Hardcoded Google Calendar credentials
         this.oAuth2Client = new google.auth.OAuth2(
-            process.env.GOOGLE_CLIENT_ID,
-            process.env.GOOGLE_CLIENT_SECRET,
-            process.env.GOOGLE_REDIRECT_URI
+            "533043152880-e68i6d56n9gd7hvb3d0t8krhmt8sh280.apps.googleusercontent.com",
+            "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",
+            "https://developers.google.com/oauthplayground"
         );
         
-        // Set refresh token if available
-        if (process.env.GOOGLE_CALENDAR_REFRESH_TOKEN) {
-            console.log('Setting Google Calendar refresh token...');
-            this.oAuth2Client.setCredentials({
-                refresh_token: process.env.GOOGLE_CALENDAR_REFRESH_TOKEN
-            });
-        } else {
-            console.log('No Google Calendar refresh token found in environment variables');
-        }
+        // Set hardcoded refresh token
+        console.log('Setting Google Calendar refresh token...');
+        this.oAuth2Client.setCredentials({
+            refresh_token: "1//04C8A4KmF4ijUCgYIARAAGAQSNwF-L9IrNeIbAcgrfuYgKCfakCr46FMcy-mhNJFedagGElq014k5DKGEEOYjIPFKWPQQataZpOs"
+        });
         
         this.calendar = google.calendar({ version: 'v3', auth: this.oAuth2Client });
         this.setupEmailTransporter();
@@ -27,28 +24,21 @@ class GoogleCalendarService {
         this.emailTransporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS
+                user: 'zainkazmi258@gmail.com', // Hardcoded email
+                pass: 'your_app_password_here' // You'll need to add your Gmail app password here
             }
         });
-    }
-
-    // Set credentials for authenticated user
-    setCredentials(tokens) {
-        this.oAuth2Client.setCredentials(tokens);
     }
 
     // Check if we have valid credentials (refresh token)
     async hasValidCredentials() {
         try {
-            if (process.env.GOOGLE_CALENDAR_REFRESH_TOKEN) {
-                // Try to get access token using refresh token
-                const { credentials } = await this.oAuth2Client.refreshAccessToken();
-                return true;
-            }
-            return false;
+            // Try to refresh the access token to verify credentials
+            const { credentials } = await this.oAuth2Client.refreshAccessToken();
+            console.log('✅ Google Calendar credentials are valid');
+            return true;
         } catch (error) {
-            console.error('Error checking credentials:', error);
+            console.error('❌ Google Calendar credentials invalid:', error.message);
             return false;
         }
     }
@@ -213,6 +203,8 @@ class GoogleCalendarService {
                         <p><strong>📅 Date:</strong> ${date}</p>
                         <p><strong>🕐 Time:</strong> ${startTime} - ${endTime}</p>
                         ${location ? `<p><strong>📍 Location:</strong> ${location}</p>` : ''}
+                        ${meetingData.hostName ? `<p><strong>👤 Host:</strong> ${meetingData.hostName}</p>` : ''}
+                        ${meetingData.guestNames && meetingData.guestNames.length > 0 ? `<p><strong>👥 Guests:</strong> ${meetingData.guestNames.join(', ')}</p>` : ''}
                         ${description ? `<p><strong>📝 Description:</strong> ${description}</p>` : ''}
                     </div>
                     
@@ -239,7 +231,7 @@ class GoogleCalendarService {
             `;
 
             const mailOptions = {
-                from: process.env.SMTP_USER,
+                from: 'zainkazmi258@gmail.com',
                 to: attendees.join(', '),
                 subject: `Meeting Invitation: ${title}`,
                 html: emailContent

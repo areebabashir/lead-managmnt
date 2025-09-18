@@ -49,6 +49,13 @@ export interface CreateMeetingData {
   description?: string;
   priority: 'high' | 'medium' | 'low';
   reminder: number;
+  // Host and guest information
+  hostId?: string;
+  hostName?: string;
+  hostEmail?: string;
+  guestIds?: string[];
+  guestEmails?: string[];
+  guestNames?: string[];
 }
 
 export interface UpdateMeetingData extends Partial<CreateMeetingData> {

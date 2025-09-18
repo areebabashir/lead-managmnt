@@ -3,16 +3,17 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+// Hardcoded Google OAuth credentials
 const oAuth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_REDIRECT_URI
+  "533043152880-e68i6d56n9gd7hvb3d0t8krhmt8sh280.apps.googleusercontent.com",
+  "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",
+  "https://developers.google.com/oauthplayground"
 );
 
-// Attach refresh token
-if (process.env.GOOGLE_REFRESH_TOKEN) {
-  oAuth2Client.setCredentials({ refresh_token: process.env.GOOGLE_REFRESH_TOKEN });
-}
+// Attach hardcoded refresh token
+oAuth2Client.setCredentials({ 
+  refresh_token: "1//04C8A4KmF4ijUCgYIARAAGAQSNwF-L9IrNeIbAcgrfuYgKCfakCr46FMcy-mhNJFedagGElq014k5DKGEEOYjIPFKWPQQataZpOs"
+});
 
 const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
 

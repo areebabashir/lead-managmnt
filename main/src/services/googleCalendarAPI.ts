@@ -16,6 +16,7 @@ const getHeaders = () => {
 
 export interface GoogleCalendarStatus {
   connected: boolean;
+  message?: string;
 }
 
 export interface GoogleCalendarAuthResponse {
@@ -137,6 +138,23 @@ export class GoogleCalendarIntegration {
     } catch (error) {
       console.error('Error checking Google Calendar connection:', error);
       return false;
+    }
+  }
+
+  // Get connection status with message
+  static async getConnectionStatus(): Promise<GoogleCalendarStatus> {
+    try {
+      const status = await getGoogleCalendarStatus();
+      return {
+        connected: status.connected,
+        message: status.message || (status.connected ? 'Google Calendar connected successfully' : 'Google Calendar not connected - invalid credentials')
+      };
+    } catch (error) {
+      console.error('Error getting Google Calendar status:', error);
+      return {
+        connected: false,
+        message: 'Failed to connect to Google Calendar - server error'
+      };
     }
   }
 

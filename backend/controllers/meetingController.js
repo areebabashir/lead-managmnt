@@ -51,14 +51,42 @@ export const createMeeting = async (req, res) => {
                     meeting.googleEventLink = googleCalendarResult.eventLink;
                     await meeting.save();
 
-                    // Send meeting invitation email if attendees are provided
-                    if (meetingData.attendees && meetingData.attendees.length > 0) {
-                        await googleCalendarService.sendMeetingInvitation(
-                            meetingData,
-                            googleCalendarResult.meetLink,
-                            googleCalendarResult.eventLink,
-                            meetingData.attendees
-                        );
+                    // Send meeting invitations to host and guests
+                    try {
+                        // Prepare email recipients
+                        const emailRecipients = [];
+                        
+                        // Add host email
+                        if (meetingData.hostEmail) {
+                            emailRecipients.push(meetingData.hostEmail);
+                        }
+                        
+                        // Add guest emails
+                        if (meetingData.guestEmails && meetingData.guestEmails.length > 0) {
+                            emailRecipients.push(...meetingData.guestEmails);
+                        }
+                        
+                        // Fall back to attendees if host/guest info not provided
+                        if (emailRecipients.length === 0 && meetingData.attendees && meetingData.attendees.length > 0) {
+                            emailRecipients.push(...meetingData.attendees);
+                        }
+
+                        if (emailRecipients.length > 0) {
+                            await googleCalendarService.sendMeetingInvitation(
+                                {
+                                    ...meetingData,
+                                    hostName: meetingData.hostName,
+                                    guestNames: meetingData.guestNames
+                                },
+                                googleCalendarResult.meetLink,
+                                googleCalendarResult.eventLink,
+                                emailRecipients
+                            );
+                            console.log(`📧 Meeting invitations sent to: ${emailRecipients.join(', ')}`);
+                        }
+                    } catch (emailError) {
+                        console.error('Error sending meeting invitations:', emailError);
+                        // Don't fail the entire request if email sending fails
                     }
                 }
             }

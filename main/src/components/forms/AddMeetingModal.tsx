@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/hooks/use-toast';
 import { createMeeting, CreateMeetingData, Meeting } from '@/services/meetingAPI';
 import { GoogleCalendarIntegration } from '@/services/googleCalendarAPI';
+import { userAPI, User } from '@/services/userAPI';
+import { contactAPI, Contact } from '@/services/contactAPI';
 import GoogleCalendarAuth from './GoogleCalendarAuth';
 
 interface AddMeetingModalProps {
@@ -24,7 +26,9 @@ interface MeetingFormData {
   startTime: string;
   endTime: string;
   location: string;
-  attendees: string;
+  hostId: string; // Selected user as host
+  guestIds: string[]; // Selected contacts as guests
+  attendees: string; // Keep for backward compatibility
   description: string;
   priority: 'high' | 'medium' | 'low';
   reminder: string;
@@ -36,6 +40,8 @@ const initialFormData: MeetingFormData = {
   startTime: '',
   endTime: '',
   location: '',
+  hostId: '',
+  guestIds: [],
   attendees: '',
   description: '',
   priority: 'medium',
@@ -47,13 +53,47 @@ export default function AddMeetingModal({ isOpen, onClose, selectedDate, onMeeti
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleCalendarConnected, setIsGoogleCalendarConnected] = useState(false);
   const [createdMeeting, setCreatedMeeting] = useState<Meeting | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [selectedGuests, setSelectedGuests] = useState<Contact[]>([]);
+  const [loadingData, setLoadingData] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Check Google Calendar connection status when modal opens
   useEffect(() => {
     if (isOpen) {
       checkGoogleCalendarStatus();
+      loadUsersAndContacts();
     }
   }, [isOpen]);
+
+  // Load users and contacts for selection
+  const loadUsersAndContacts = async () => {
+    try {
+      setLoadingData(true);
+      const [usersResponse, contactsResponse] = await Promise.all([
+        userAPI.getAllUsers(),
+        contactAPI.getContacts({ limit: 1000 }) // Get all contacts
+      ]);
+      
+      if (usersResponse.success) {
+        setUsers(usersResponse.users);
+      }
+      
+      if (contactsResponse.success) {
+        setContacts(contactsResponse.data);
+      }
+    } catch (error) {
+      console.error('Error loading users and contacts:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load users and contacts",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingData(false);
+    }
+  };
 
   const checkGoogleCalendarStatus = async () => {
     try {
@@ -65,36 +105,69 @@ export default function AddMeetingModal({ isOpen, onClose, selectedDate, onMeeti
     }
   };
 
-  const handleInputChange = (field: keyof MeetingFormData, value: string) => {
+  const handleInputChange = (field: keyof MeetingFormData, value: any) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+    
+    // Clear error for this field when user starts typing
+    if (formErrors[field]) {
+      setFormErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    
+    if (!formData.title.trim()) {
+      errors.title = 'Meeting title is required';
+    }
+    
+    if (!formData.startTime) {
+      errors.startTime = 'Start time is required';
+    }
+    
+    if (!formData.endTime) {
+      errors.endTime = 'End time is required';
+    }
+    
+    if (formData.startTime && formData.endTime && formData.startTime >= formData.endTime) {
+      errors.endTime = 'End time must be after start time';
+    }
+    
+    if (!formData.hostId) {
+      errors.hostId = 'Please select a meeting host';
+    }
+    
+    if (formData.guestIds.length === 0) {
+      errors.guestIds = 'Please select at least one guest';
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate form first
+    if (!validateForm()) {
+        toast({
+        title: "Validation Error",
+        description: "Please fix the errors in the form",
+          variant: "destructive"
+        });
+        return;
+      }
+
     setIsLoading(true);
 
     try {
-      // Validate form
-      if (!formData.title.trim()) {
-        toast({
-          title: "Error",
-          description: "Please enter a meeting title",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      if (!formData.startTime || !formData.endTime) {
-        toast({
-          title: "Error",
-          description: "Please select start and end times",
-          variant: "destructive"
-        });
-        return;
-      }
 
       // Create meeting data with timezone-safe date formatting
       const formatDateForAPI = (date: Date) => {
@@ -104,6 +177,16 @@ export default function AddMeetingModal({ isOpen, onClose, selectedDate, onMeeti
         return `${year}-${month}-${day}`;
       };
 
+      // Get host and guest details
+      const selectedHost = users.find(user => user._id === formData.hostId);
+      const selectedGuestContacts = contacts.filter(contact => formData.guestIds.includes(contact._id));
+      
+      // Prepare attendee emails (host + guests)
+      const attendeeEmails = [
+        selectedHost?.email,
+        ...selectedGuestContacts.map(contact => contact.email)
+      ].filter(Boolean);
+
       const meetingData: CreateMeetingData = {
         title: formData.title,
         type: formData.type,
@@ -111,10 +194,17 @@ export default function AddMeetingModal({ isOpen, onClose, selectedDate, onMeeti
         startTime: formData.startTime,
         endTime: formData.endTime,
         location: formData.location,
-        attendees: formData.attendees.split(',').map(email => email.trim()).filter(Boolean),
+        attendees: attendeeEmails,
         description: formData.description,
         priority: formData.priority,
-        reminder: parseInt(formData.reminder)
+        reminder: parseInt(formData.reminder),
+        // Add host and guest information
+        hostId: formData.hostId,
+        hostName: selectedHost?.name || '',
+        hostEmail: selectedHost?.email || '',
+        guestIds: formData.guestIds,
+        guestEmails: selectedGuestContacts.map(contact => contact.email),
+        guestNames: selectedGuestContacts.map(contact => contact.fullName)
       };
 
       // Create meeting via API
@@ -226,22 +316,48 @@ export default function AddMeetingModal({ isOpen, onClose, selectedDate, onMeeti
                 placeholder="Enter meeting title"
                 value={formData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
-                className="w-full"
+                className={`w-full ${formErrors.title ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
               />
+              {formErrors.title && (
+                <p className="text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  {formErrors.title}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="type" className="text-sm font-medium">
                 Type
               </Label>
               <Select value={formData.type} onValueChange={(value: any) => handleInputChange('type', value)}>
-                <SelectTrigger>
-                  <SelectValue />
+                <SelectTrigger className="w-full bg-white">
+                  <SelectValue placeholder="Select meeting type" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="meeting">Meeting</SelectItem>
-                  <SelectItem value="appointment">Appointment</SelectItem>
-                  <SelectItem value="call">Call</SelectItem>
-                  <SelectItem value="personal">Personal</SelectItem>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                  <SelectItem value="meeting" className="bg-white hover:bg-gray-50">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-blue-500" />
+                      <span>Meeting</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="appointment" className="bg-white hover:bg-gray-50">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-green-500" />
+                      <span>Appointment</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="call" className="bg-white hover:bg-gray-50">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-orange-500" />
+                      <span>Call</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="personal" className="bg-white hover:bg-gray-50">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-purple-500" />
+                      <span>Personal</span>
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -258,8 +374,14 @@ export default function AddMeetingModal({ isOpen, onClose, selectedDate, onMeeti
                 type="time"
                 value={formData.startTime}
                 onChange={(e) => handleInputChange('startTime', e.target.value)}
-                className="w-full"
+                className={`w-full ${formErrors.startTime ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
               />
+              {formErrors.startTime && (
+                <p className="text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  {formErrors.startTime}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="endTime" className="text-sm font-medium">
@@ -270,8 +392,14 @@ export default function AddMeetingModal({ isOpen, onClose, selectedDate, onMeeti
                 type="time"
                 value={formData.endTime}
                 onChange={(e) => handleInputChange('endTime', e.target.value)}
-                className="w-full"
+                className={`w-full ${formErrors.endTime ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
               />
+              {formErrors.endTime && (
+                <p className="text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  {formErrors.endTime}
+                </p>
+              )}
             </div>
           </div>
 
@@ -297,33 +425,121 @@ export default function AddMeetingModal({ isOpen, onClose, selectedDate, onMeeti
                 Priority
               </Label>
               <Select value={formData.priority} onValueChange={(value: any) => handleInputChange('priority', value)}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                  <SelectItem value="low" className="bg-white hover:bg-gray-50">Low</SelectItem>
+                  <SelectItem value="medium" className="bg-white hover:bg-gray-50">Medium</SelectItem>
+                  <SelectItem value="high" className="bg-white hover:bg-gray-50">High</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          {/* Attendees */}
+          {/* Meeting Host */}
           <div className="space-y-2">
-            <Label htmlFor="attendees" className="text-sm font-medium">
-              Attendees
+            <Label htmlFor="host" className="text-sm font-medium">
+              Meeting Host *
             </Label>
-            <div className="relative">
-              <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                id="attendees"
-                placeholder="Enter email addresses separated by commas"
-                value={formData.attendees}
-                onChange={(e) => handleInputChange('attendees', e.target.value)}
-                className="pl-10"
-              />
+            {loadingData ? (
+              <div className="flex items-center space-x-2 p-3 border rounded-md bg-gray-50">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                <span className="text-sm text-gray-500">Loading users...</span>
+              </div>
+            ) : (
+              <Select value={formData.hostId} onValueChange={(value) => handleInputChange('hostId', value)}>
+                <SelectTrigger className={`w-full bg-white ${formErrors.hostId ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}>
+                  <SelectValue placeholder="Select meeting host" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60 bg-white border border-gray-200 shadow-lg">
+                  {users.length === 0 ? (
+                    <div className="p-2 text-sm text-gray-500 bg-white">No users available</div>
+                  ) : (
+                    users.map((user) => (
+                      <SelectItem key={user._id} value={user._id} className="bg-white hover:bg-gray-50">
+                        <div className="flex flex-col">
+                          <span className="font-medium">{user.name}</span>
+                          <span className="text-xs text-gray-500">{user.email}</span>
+                        </div>
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            )}
+            {formErrors.hostId && (
+              <p className="text-sm text-red-600 flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                {formErrors.hostId}
+              </p>
+            )}
+          </div>
+
+          {/* Meeting Guests */}
+          <div className="space-y-2">
+            <Label htmlFor="guests" className="text-sm font-medium">
+              Meeting Guests (Leads/Contacts) *
+            </Label>
+            {loadingData ? (
+              <div className="flex items-center space-x-2 p-3 border rounded-md bg-gray-50">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                <span className="text-sm text-gray-500">Loading contacts...</span>
+              </div>
+            ) : (
+              <div className={`border rounded-md ${formErrors.guestIds ? 'border-red-500' : ''}`}>
+                {contacts.length === 0 ? (
+                  <div className="p-4 text-center text-sm text-gray-500">
+                    No contacts available. Please add contacts first.
+                  </div>
+                ) : (
+                  <>
+                    <div className="max-h-40 overflow-y-auto p-2 space-y-2">
+                      {contacts.map((contact) => (
+                        <label key={contact._id} className="flex items-start space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.guestIds.includes(contact._id)}
+                            onChange={(e) => {
+                              const newGuestIds = e.target.checked
+                                ? [...formData.guestIds, contact._id]
+                                : formData.guestIds.filter(id => id !== contact._id);
+                              handleInputChange('guestIds', newGuestIds);
+                            }}
+                            className="mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-gray-900">{contact.fullName}</div>
+                            <div className="text-xs text-gray-500 truncate">{contact.email}</div>
+                            {contact.phoneNumber && (
+                              <div className="text-xs text-gray-400">{contact.phoneNumber}</div>
+                            )}
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                    <div className="px-3 py-2 bg-gray-50 border-t text-xs text-gray-600 flex items-center justify-between">
+                      <span>Selected: {formData.guestIds.length} guest{formData.guestIds.length !== 1 ? 's' : ''}</span>
+                      {formData.guestIds.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => handleInputChange('guestIds', [])}
+                          className="text-red-600 hover:text-red-700 text-xs underline"
+                        >
+                          Clear all
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
             </div>
+            )}
+            {formErrors.guestIds && (
+              <p className="text-sm text-red-600 flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                {formErrors.guestIds}
+              </p>
+            )}
           </div>
 
           {/* Description */}
@@ -348,18 +564,18 @@ export default function AddMeetingModal({ isOpen, onClose, selectedDate, onMeeti
             <Label htmlFor="reminder" className="text-sm font-medium">
               Reminder
             </Label>
-            <Select value={formData.reminder} onValueChange={(value) => handleInputChange('reminder', value)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="5">5 minutes before</SelectItem>
-                <SelectItem value="15">15 minutes before</SelectItem>
-                <SelectItem value="30">30 minutes before</SelectItem>
-                <SelectItem value="60">1 hour before</SelectItem>
-                <SelectItem value="1440">1 day before</SelectItem>
-              </SelectContent>
-            </Select>
+             <Select value={formData.reminder} onValueChange={(value) => handleInputChange('reminder', value)}>
+               <SelectTrigger className="bg-white">
+                 <SelectValue />
+               </SelectTrigger>
+               <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                 <SelectItem value="5" className="bg-white hover:bg-gray-50">5 minutes before</SelectItem>
+                 <SelectItem value="15" className="bg-white hover:bg-gray-50">15 minutes before</SelectItem>
+                 <SelectItem value="30" className="bg-white hover:bg-gray-50">30 minutes before</SelectItem>
+                 <SelectItem value="60" className="bg-white hover:bg-gray-50">1 hour before</SelectItem>
+                 <SelectItem value="1440" className="bg-white hover:bg-gray-50">1 day before</SelectItem>
+               </SelectContent>
+             </Select>
           </div>
 
           {/* Success Section - Show Google Meet Link */}
@@ -451,3 +667,5 @@ export default function AddMeetingModal({ isOpen, onClose, selectedDate, onMeeti
     </div>
   );
 }
+
+
