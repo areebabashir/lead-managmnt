@@ -52,7 +52,7 @@ const emailSchema = new mongoose.Schema({
   // Email Status and Type
   status: {
     type: String,
-    enum: ['draft', 'scheduled', 'sending', 'sent', 'failed', 'cancelled'],
+    enum: ['draft', 'scheduled', 'sending', 'sent', 'failed', 'cancelled', 'received'],
     default: 'draft'
   },
   emailType: {
@@ -99,14 +99,35 @@ const emailSchema = new mongoose.Schema({
       filename: String,
       contentType: String,
       size: Number,
-      url: String
+      url: String,
+      attachmentId: String
     }],
     priority: {
       type: String,
       enum: ['low', 'normal', 'high'],
       default: 'normal'
     },
-    tags: [String]
+    tags: [String],
+    // Gmail specific fields
+    gmailLabels: [String], // Gmail label IDs
+    isRead: {
+      type: Boolean,
+      default: false
+    },
+    isStarred: {
+      type: Boolean,
+      default: false
+    },
+    isImportant: {
+      type: Boolean,
+      default: false
+    },
+    receivedDate: Date,
+    emailDirection: {
+      type: String,
+      enum: ['sent', 'received'],
+      default: 'sent'
+    }
   },
   
   // Tracking and Analytics
@@ -159,6 +180,12 @@ emailSchema.index({ scheduledDate: 1 });
 emailSchema.index({ sentDate: -1 });
 emailSchema.index({ 'recipient.contactId': 1 });
 emailSchema.index({ createdAt: -1 });
+// Inbox specific indexes
+emailSchema.index({ 'metadata.emailDirection': 1, 'metadata.receivedDate': -1 });
+emailSchema.index({ 'metadata.isRead': 1 });
+emailSchema.index({ 'metadata.isStarred': 1 });
+emailSchema.index({ 'metadata.threadId': 1 });
+emailSchema.index({ 'metadata.gmailMessageId': 1 });
 
 // Virtual for email age in hours
 emailSchema.virtual('ageInHours').get(function() {
@@ -272,6 +299,51 @@ emailSchema.statics.getEmailsByContact = function(contactId, userId = null) {
     query['sender.userId'] = userId;
   }
   return this.find(query).sort({ createdAt: -1 });
+};
+
+// Static method to get received emails (inbox)
+emailSchema.statics.getReceivedEmails = function(userId, options = {}) {
+  const query = { 
+    'metadata.emailDirection': 'received',
+    isActive: true 
+  };
+  
+  if (options.unreadOnly) {
+    query['metadata.isRead'] = false;
+  }
+  
+  if (options.starredOnly) {
+    query['metadata.isStarred'] = true;
+  }
+  
+  if (options.label) {
+    query['metadata.gmailLabels'] = options.label;
+  }
+  
+  return this.find(query)
+    .sort({ 'metadata.receivedDate': -1 })
+    .limit(options.limit || 50)
+    .skip(options.skip || 0);
+};
+
+// Static method to get email threads
+emailSchema.statics.getEmailThread = function(threadId) {
+  return this.find({ 
+    'metadata.threadId': threadId,
+    isActive: true 
+  }).sort({ 'metadata.receivedDate': 1 });
+};
+
+// Method to mark email as read/unread
+emailSchema.methods.markAsRead = function(isRead = true) {
+  this.metadata.isRead = isRead;
+  return this.save();
+};
+
+// Method to star/unstar email
+emailSchema.methods.toggleStar = function() {
+  this.metadata.isStarred = !this.metadata.isStarred;
+  return this.save();
 };
 
 const Email = mongoose.model('Email', emailSchema);

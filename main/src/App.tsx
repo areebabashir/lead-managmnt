@@ -24,6 +24,7 @@ import AIAssistant from "./pages/AI/AIAssistant";
 import EmailGenerator from "./pages/AI/EmailGenerator";
 import EmailManager from "./pages/AI/EmailManager";
 import MeetingNotes from "./pages/AI/MeetingNotes";
+import MeetingNotesManager from "./pages/AI/MeetingNotesManager";
 import CustomPrompts from "./pages/AI/CustomPrompts";
 import Profile from "./pages/Profile";
 import MeetingScheduling from "./pages/MeetingScheduling";
@@ -148,11 +149,18 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/ai-assistant/meetings" element={
-              <ProtectedRoute requiredPermission={{ resource: 'ai_generator', action: 'generate' }}>
+              // <ProtectedRoute requiredPermission={{ resource: 'meeting_notes', action: 'create' }}>
                 <AppLayout>
                   <MeetingNotes />
                 </AppLayout>
-              </ProtectedRoute>
+              // </ProtectedRoute>
+            } />
+            <Route path="/ai-assistant/meeting-notes-manager" element={
+              // <ProtectedRoute requiredPermission={{ resource: 'meeting_notes', action: 'read' }}>
+                <AppLayout>
+                  <MeetingNotesManager />
+                </AppLayout>
+              // </ProtectedRoute>
             } />
             <Route path="/ai-assistant/prompts" element={
               <ProtectedRoute requiredPermission={{ resource: 'ai_generator', action: 'generate' }}>

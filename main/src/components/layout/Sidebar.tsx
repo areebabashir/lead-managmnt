@@ -126,7 +126,13 @@ const getMenuItems = (hasPermission: (resource: string, action: string) => boole
           title: "Meeting Notes", 
           href: "/ai-assistant/meetings", 
           icon: FileText,
-          show: isSuperAdmin || hasPermission('ai_generator', 'generate')
+          show: isSuperAdmin || hasPermission('meeting_notes', 'create')
+        },
+        { 
+          title: "Notes Manager", 
+          href: "/ai-assistant/meeting-notes-manager", 
+          icon: Database,
+          show: isSuperAdmin || hasPermission('meeting_notes', 'read')
         },
         { 
           title: "Custom Prompts", 

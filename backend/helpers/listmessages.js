@@ -8,10 +8,6 @@ const oAuth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_SECRET,
   process.env.GOOGLE_REDIRECT_URI
 );
-// console.log(process.env.GOOGLE_CLIENT_ID);
-// console.log(process.env.GOOGLE_CLIENT_SECRET);
-// console.log(process.env.GOOGLE_REDIRECT_URI);
-// console.log(process.env.GOOGLE_REFRESH_TOKEN);
 
 // Attach refresh token
 if (process.env.GOOGLE_REFRESH_TOKEN) {
