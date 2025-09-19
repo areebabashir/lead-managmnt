@@ -2,6 +2,8 @@ import Contact from '../models/contactModel.js';
 import Task from '../models/taskModel.js';
 import Campaign from '../models/campaignModel.js';
 import User from '../models/authModel.js';
+import Meeting from '../models/meetingModel.js';
+import SMS from '../models/smsModel.js';
 import { hasPermission } from '../helpers/permissionHelper.js';
 
 // Get dashboard overview data
@@ -25,7 +27,7 @@ export const getDashboardOverview = async (req, res) => {
         const userCounts = await getUserCounts(isAdmin);
 
         // Get recent activities
-        const recentActivities = await getRecentActivities(userId, isAdmin);
+        const recentActivities = await getRecentActivitiesHelper(userId, isAdmin);
 
         // Get performance metrics
         const performanceMetrics = await getPerformanceMetrics(userId, isAdmin);
@@ -251,8 +253,8 @@ const getUserCounts = async (isAdmin) => {
     };
 };
 
-// Helper function to get recent activities
-const getRecentActivities = async (userId, isAdmin) => {
+// Helper function to get recent activities (internal)
+const getRecentActivitiesHelper = async (userId, isAdmin) => {
     const filter = isAdmin ? {} : { createdBy: userId };
     const limit = 10;
 
@@ -526,4 +528,302 @@ const getROIMetrics = async (userId, isAdmin) => {
             roi: campaign.roiPercentage
         }))
     };
+};
+
+// Get comprehensive dashboard statistics
+export const getDashboardStats = async (req, res) => {
+    try {
+        // Check permission
+        if (!await hasPermission(req.user._id, 'dashboards', 'read')) {
+            return res.status(403).json({
+                success: false,
+                message: 'Permission denied: Cannot access dashboard'
+            });
+        }
+
+        const userId = req.user._id;
+        const isAdmin = req.user.isSuperAdmin || req.user.role?.level >= 4;
+        
+        // Get current month date range
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+
+        // Get total counts
+        const totalLeads = await Contact.countDocuments({ isActive: true });
+        const totalUsers = await User.countDocuments({ isActive: true });
+        const totalTasks = await Task.countDocuments({ isActive: true });
+        const totalMeetings = await Meeting.countDocuments({ isActive: true });
+        const totalSMS = await SMS.countDocuments({});
+
+        // Get this month's data
+        const leadsThisMonth = await Contact.countDocuments({
+            isActive: true,
+            createdAt: { $gte: startOfMonth }
+        });
+        
+        const tasksCompleted = await Task.countDocuments({
+            status: 'done',
+            updatedAt: { $gte: startOfMonth }
+        });
+        
+        const meetingsScheduled = await Meeting.countDocuments({
+            isActive: true,
+            createdAt: { $gte: startOfMonth }
+        });
+        
+        const smsDelivered = await SMS.countDocuments({
+            twilioStatus: 'delivered',
+            sentAt: { $gte: startOfMonth }
+        });
+
+        // Get last month's data for growth calculation
+        const leadsLastMonth = await Contact.countDocuments({
+            isActive: true,
+            createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth }
+        });
+        
+        const tasksLastMonth = await Task.countDocuments({
+            status: 'done',
+            updatedAt: { $gte: startOfLastMonth, $lte: endOfLastMonth }
+        });
+        
+        const meetingsLastMonth = await Meeting.countDocuments({
+            isActive: true,
+            createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth }
+        });
+        
+        const usersLastMonth = await User.countDocuments({
+            isActive: true,
+            createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth }
+        });
+
+        // Calculate growth percentages
+        const leadsGrowth = leadsLastMonth > 0 ? ((leadsThisMonth - leadsLastMonth) / leadsLastMonth) * 100 : 0;
+        const tasksGrowth = tasksLastMonth > 0 ? ((tasksCompleted - tasksLastMonth) / tasksLastMonth) * 100 : 0;
+        const usersGrowth = usersLastMonth > 0 ? ((totalUsers - usersLastMonth) / usersLastMonth) * 100 : 0;
+        const meetingsGrowth = meetingsLastMonth > 0 ? ((meetingsScheduled - meetingsLastMonth) / meetingsLastMonth) * 100 : 0;
+
+        const stats = {
+            totalLeads,
+            totalUsers,
+            totalTasks,
+            totalMeetings,
+            totalSMS,
+            leadsThisMonth,
+            tasksCompleted,
+            meetingsScheduled,
+            smsDelivered,
+            leadsGrowth: Math.round(leadsGrowth * 100) / 100,
+            tasksGrowth: Math.round(tasksGrowth * 100) / 100,
+            usersGrowth: Math.round(usersGrowth * 100) / 100,
+            meetingsGrowth: Math.round(meetingsGrowth * 100) / 100
+        };
+
+        res.json({
+            success: true,
+            data: stats
+        });
+
+    } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching dashboard statistics',
+            error: error.message
+        });
+    }
+};
+
+// Get leads chart data (monthly breakdown)
+export const getLeadsChartData = async (req, res) => {
+    try {
+        const months = [];
+        const now = new Date();
+        
+        // Get last 6 months of data
+        for (let i = 5; i >= 0; i--) {
+            const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const nextMonth = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+            
+            const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+            
+            const leads = await Contact.countDocuments({
+                isActive: true,
+                createdAt: { $gte: date, $lt: nextMonth }
+            });
+            
+            const conversions = await Contact.countDocuments({
+                isActive: true,
+                status: 'closed_won',
+                updatedAt: { $gte: date, $lt: nextMonth }
+            });
+            
+            months.push({
+                month: monthName,
+                leads,
+                conversions
+            });
+        }
+
+        res.json({
+            success: true,
+            data: months
+        });
+
+    } catch (error) {
+        console.error('Error fetching leads chart data:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching leads chart data',
+            error: error.message
+        });
+    }
+};
+
+// Get leads by stage data
+export const getLeadsStageData = async (req, res) => {
+    try {
+        const stages = [
+            { name: 'New', status: 'New' },
+            { name: 'Contacted', status: 'Existing' },
+            { name: 'Qualified', status: 'First-Time Buyer' }
+        ];
+
+        const stageData = [];
+        
+        for (const stage of stages) {
+            const count = await Contact.countDocuments({
+                isActive: true,
+                status: stage.status
+            });
+            
+            stageData.push({
+                name: stage.name,
+                value: count
+            });
+        }
+
+        res.json({
+            success: true,
+            data: stageData
+        });
+
+    } catch (error) {
+        console.error('Error fetching leads stage data:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching leads stage data',
+            error: error.message
+        });
+    }
+};
+
+// Get recent activities (API endpoint)
+export const getRecentActivities = async (req, res) => {
+    try {
+        const limit = 10;
+        const activities = [];
+
+        // Get recent contacts
+        const recentContacts = await Contact.find({ isActive: true })
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .populate('createdBy', 'name');
+
+        // Get recent tasks
+        const recentTasks = await Task.find({ isActive: true })
+            .sort({ updatedAt: -1 })
+            .limit(5)
+            .populate('createdBy', 'name');
+
+        // Get recent meetings
+        const recentMeetings = await Meeting.find({ isActive: true })
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .populate('createdBy', 'name');
+
+        // Get recent SMS
+        const recentSMS = await SMS.find({})
+            .sort({ sentAt: -1 })
+            .limit(5)
+            .populate('sentBy', 'name');
+
+        // Format activities
+        recentContacts.forEach(contact => {
+            activities.push({
+                id: contact._id,
+                action: `New lead: ${contact.fullName}`,
+                user: contact.createdBy?.name || 'System',
+                time: getTimeAgo(contact.createdAt),
+                type: 'lead'
+            });
+        });
+
+        recentTasks.forEach(task => {
+            activities.push({
+                id: task._id,
+                action: `Task ${task.status}: ${task.title}`,
+                user: task.createdBy?.name || 'System',
+                time: getTimeAgo(task.updatedAt),
+                type: 'task'
+            });
+        });
+
+        recentMeetings.forEach(meeting => {
+            activities.push({
+                id: meeting._id,
+                action: `Meeting scheduled: ${meeting.title}`,
+                user: meeting.createdBy?.name || 'System',
+                time: getTimeAgo(meeting.createdAt),
+                type: 'meeting'
+            });
+        });
+
+        recentSMS.forEach(sms => {
+            activities.push({
+                id: sms._id,
+                action: `SMS sent to ${sms.recipientName}`,
+                user: sms.sentBy?.name || 'System',
+                time: getTimeAgo(sms.sentAt),
+                type: 'sms'
+            });
+        });
+
+        // Sort by time and limit
+        const sortedActivities = activities
+            .sort((a, b) => new Date(b.createdAt || b.updatedAt || b.sentAt) - new Date(a.createdAt || a.updatedAt || a.sentAt))
+            .slice(0, limit);
+
+        res.json({
+            success: true,
+            data: sortedActivities
+        });
+
+    } catch (error) {
+        console.error('Error fetching recent activities:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching recent activities',
+            error: error.message
+        });
+    }
+};
+
+// Helper function to get time ago
+const getTimeAgo = (date) => {
+    const now = new Date();
+    const diffInMs = now - new Date(date);
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (diffInMinutes < 60) {
+        return `${diffInMinutes} min ago`;
+    } else if (diffInHours < 24) {
+        return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+    } else {
+        return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+    }
 };

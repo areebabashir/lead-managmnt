@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "../contexts/AuthContext"
 import MonthCalendar from "../components/dashboard/MonthCalendar"
 import GoogleCalendarAuth from "../components/forms/GoogleCalendarAuth"
+import { dashboardAPI, DashboardStats, LeadsChartData, LeadsStageData, RecentActivity } from "../services/dashboardAPI"
 import {
   PieChart as RechartsPieChart,
   Pie,
@@ -102,40 +103,52 @@ const leadsStageData = [
   { name: "Lost", value: 3 },
 ]
 
-const stats: Stat[] = [
-  {
-    title: "Total Leads",
-    value: "1,234",
-    change: "+12.5%",
-    changeValue: 135,
-    icon: Users,
-    trend: "up",
-  },
-  {
-    title: "Active Tasks",
-    value: "89",
-    change: "+5.2%",
-    changeValue: 4,
-    icon: CheckSquare,
-    trend: "up",
-  },
-  {
-    title: "Staff Online",
-    value: "24",
-    change: "+8.3%",
-    changeValue: 2,
-    icon: UserCheck,
-    trend: "up",
-  },
-  {
-    title: "Support Tickets",
-    value: "156",
-    change: "-8.1%",
-    changeValue: -14,
-    icon: Headphones,
-    trend: "down",
-  },
-]
+  // Generate real stats from dashboard data
+  const generateStats = (data: DashboardStats | null): Stat[] => {
+    if (!data) {
+      return [
+        { title: "Total Leads", value: "Loading...", change: "", changeValue: 0, icon: Users, trend: "up" },
+        { title: "Active Tasks", value: "Loading...", change: "", changeValue: 0, icon: CheckSquare, trend: "up" },
+        { title: "Total Users", value: "Loading...", change: "", changeValue: 0, icon: UserCheck, trend: "up" },
+        { title: "SMS Sent", value: "Loading...", change: "", changeValue: 0, icon: MessageSquare, trend: "up" },
+      ]
+    }
+
+    return [
+      {
+        title: "Total Leads",
+        value: data.totalLeads.toLocaleString(),
+        change: data.leadsGrowth >= 0 ? `+${data.leadsGrowth}%` : `${data.leadsGrowth}%`,
+        changeValue: data.leadsThisMonth,
+        icon: Users,
+        trend: data.leadsGrowth >= 0 ? "up" : "down",
+      },
+      {
+        title: "Active Tasks",
+        value: data.totalTasks.toLocaleString(),
+        change: data.tasksGrowth >= 0 ? `+${data.tasksGrowth}%` : `${data.tasksGrowth}%`,
+        changeValue: data.tasksCompleted,
+        icon: CheckSquare,
+        trend: data.tasksGrowth >= 0 ? "up" : "down",
+      },
+      {
+        title: "Total Users",
+        value: data.totalUsers.toLocaleString(),
+        change: data.usersGrowth >= 0 ? `+${data.usersGrowth}%` : `${data.usersGrowth}%`,
+        changeValue: data.totalUsers,
+        icon: UserCheck,
+        trend: data.usersGrowth >= 0 ? "up" : "down",
+      },
+      {
+        title: "SMS Sent",
+        value: data.totalSMS.toLocaleString(),
+        change: `${data.smsDelivered} delivered`,
+        changeValue: data.smsDelivered,
+        icon: MessageSquare,
+        trend: "up",
+      },
+    ]
+  }
 
 const todoItems: Todo[] = [
   { id: "td1", label: "Follow up with new leads", done: false, priority: "high", time: "2 hours ago" },
@@ -143,11 +156,6 @@ const todoItems: Todo[] = [
   { id: "td3", label: "Review ticket #4231", done: true, priority: "low", time: "1 day ago" },
 ]
 
-const recentActivities: ActivityItemType[] = [
-  { id: 1, action: "New lead created", user: "John Doe", time: "2 min ago", type: "lead" },
-  { id: 2, action: "Task completed", user: "Sarah Smith", time: "15 min ago", type: "task" },
-  { id: 3, action: "Support ticket resolved", user: "Mike Johnson", time: "1 hour ago", type: "support" },
-]
 
 
 
@@ -602,6 +610,102 @@ export const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSideba
 // Dashboard Page Component
 export default function Dashboard() {
   const { user, hasPermission } = useAuth()
+  
+  // Real data state
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null)
+  const [leadsChartData, setLeadsChartData] = useState<LeadsChartData[]>([])
+  const [leadsStageData, setLeadsStageData] = useState<LeadsStageData[]>([])
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Load dashboard data
+  useEffect(() => {
+    loadDashboardData()
+  }, [])
+
+  const loadDashboardData = async () => {
+    try {
+      setIsLoading(true)
+      
+      // Load all dashboard data in parallel
+      const [statsResponse, chartResponse, stageResponse, activitiesResponse] = await Promise.all([
+        dashboardAPI.getDashboardStats(),
+        dashboardAPI.getLeadsChartData(),
+        dashboardAPI.getLeadsStageData(),
+        dashboardAPI.getRecentActivities()
+      ])
+
+      if (statsResponse.success) {
+        setDashboardStats(statsResponse.data)
+      }
+
+      if (chartResponse.success) {
+        setLeadsChartData(chartResponse.data)
+      }
+
+      if (stageResponse.success) {
+        setLeadsStageData(stageResponse.data)
+      }
+
+      if (activitiesResponse.success) {
+        setRecentActivities(activitiesResponse.data)
+      }
+
+    } catch (error) {
+      console.error('Error loading dashboard data:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Generate real stats from dashboard data
+  const generateStats = (data: DashboardStats | null): Stat[] => {
+    if (!data) {
+      return [
+        { title: "Total Leads", value: "Loading...", change: "", changeValue: 0, icon: Users, trend: "up" },
+        { title: "Active Tasks", value: "Loading...", change: "", changeValue: 0, icon: CheckSquare, trend: "up" },
+        { title: "Total Users", value: "Loading...", change: "", changeValue: 0, icon: UserCheck, trend: "up" },
+        { title: "SMS Sent", value: "Loading...", change: "", changeValue: 0, icon: MessageSquare, trend: "up" },
+      ]
+    }
+
+    return [
+      {
+        title: "Total Leads",
+        value: data.totalLeads.toLocaleString(),
+        change: data.leadsGrowth >= 0 ? `+${data.leadsGrowth}%` : `${data.leadsGrowth}%`,
+        changeValue: data.leadsThisMonth,
+        icon: Users,
+        trend: data.leadsGrowth >= 0 ? "up" : "down",
+      },
+      {
+        title: "Active Tasks",
+        value: data.totalTasks.toLocaleString(),
+        change: data.tasksGrowth >= 0 ? `+${data.tasksGrowth}%` : `${data.tasksGrowth}%`,
+        changeValue: data.tasksCompleted,
+        icon: CheckSquare,
+        trend: data.tasksGrowth >= 0 ? "up" : "down",
+      },
+      {
+        title: "Total Users",
+        value: data.totalUsers.toLocaleString(),
+        change: data.usersGrowth >= 0 ? `+${data.usersGrowth}%` : `${data.usersGrowth}%`,
+        changeValue: data.totalUsers,
+        icon: UserCheck,
+        trend: data.usersGrowth >= 0 ? "up" : "down",
+      },
+      {
+        title: "SMS Sent",
+        value: data.totalSMS.toLocaleString(),
+        change: `${data.smsDelivered} delivered`,
+        changeValue: data.smsDelivered,
+        icon: MessageSquare,
+        trend: "up",
+      },
+    ]
+  }
+
+  const stats = generateStats(dashboardStats)
 
   return (
     <div className="min-h-screen  pl-3 md:pl-6 pt-6">
@@ -662,7 +766,7 @@ export default function Dashboard() {
         <div className="xl:col-span-2 space-y-6">
           <ChartCard title="Leads Growth & Conversions" icon={TrendingUp}>
             <ResponsiveContainer width="100%" height={250}>
-              <AreaChart data={mockLeadsData}>
+              <AreaChart data={leadsChartData.length > 0 ? leadsChartData : mockLeadsData}>
                 <defs>
                   <linearGradient id="leadsGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#EA580C" stopOpacity={0.2} />
@@ -731,7 +835,11 @@ export default function Dashboard() {
   <ResponsiveContainer width="100%" height={260}>
     <RechartsPieChart>
       <Pie
-        data={leadsStageData}
+        data={leadsStageData.length > 0 ? leadsStageData : [
+          { name: "New", value: 35 },
+          { name: "Contacted", value: 22 },
+          { name: "Qualified", value: 18 }
+        ]}
         cx="50%"
         cy="50%"
         innerRadius={50}
