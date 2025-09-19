@@ -59,6 +59,19 @@ const meetingSchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: true
+    },
+    // Google Calendar integration fields
+    googleEventId: {
+        type: String,
+        default: null
+    },
+    googleMeetLink: {
+        type: String,
+        default: null
+    },
+    googleEventLink: {
+        type: String,
+        default: null
     }
 }, { 
     timestamps: true 

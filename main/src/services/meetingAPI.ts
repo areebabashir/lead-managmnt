@@ -31,6 +31,11 @@ export interface Meeting {
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  // Google Calendar integration fields
+  googleEventId?: string;
+  googleMeetLink?: string;
+  googleEventLink?: string;
+  googleCalendarCreated?: boolean;
 }
 
 export interface CreateMeetingData {
@@ -44,6 +49,13 @@ export interface CreateMeetingData {
   description?: string;
   priority: 'high' | 'medium' | 'low';
   reminder: number;
+  // Host and guest information
+  hostId?: string;
+  hostName?: string;
+  hostEmail?: string;
+  guestIds?: string[];
+  guestEmails?: string[];
+  guestNames?: string[];
 }
 
 export interface UpdateMeetingData extends Partial<CreateMeetingData> {

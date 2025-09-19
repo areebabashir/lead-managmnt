@@ -38,6 +38,11 @@ const userSchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: true
+    },
+    // Google Calendar integration
+    googleTokens: {
+        type: Object,
+        default: null
     }
 }, { timestamps: true });
 

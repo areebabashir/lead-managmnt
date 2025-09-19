@@ -28,6 +28,7 @@ import MeetingNotesManager from "./pages/AI/MeetingNotesManager";
 import CustomPrompts from "./pages/AI/CustomPrompts";
 import Profile from "./pages/Profile";
 import MeetingScheduling from "./pages/MeetingScheduling";
+import GoogleCalendarCallback from "./pages/GoogleCalendarCallback";
 
 import NotFound from "./pages/NotFound";
 import Performance from "./pages/Analytics/Performance";
@@ -45,6 +46,7 @@ const App = () => (
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
+            <Route path="/google-calendar-callback" element={<GoogleCalendarCallback />} />
             
             {/* Protected Routes */}
             <Route path="/" element={
