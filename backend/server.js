@@ -13,6 +13,7 @@ import meetingRoutes from './routes/meetingRoutes.js'; // Importing meeting rout
 import webhookRoutes from './routes/webhookRoutes.js'; // Importing webhook routes
 import emailRoutes from './routes/emailRoutes.js'; // Importing email routes
 import googleCalendarRoutes from './routes/googleCalendarRoutes.js'; // Importing Google Calendar routes
+import smsRoutes from './routes/smsRoutes.js'; // Importing SMS routes
 import meetingNotesRoutes from './routes/meetingNotesRoutes.js'; // Importing meeting notes routes
 import { seedDefaultRoles } from './config/seedRoles.js'; // Import role seeder
 import emailScheduler from './services/emailScheduler.js'; // Import email scheduler
@@ -46,6 +47,7 @@ app.use('/api/meetings', meetingRoutes); // Mount meeting routes
 app.use('/api/webhooks', webhookRoutes); // Mount webhook routes
 app.use('/api/emails', emailRoutes); // Mount email routes
 app.use('/api/google-calendar', googleCalendarRoutes); // Mount Google Calendar routes
+app.use('/api/sms', smsRoutes); // Mount SMS routes
 
 // Legacy OAuth callback (kept for backward compatibility)
 app.get("/oauth2callback", async (req, res) => {

@@ -564,18 +564,18 @@ export default function AddMeetingModal({ isOpen, onClose, selectedDate, onMeeti
             <Label htmlFor="reminder" className="text-sm font-medium">
               Reminder
             </Label>
-             <Select value={formData.reminder} onValueChange={(value) => handleInputChange('reminder', value)}>
+            <Select value={formData.reminder} onValueChange={(value) => handleInputChange('reminder', value)}>
                <SelectTrigger className="bg-white">
-                 <SelectValue />
-               </SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
                <SelectContent className="bg-white border border-gray-200 shadow-lg">
                  <SelectItem value="5" className="bg-white hover:bg-gray-50">5 minutes before</SelectItem>
                  <SelectItem value="15" className="bg-white hover:bg-gray-50">15 minutes before</SelectItem>
                  <SelectItem value="30" className="bg-white hover:bg-gray-50">30 minutes before</SelectItem>
                  <SelectItem value="60" className="bg-white hover:bg-gray-50">1 hour before</SelectItem>
                  <SelectItem value="1440" className="bg-white hover:bg-gray-50">1 day before</SelectItem>
-               </SelectContent>
-             </Select>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Success Section - Show Google Meet Link */}
