@@ -155,6 +155,12 @@ const emailSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  // Reference to the active email account that sent/received this email
+  activeEmailAccount: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'EmailAccount',
+    required: false // Optional for backward compatibility
+  },
   retryCount: {
     type: Number,
     default: 0
@@ -186,6 +192,8 @@ emailSchema.index({ 'metadata.isRead': 1 });
 emailSchema.index({ 'metadata.isStarred': 1 });
 emailSchema.index({ 'metadata.threadId': 1 });
 emailSchema.index({ 'metadata.gmailMessageId': 1 });
+// Active email account index
+emailSchema.index({ 'activeEmailAccount': 1 });
 
 // Virtual for email age in hours
 emailSchema.virtual('ageInHours').get(function() {
@@ -307,6 +315,11 @@ emailSchema.statics.getReceivedEmails = function(userId, options = {}) {
     'metadata.emailDirection': 'received',
     isActive: true 
   };
+  
+  // Filter by active email account if provided
+  if (options.activeEmailAccountId) {
+    query['activeEmailAccount'] = options.activeEmailAccountId;
+  }
   
   if (options.unreadOnly) {
     query['metadata.isRead'] = false;

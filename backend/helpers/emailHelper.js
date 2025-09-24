@@ -1,25 +1,54 @@
 import { google } from "googleapis";
 import dotenv from "dotenv";
+import EmailAccount from "../models/emailAccountModel.js";
 
 dotenv.config();
 
-// Hardcoded Google OAuth credentials
+// Google OAuth credentials (still from env for client setup)
 const oAuth2Client = new google.auth.OAuth2(
-  "533043152880-e68i6d56n9gd7hvb3d0t8krhmt8sh280.apps.googleusercontent.com",
-  "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",
-  "https://developers.google.com/oauthplayground"
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  process.env.GOOGLE_REDIRECT_URI
 );
-// console.log(process.env.GOOGLE_CLIENT_ID);
-// console.log(process.env.GOOGLE_CLIENT_SECRET);
-// console.log(process.env.GOOGLE_REDIRECT_URI);
-// console.log(process.env.GOOGLE_REFRESH_TOKEN);
 
-// Attach hardcoded refresh token
-oAuth2Client.setCredentials({ 
-  refresh_token: "1//04C8A4KmF4ijUCgYIARAAGAQSNwF-L9IrNeIbAcgrfuYgKCfakCr46FMcy-mhNJFedagGElq014k5DKGEEOYjIPFKWPQQataZpOs"
-});
+// Function to get active email account and set up OAuth client
+async function getActiveEmailAccount() {
+  try {
+    const activeAccount = await EmailAccount.findOne({ isActive: true });
+    
+    if (!activeAccount) {
+      throw new Error('No active email account found. Please activate an email account in settings.');
+    }
 
-const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
+    if (!activeAccount.google?.refreshToken) {
+      throw new Error('Active email account does not have a valid refresh token. Please reconnect your Google account.');
+    }
+
+    return activeAccount;
+  } catch (error) {
+    console.error('Error getting active email account:', error);
+    throw error;
+  }
+}
+
+// Function to get configured Gmail client with active account tokens
+async function getGmailClient() {
+  try {
+    const activeAccount = await getActiveEmailAccount();
+    
+    // Set credentials for the active account
+    oAuth2Client.setCredentials({
+      refresh_token: activeAccount.google.refreshToken,
+      access_token: activeAccount.google.accessToken,
+      expiry_date: activeAccount.google.expiryDate
+    });
+
+    return google.gmail({ version: "v1", auth: oAuth2Client });
+  } catch (error) {
+    console.error('Error setting up Gmail client:', error);
+    throw error;
+  }
+}
 
 /**
  * Decode base64 email body
@@ -33,107 +62,157 @@ function decodeEmailBody(base64Data) {
  * Send an email
  */
 export async function sendEmail(to, subject, text) {
-  const message = [
-    `From: Realtech <${process.env.GMAIL_SENDER}>`,
-    `To: ${to}`,
-    `Subject: ${subject}`,
-    "",
-    text,
-  ].join("\n");
+  try {
+    const gmail = await getGmailClient();
+    const activeAccount = await getActiveEmailAccount();
+    
+    const message = [
+      `From: ${activeAccount.displayName || 'Company'} <${activeAccount.email}>`,
+      `To: ${to}`,
+      `Subject: ${subject}`,
+      "",
+      text,
+    ].join("\n");
 
-  const encodedMessage = Buffer.from(message)
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
+    const encodedMessage = Buffer.from(message)
+      .toString("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
 
-  const res = await gmail.users.messages.send({
-    userId: "me",
-    requestBody: { raw: encodedMessage },
-  });
+    const res = await gmail.users.messages.send({
+      userId: "me",
+      requestBody: { raw: encodedMessage },
+    });
 
-  return res.data;
+    return res.data;
+  } catch (error) {
+    console.error('Error sending email:', error);
+    throw error;
+  }
 }
 
 /**
  * List messages (optionally with query e.g. "is:unread")
  */
-export async function listMessages(query = "") {
-  const res = await gmail.users.messages.list({
-    userId: "me",
-    q: query,
-    maxResults: 10,
-  });
-  console.log("List messages:", res.data.messages);
-  return res.data.messages || [];
+export async function listMessages(query = "", maxResults = 10) {
+  try {
+    const gmail = await getGmailClient();
+    
+    const res = await gmail.users.messages.list({
+      userId: "me",
+      q: query,
+      maxResults: maxResults,
+    });
+    console.log("List messages:", res.data.messages);
+    return res.data.messages || [];
+  } catch (error) {
+    console.error('Error listing messages:', error);
+    throw error;
+  }
 }
 
 /**
  * Get full message content
  */
 export async function getMessage(messageId) {
-  const res = await gmail.users.messages.get({
-    userId: "me",
-    id: messageId,
-    format: "full", // can be 'metadata' or 'minimal'
-  });
-  console.log("Message:", res.data);
-  return res.data;
+  try {
+    const gmail = await getGmailClient();
+    
+    const res = await gmail.users.messages.get({
+      userId: "me",
+      id: messageId,
+      format: "full", // can be 'metadata' or 'minimal'
+    });
+    console.log("Message:", res.data);
+    return res.data;
+  } catch (error) {
+    console.error('Error getting message:', error);
+    throw error;
+  }
 }
 
 /**
  * Modify message (e.g. mark read/unread, apply label)
  */
 export async function modifyMessage(messageId, labelsToAdd = [], labelsToRemove = []) {
-  const res = await gmail.users.messages.modify({
-    userId: "me",
-    id: messageId,
-    requestBody: {
-      addLabelIds: labelsToAdd,
-      removeLabelIds: labelsToRemove,
-    },
-  });
-  return res.data;
+  try {
+    const gmail = await getGmailClient();
+    
+    const res = await gmail.users.messages.modify({
+      userId: "me",
+      id: messageId,
+      requestBody: {
+        addLabelIds: labelsToAdd,
+        removeLabelIds: labelsToRemove,
+      },
+    });
+    return res.data;
+  } catch (error) {
+    console.error('Error modifying message:', error);
+    throw error;
+  }
 }
 
 /**
  * List all labels
  */
 export async function listLabels() {
-  const res = await gmail.users.labels.list({ userId: "me" });
-  return res.data.labels || [];
+  try {
+    const gmail = await getGmailClient();
+    
+    const res = await gmail.users.labels.list({ userId: "me" });
+    return res.data.labels || [];
+  } catch (error) {
+    console.error('Error listing labels:', error);
+    throw error;
+  }
 }
 
 /**
  * Get a thread (all messages in conversation)
  */
 export async function getThread(threadId) {
-  const res = await gmail.users.threads.get({
-    userId: "me",
-    id: threadId,
-  });
-  
-  // Decode the base64 email body
-  const message = res.data.messages[0];
-  if (message.payload && message.payload.body && message.payload.body.data) {
-    const decodedBody = Buffer.from(message.payload.body.data, 'base64').toString('utf-8');
-    console.log("Decoded email body:", decodedBody);
+  try {
+    const gmail = await getGmailClient();
+    
+    const res = await gmail.users.threads.get({
+      userId: "me",
+      id: threadId,
+    });
+    
+    // Decode the base64 email body
+    const message = res.data.messages[0];
+    if (message.payload && message.payload.body && message.payload.body.data) {
+      const decodedBody = Buffer.from(message.payload.body.data, 'base64').toString('utf-8');
+      console.log("Decoded email body:", decodedBody);
+    }
+    
+    console.log("Thread:", res.data);
+    return res.data;
+  } catch (error) {
+    console.error('Error getting thread:', error);
+    throw error;
   }
-  
-  console.log("Thread:", res.data);
-  return res.data;
 }
 
 /**
  * Get mailbox history since a given historyId (for syncing)
  */
 export async function getHistory(startHistoryId) {
-  const res = await gmail.users.history.list({
-    userId: "me",
-    startHistoryId,
-    historyTypes: ["messageAdded", "messageDeleted"],
-  });
-  return res.data.history || [];
+  try {
+    const gmail = await getGmailClient();
+    
+    const res = await gmail.users.history.list({
+      userId: "me",
+      startHistoryId,
+      historyTypes: ["messageAdded", "messageDeleted"],
+    });
+    return res.data.history || [];
+  } catch (error) {
+    console.error('Error getting history:', error);
+    throw error;
+  }
 }
 
 /**
@@ -141,6 +220,9 @@ export async function getHistory(startHistoryId) {
  */
 export async function syncInboxEmails(userId, maxResults = 50) {
   try {
+    // Get active email account to ensure we're syncing from the right account
+    const activeAccount = await getActiveEmailAccount();
+    
     // Get recent messages from Gmail
     const messages = await listMessages('in:inbox', maxResults);
     
@@ -168,7 +250,7 @@ export async function syncInboxEmails(userId, maxResults = 50) {
         const payload = fullMessage.payload;
         
         // Extract email data
-        const emailData = extractEmailData(payload, fullMessage, userId);
+        const emailData = extractEmailData(payload, fullMessage, userId, activeAccount);
         
         if (emailData) {
           const email = new Email(emailData);
@@ -191,7 +273,7 @@ export async function syncInboxEmails(userId, maxResults = 50) {
 /**
  * Extract email data from Gmail message payload
  */
-function extractEmailData(payload, fullMessage, userId) {
+function extractEmailData(payload, fullMessage, userId, activeAccount = null) {
   try {
     const headers = payload.headers || [];
     
@@ -239,6 +321,7 @@ function extractEmailData(payload, fullMessage, userId) {
         name: senderName
       },
       status: 'received',
+      activeEmailAccount: activeAccount ? activeAccount._id : null,
       metadata: {
         gmailMessageId: fullMessage.id,
         threadId: fullMessage.threadId,
@@ -248,7 +331,13 @@ function extractEmailData(payload, fullMessage, userId) {
         isStarred: fullMessage.labelIds?.includes('STARRED') || false,
         isImportant: fullMessage.labelIds?.includes('IMPORTANT') || false,
         receivedDate: new Date(date),
-        emailDirection: 'received'
+        emailDirection: 'received',
+        // Add active account information for tracking
+        activeEmailAccount: activeAccount ? {
+          id: activeAccount._id,
+          email: activeAccount.email,
+          displayName: activeAccount.displayName
+        } : null
       }
     };
   } catch (error) {
@@ -276,6 +365,9 @@ function extractBodyFromParts(parts) {
   return '';
 }
 
+
+// Export helper functions for use by other modules
+export { getActiveEmailAccount, getGmailClient };
 
 // listMessages();
 // getMessage("19951abd82bd7f55");

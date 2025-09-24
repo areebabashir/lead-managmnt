@@ -49,6 +49,17 @@ export const generateAndSaveEmail = async (req, res) => {
       });
     }
 
+    // Get active email account
+    const EmailAccount = (await import('../models/emailAccountModel.js')).default;
+    const activeAccount = await EmailAccount.findOne({ isActive: true });
+    
+    if (!activeAccount) {
+      return res.status(404).json({
+        success: false,
+        message: 'No active email account found. Please activate an email account in settings.'
+      });
+    }
+
     let generatedContent = { subject: '', body: '' };
     let aiInteractionId = null;
 
@@ -101,6 +112,7 @@ export const generateAndSaveEmail = async (req, res) => {
       },
       status: 'draft',
       emailType: emailType || 'custom',
+      activeEmailAccount: activeAccount._id,
       aiContext: {
         emailType: emailType || 'custom',
         tone: context?.tone || 'professional',
@@ -312,8 +324,23 @@ export const getUserEmails = async (req, res) => {
       });
     }
 
-    // Build query
-    const query = { 'sender.userId': userId, isActive: true };
+    // Get active email account
+    const EmailAccount = (await import('../models/emailAccountModel.js')).default;
+    const activeAccount = await EmailAccount.findOne({ isActive: true });
+    
+    if (!activeAccount) {
+      return res.status(404).json({
+        success: false,
+        message: 'No active email account found. Please activate an email account in settings.'
+      });
+    }
+
+    // Build query - filter by active email account
+    const query = { 
+      'sender.userId': userId, 
+      'activeEmailAccount': activeAccount._id,
+      isActive: true 
+    };
     if (status) query.status = status;
     if (contactId) query['recipient.contactId'] = contactId;
 
@@ -321,6 +348,7 @@ export const getUserEmails = async (req, res) => {
     const emails = await Email.find(query)
       .populate('recipient.contactId', 'fullName email')
       .populate('aiContext.aiInteractionId', 'prompt response')
+      .populate('activeEmailAccount', 'email displayName')
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
@@ -606,17 +634,30 @@ export const getInboxEmails = async (req, res) => {
       });
     }
 
+    // Get active email account
+    const EmailAccount = (await import('../models/emailAccountModel.js')).default;
+    const activeAccount = await EmailAccount.findOne({ isActive: true });
+    
+    if (!activeAccount) {
+      return res.status(404).json({
+        success: false,
+        message: 'No active email account found. Please activate an email account in settings.'
+      });
+    }
+
     const options = {
       unreadOnly: unreadOnly === 'true',
       starredOnly: starredOnly === 'true',
       label: label,
       limit: parseInt(limit),
-      skip: (parseInt(page) - 1) * parseInt(limit)
+      skip: (parseInt(page) - 1) * parseInt(limit),
+      activeEmailAccountId: activeAccount._id
     };
 
     const emails = await Email.getReceivedEmails(userId, options);
     const total = await Email.countDocuments({ 
       'metadata.emailDirection': 'received',
+      'activeEmailAccount': activeAccount._id,
       isActive: true 
     });
 

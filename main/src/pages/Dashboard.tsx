@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "../contexts/AuthContext"
 import MonthCalendar from "../components/dashboard/MonthCalendar"
 import GoogleCalendarAuth from "../components/forms/GoogleCalendarAuth"
+import ActiveEmailAccountStatus from "../components/dashboard/ActiveEmailAccountStatus"
 import { dashboardAPI, DashboardStats, LeadsChartData, LeadsStageData, RecentActivity } from "../services/dashboardAPI"
 import {
   PieChart as RechartsPieChart,
@@ -790,6 +791,13 @@ export default function Dashboard() {
 
           <ChartCard title="Calendar & Schedule" icon={CalendarDays}>
             <div className="space-y-4">
+              {/* Active Email Account Status */}
+              <ActiveEmailAccountStatus 
+                onConnectionChange={(connected) => {
+                  // You can add any additional logic here when email connection status changes
+                }}
+              />
+              
               {/* Google Calendar Integration */}
               <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
@@ -828,6 +836,32 @@ export default function Dashboard() {
               {recentActivities.map((activity, index) => (
                 <ActivityRow key={activity.id} activity={activity} index={index} />
               ))}
+            </div>
+          </ChartCard>
+
+          <ChartCard title="Quick Actions" icon={Activity}>
+            <div className="space-y-3">
+              <button
+                onClick={() => window.location.href = '/ai/email-manager'}
+                className="w-full flex items-center gap-3 p-3 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-lg transition-colors group"
+              >
+                <Mail className="h-5 w-5 text-orange-600 group-hover:text-orange-700" />
+                <div className="text-left">
+                  <div className="text-sm font-medium text-orange-800">Email Manager</div>
+                  <div className="text-xs text-orange-600">Manage sent & inbox emails</div>
+                </div>
+              </button>
+              
+              <button
+                onClick={() => window.location.href = '/ai/email-generator'}
+                className="w-full flex items-center gap-3 p-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors group"
+              >
+                <MessageSquare className="h-5 w-5 text-blue-600 group-hover:text-blue-700" />
+                <div className="text-left">
+                  <div className="text-sm font-medium text-blue-800">Email Generator</div>
+                  <div className="text-xs text-blue-600">Create AI-powered emails</div>
+                </div>
+              </button>
             </div>
           </ChartCard>
 

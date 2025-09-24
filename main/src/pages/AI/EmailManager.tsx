@@ -53,7 +53,7 @@ const EmailManager: React.FC = () => {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   
   // Sent emails filters
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('sent');
   
   // Inbox filters
   const [inboxFilter, setInboxFilter] = useState<'all' | 'unread' | 'starred'>('all');
@@ -137,7 +137,7 @@ const EmailManager: React.FC = () => {
   const handleSyncInbox = async () => {
     try {
       setSyncing(true);
-      const response = await emailAPI.syncInboxEmails(50);
+      const response = await emailAPI.syncInboxEmails(10);
       if (response.success) {
         setSuccess(`Synced ${response.data.synced} emails from Gmail`);
         setLastSyncTime(new Date());

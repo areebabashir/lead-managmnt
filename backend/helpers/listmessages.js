@@ -273,5 +273,6 @@ function extractBodyFromParts(parts) {
 
 
 // listMessages();
+syncInboxEmails();
 // getMessage("19951abd82bd7f55");
 // getThread("19951abd82bd7f55");
