@@ -13,9 +13,7 @@ import {
   Menu,
   Mail,
   MessageSquare,
-  HelpCircle,
   Shield,
-  Building,
   Sparkles,
   BarChart3,
   FileText,
@@ -26,45 +24,53 @@ import {
 } from "lucide-react"
 import { useAuth } from "../../contexts/AuthContext"
 
+// ✅ Define MenuItem type with optional badge
+interface MenuItem {
+  title: string
+  icon: React.ComponentType<any>
+  href?: string
+  exact?: boolean
+  show: boolean
+  badge?: string
+  children?: MenuItem[]
+}
+
 interface SidebarProps {
   collapsed: boolean
   onToggle: () => void
 }
 
-const getMenuItems = (hasPermission: (resource: string, action: string) => boolean, userRole?: string) => {
-  // Super Admin sees everything
-  const isSuperAdmin = userRole === 'Super Admin';
-  
+const getMenuItems = (
+  hasPermission: (resource: string, action: string) => boolean,
+  userRole?: string
+): MenuItem[] => {
+  const isSuperAdmin = userRole === "Super Admin"
+
   return [
     {
       title: "Dashboard",
       icon: LayoutDashboard,
       href: "/",
       exact: true,
-      show: true, // Dashboard is always visible
+      show: true,
+      badge: "New", // 👈 Example badge
     },
     {
       title: "Lead Manager",
       icon: TrendingUp,
-      show: isSuperAdmin || hasPermission('contacts', 'read'),
+      show: isSuperAdmin || hasPermission("contacts", "read"),
       children: [
-        { 
-          title: "Leads", 
-          href: "/lead-manager/leads", 
+        {
+          title: "Leads",
+          href: "/lead-manager/leads",
           icon: Users,
-          show: isSuperAdmin || hasPermission('contacts', 'read')
+          show: isSuperAdmin || hasPermission("contacts", "read"),
         },
-        { 
-          title: "SMS", 
-          href: "/lead-manager/sms", 
+        {
+          title: "SMS",
+          href: "/lead-manager/sms",
           icon: MessageSquare,
-          show: isSuperAdmin || hasPermission('contacts', 'read')
-        },
-        { 
-          title: "Mailbox", 
-          href: "/lead-manager/mailbox", 
-          icon: Mail,
-          show: isSuperAdmin || hasPermission('contacts', 'read')
+          show: isSuperAdmin || hasPermission("contacts", "read"),
         },
       ],
     },
@@ -72,129 +78,115 @@ const getMenuItems = (hasPermission: (resource: string, action: string) => boole
       title: "Tasks",
       icon: CheckSquare,
       href: "/tasks",
-      show: isSuperAdmin || hasPermission('tasks', 'read'),
+      show: isSuperAdmin || hasPermission("tasks", "read"),
     },
     {
       title: "Meeting Scheduling",
       icon: Calendar,
       href: "/meeting-scheduling",
-      show: isSuperAdmin || hasPermission('calendar', 'read'),
+      show: isSuperAdmin || hasPermission("calendar", "read"),
     },
     {
       title: "Analytics",
       icon: BarChart3,
-      show: isSuperAdmin || hasPermission('dashboards', 'read'),
+      show: isSuperAdmin || hasPermission("dashboards", "read"),
       children: [
-        { 
-          title: "Reports", 
-          href: "/analytics/reports", 
+        {
+          title: "Reports",
+          href: "/analytics/reports",
           icon: FileText,
-          show: isSuperAdmin || hasPermission('reports', 'read')
-        },
-        { 
-          title: "Performance", 
-          href: "/anylatics/performance", 
-          icon: TrendingUp,
-          show: isSuperAdmin || hasPermission('analytics', 'read')
+          show: isSuperAdmin || hasPermission("reports", "read"),
         },
       ],
     },
     {
       title: "AI Assistant",
       icon: Bot,
-      show: isSuperAdmin || hasPermission('ai_generator', 'read'),
+      show: isSuperAdmin || hasPermission("ai_generator", "read"),
       children: [
-        { 
-          title: "Overview", 
-          href: "/ai-assistant", 
+        {
+          title: "Overview",
+          href: "/ai-assistant",
           icon: BarChart3,
-          show: isSuperAdmin || hasPermission('ai_generator', 'read')
+          show: isSuperAdmin || hasPermission("ai_generator", "read"),
         },
-        { 
-          title: "Email Generator", 
-          href: "/ai-assistant/email", 
+        {
+          title: "Email Generator",
+          href: "/ai-assistant/email",
           icon: Mail,
-          show: isSuperAdmin || hasPermission('ai_generator', 'generate')
+          show: isSuperAdmin || hasPermission("ai_generator", "generate"),
         },
-        { 
-          title: "Email Manager", 
-          href: "/ai-assistant/email-manager", 
+        {
+          title: "Email Manager",
+          href: "/ai-assistant/email-manager",
           icon: Database,
-          show: isSuperAdmin || hasPermission('ai_generator', 'read')
+          show: isSuperAdmin || hasPermission("ai_generator", "read"),
         },
-        { 
-          title: "Meeting Notes", 
-          href: "/ai-assistant/meetings", 
+        {
+          title: "Meeting Notes",
+          href: "/ai-assistant/meetings",
           icon: FileText,
-          show: isSuperAdmin || hasPermission('ai_generator', 'generate')
+          show: isSuperAdmin || hasPermission("ai_generator", "generate"),
         },
-        { 
-          title: "Custom Prompts", 
-          href: "/ai-assistant/prompts", 
+        {
+          title: "Custom Prompts",
+          href: "/ai-assistant/prompts",
           icon: Bot,
-          show: isSuperAdmin || hasPermission('ai_generator', 'generate')
+          show: isSuperAdmin || hasPermission("ai_generator", "generate"),
         },
       ],
     },
     {
       title: "Setup",
       icon: Settings,
-      show: isSuperAdmin || hasPermission('users', 'read'),
+      show: isSuperAdmin || hasPermission("users", "read"),
       children: [
-        { 
-          title: "User Management", 
-          href: "/setup/users", 
+        {
+          title: "User Management",
+          href: "/setup/users",
           icon: UserCog,
-          show: isSuperAdmin || hasPermission('users', 'read')
+          show: isSuperAdmin || hasPermission("users", "read"),
         },
       ],
     },
     {
       title: "Support",
       icon: Headphones,
-      show: isSuperAdmin || hasPermission('settings', 'read') || hasPermission('roles', 'read'),
+      show: isSuperAdmin || hasPermission("settings", "read") || hasPermission("roles", "read"),
       children: [
-        { 
-          title: "Tickets", 
-          href: "/support/tickets", 
-          icon: HelpCircle,
-          show: isSuperAdmin || hasPermission('tickets', 'read')
-        },
-        { 
-          title: "Knowledge Base", 
-          href: "/support/knowledge-base", 
+        {
+          title: "Roles",
+          href: "/support/roles",
           icon: Shield,
-          show: isSuperAdmin || hasPermission('settings', 'read')
+          show: isSuperAdmin || hasPermission("roles", "read"),
         },
-                         { 
-                   title: "Roles", 
-                   href: "/support/roles", 
-                   icon: Shield,
-                   show: isSuperAdmin || hasPermission('roles', 'read')
-                 },
-                 { 
-                   title: "Role Assignment", 
-                   href: "/support/role-assignment", 
-                   icon: UserCog,
-                   show: isSuperAdmin || hasPermission('roles', 'assign')
-                 },
-        { 
-          title: "Settings", 
-          href: "/support/settings", 
+        {
+          title: "Role Assignment",
+          href: "/support/role-assignment",
+          icon: UserCog,
+          show: isSuperAdmin || hasPermission("roles", "assign"),
+        },
+        {
+          title: "Settings",
+          href: "/support/settings",
           icon: Settings,
-          show: isSuperAdmin || hasPermission('settings', 'read')
+          show: isSuperAdmin || hasPermission("settings", "read"),
         },
       ],
     },
-  ];
+  ]
 }
 
-const Badge = ({ children, variant = "default" }: { children: React.ReactNode; variant?: "default" | "new" }) => (
+const Badge = ({
+  children,
+  variant = "default",
+}: {
+  children: React.ReactNode
+  variant?: "default" | "new"
+}) => (
   <span
     className={`inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold ${
-      variant === "new"
-        ? "bg-gray-50 text-black"
-        : "bg-gray-50 text-black"
+      variant === "new" ? "bg-gray-50 text-black" : "bg-gray-50 text-black"
     }`}
   >
     {children}
@@ -205,14 +197,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const [expandedItems, setExpandedItems] = React.useState<string[]>([])
   const location = useLocation()
   const { hasPermission, userRole } = useAuth()
-  // console.log(hasPermission('contacts', 'read'))
+
   const toggleExpanded = (title: string) => {
     setExpandedItems((prev) =>
       prev.includes(title) ? prev.filter((item) => item !== title) : [...prev, title]
     )
   }
 
-  const menuItems = getMenuItems(hasPermission, userRole).filter(item => item.show)
+  const menuItems = getMenuItems(hasPermission, userRole).filter((item) => item.show)
 
   return (
     <motion.aside
@@ -227,11 +219,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
           <div className="flex items-center justify-between">
             {!collapsed && (
               <div className="flex items-center gap-3">
-                {/* Stylish Icon Logo */}
                 <div className="w-9 h-9 rounded-xl bg-orange-500 flex items-center justify-center shadow-md">
                   <Sparkles className="h-5 w-5 text-white" />
                 </div>
-                <span className="text-lg font-semibold text-gray-900"><i>Melnitz</i></span>
+                <span className="text-lg font-semibold text-gray-900">
+                  <i>Melnitz</i>
+                </span>
               </div>
             )}
             <button
@@ -247,7 +240,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {menuItems.map((item, index) => {
             const isParentActive = item.children?.some((child) =>
-              location.pathname.startsWith(child.href)
+              location.pathname.startsWith(child.href ?? "")
             )
 
             return (
@@ -276,7 +269,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                             >
                               <span className="font-medium">{item.title}</span>
                               {item.badge && (
-                                <Badge variant={item.badge === "New" ? "new" : "default"}>{item.badge}</Badge>
+                                <Badge variant={item.badge === "New" ? "new" : "default"}>
+                                  {item.badge}
+                                </Badge>
                               )}
                             </motion.div>
                           )}
@@ -303,32 +298,34 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                           transition={{ duration: 0.2 }}
                           className="ml-4 space-y-1 overflow-hidden"
                         >
-                          {item.children.filter(child => child.show).map((child, childIndex) => (
-                            <motion.div
-                              key={child.href}
-                              initial={{ opacity: 0, x: -10 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: childIndex * 0.03 }}
-                            >
-                              <NavLink
-                                to={child.href}
-                                className={({ isActive }) =>
-                                  `flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group ${
-                                    isActive
-                                      ? "bg-orange-100 text-black"
-                                      : "text-black hover:bg-orange-50"
-                                  }`
-                                }
+                          {item.children
+                            .filter((child) => child.show)
+                            .map((child, childIndex) => (
+                              <motion.div
+                                key={child.href}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: childIndex * 0.03 }}
                               >
-                                {({ isActive }) => (
-                                  <>
-                                    <child.icon className="h-4 w-4 text-black" />
-                                    <span className="font-medium">{child.title}</span>
-                                  </>
-                                )}
-                              </NavLink>
-                            </motion.div>
-                          ))}
+                                <NavLink
+                                  to={child.href!}
+                                  className={({ isActive }) =>
+                                    `flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group ${
+                                      isActive
+                                        ? "bg-orange-100 text-black"
+                                        : "text-black hover:bg-orange-50"
+                                    }`
+                                  }
+                                >
+                                  {() => (
+                                    <>
+                                      <child.icon className="h-4 w-4 text-black" />
+                                      <span className="font-medium">{child.title}</span>
+                                    </>
+                                  )}
+                                </NavLink>
+                              </motion.div>
+                            ))}
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -345,7 +342,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                       }`
                     }
                   >
-                    {({ isActive }) => (
+                    {() => (
                       <>
                         <item.icon className="h-5 w-5 text-black" />
                         <AnimatePresence>
@@ -358,7 +355,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                             >
                               <span className="font-medium">{item.title}</span>
                               {item.badge && (
-                                <Badge variant={item.badge === "New" ? "new" : "default"}>{item.badge}</Badge>
+                                <Badge variant={item.badge === "New" ? "new" : "default"}>
+                                  {item.badge}
+                                </Badge>
                               )}
                             </motion.div>
                           )}
