@@ -60,13 +60,13 @@ const getMenuItems = (hasPermission: (resource: string, action: string) => boole
           href: "/lead-manager/sms", 
           icon: MessageSquare,
           show: isSuperAdmin || hasPermission('contacts', 'read')
-        },
-        { 
-          title: "Mailbox", 
-          href: "/lead-manager/mailbox", 
-          icon: Mail,
-          show: isSuperAdmin || hasPermission('contacts', 'read')
-        },
+        }
+        // { 
+        //   title: "Mailbox", 
+        //   href: "/lead-manager/mailbox", 
+        //   icon: Mail,
+        //   show: isSuperAdmin || hasPermission('contacts', 'read')
+        // },
       ],
     },
     {
@@ -105,12 +105,12 @@ const getMenuItems = (hasPermission: (resource: string, action: string) => boole
       icon: Bot,
       show: isSuperAdmin || hasPermission('ai_generator', 'read'),
       children: [
-        { 
-          title: "Overview", 
-          href: "/ai-assistant", 
-          icon: BarChart3,
-          show: isSuperAdmin || hasPermission('ai_generator', 'read')
-        },
+        // { 
+        //   title: "Overview", 
+        //   href: "/ai-assistant", 
+        //   icon: BarChart3,
+        //   show: isSuperAdmin || hasPermission('ai_generator', 'read')
+        // },
         { 
           title: "Email Generator", 
           href: "/ai-assistant/email", 
@@ -134,13 +134,13 @@ const getMenuItems = (hasPermission: (resource: string, action: string) => boole
           href: "/ai-assistant/meeting-notes-manager", 
           icon: Database,
           show: isSuperAdmin || hasPermission('meeting_notes', 'read')
-        },
-        { 
-          title: "Custom Prompts", 
-          href: "/ai-assistant/prompts", 
-          icon: Bot,
-          show: isSuperAdmin || hasPermission('ai_generator', 'generate')
-        },
+        }
+        // { 
+        //   title: "Custom Prompts", 
+        //   href: "/ai-assistant/prompts", 
+        //   icon: Bot,
+        //   show: isSuperAdmin || hasPermission('ai_generator', 'generate')
+        // },
       ],
     },
     {
@@ -161,18 +161,18 @@ const getMenuItems = (hasPermission: (resource: string, action: string) => boole
       icon: Headphones,
       show: isSuperAdmin || hasPermission('settings', 'read') || hasPermission('roles', 'read'),
       children: [
-        { 
-          title: "Tickets", 
-          href: "/support/tickets", 
-          icon: HelpCircle,
-          show: isSuperAdmin || hasPermission('tickets', 'read')
-        },
-        { 
-          title: "Knowledge Base", 
-          href: "/support/knowledge-base", 
-          icon: Shield,
-          show: isSuperAdmin || hasPermission('settings', 'read')
-        },
+        // { 
+        //   title: "Tickets", 
+        //   href: "/support/tickets", 
+        //   icon: HelpCircle,
+        //   show: isSuperAdmin || hasPermission('tickets', 'read')
+        // },
+        // { 
+        //   title: "Knowledge Base", 
+        //   href: "/support/knowledge-base", 
+        //   icon: Shield,
+        //   show: isSuperAdmin || hasPermission('settings', 'read')
+        // },
                          { 
                    title: "Roles", 
                    href: "/support/roles", 

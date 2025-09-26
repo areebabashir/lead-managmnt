@@ -1,20 +1,24 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "../contexts/AuthContext"
 import MonthCalendar from "../components/dashboard/MonthCalendar"
 import GoogleCalendarAuth from "../components/forms/GoogleCalendarAuth"
 import ActiveEmailAccountStatus from "../components/dashboard/ActiveEmailAccountStatus"
 import { dashboardAPI, DashboardStats, LeadsChartData, LeadsStageData, RecentActivity } from "../services/dashboardAPI"
+import { contactAPI } from "../services/contactAPI"
+
 import {
+
   PieChart as RechartsPieChart,
   Pie,
   Cell,
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
+  Tooltip as RechartsTooltip,
   ResponsiveContainer,
   Legend,
   Area,
@@ -74,15 +78,20 @@ type Todo = {
   time: string
 }
 
-type ActivityType = "lead" | "task" | "support"
 
-type ActivityItemType = {
-  id: number
-  action: string
-  user: string
-  time: string
-  type: ActivityType
-}
+
+
+
+
+
+const colors = [
+  "#FFEDD5", // orange-100
+  "#FED7AA", // orange-200
+  "#FDBA74", // orange-300
+  "#FB923C", // orange-400
+  "#F97316", // orange-500
+];
+
 
 
 // Mock Data
@@ -95,61 +104,53 @@ const mockLeadsData = [
   { month: "Jun", leads: 67, conversions: 25 },
 ]
 
-const leadsStageData = [
-  { name: "New", value: 35 },
-  { name: "Contacted", value: 22 },
-  { name: "Qualified", value: 18 },
-  { name: "Proposal", value: 14 },
-  { name: "Won", value: 8 },
-  { name: "Lost", value: 3 },
-]
 
-  // Generate real stats from dashboard data
-  const generateStats = (data: DashboardStats | null): Stat[] => {
-    if (!data) {
-      return [
-        { title: "Total Leads", value: "Loading...", change: "", changeValue: 0, icon: Users, trend: "up" },
-        { title: "Active Tasks", value: "Loading...", change: "", changeValue: 0, icon: CheckSquare, trend: "up" },
-        { title: "Total Users", value: "Loading...", change: "", changeValue: 0, icon: UserCheck, trend: "up" },
-        { title: "SMS Sent", value: "Loading...", change: "", changeValue: 0, icon: MessageSquare, trend: "up" },
-      ]
-    }
-
+// Generate real stats from dashboard data
+const generateStats = (data: DashboardStats | null): Stat[] => {
+  if (!data) {
     return [
-      {
-        title: "Total Leads",
-        value: data.totalLeads.toLocaleString(),
-        change: data.leadsGrowth >= 0 ? `+${data.leadsGrowth}%` : `${data.leadsGrowth}%`,
-        changeValue: data.leadsThisMonth,
-        icon: Users,
-        trend: data.leadsGrowth >= 0 ? "up" : "down",
-      },
-      {
-        title: "Active Tasks",
-        value: data.totalTasks.toLocaleString(),
-        change: data.tasksGrowth >= 0 ? `+${data.tasksGrowth}%` : `${data.tasksGrowth}%`,
-        changeValue: data.tasksCompleted,
-        icon: CheckSquare,
-        trend: data.tasksGrowth >= 0 ? "up" : "down",
-      },
-      {
-        title: "Total Users",
-        value: data.totalUsers.toLocaleString(),
-        change: data.usersGrowth >= 0 ? `+${data.usersGrowth}%` : `${data.usersGrowth}%`,
-        changeValue: data.totalUsers,
-        icon: UserCheck,
-        trend: data.usersGrowth >= 0 ? "up" : "down",
-      },
-      {
-        title: "SMS Sent",
-        value: data.totalSMS.toLocaleString(),
-        change: `${data.smsDelivered} delivered`,
-        changeValue: data.smsDelivered,
-        icon: MessageSquare,
-        trend: "up",
-      },
+      { title: "Total Leads", value: "Loading...", change: "", changeValue: 0, icon: Users, trend: "up" },
+      { title: "Active Tasks", value: "Loading...", change: "", changeValue: 0, icon: CheckSquare, trend: "up" },
+      { title: "Total Users", value: "Loading...", change: "", changeValue: 0, icon: UserCheck, trend: "up" },
+      { title: "SMS Sent", value: "Loading...", change: "", changeValue: 0, icon: MessageSquare, trend: "up" },
     ]
   }
+
+  return [
+    {
+      title: "Total Leads",
+      value: data.totalLeads.toLocaleString(),
+      change: data.leadsGrowth >= 0 ? `+${data.leadsGrowth}%` : `${data.leadsGrowth}%`,
+      changeValue: data.leadsThisMonth,
+      icon: Users,
+      trend: data.leadsGrowth >= 0 ? "up" : "down",
+    },
+    {
+      title: "Active Tasks",
+      value: data.totalTasks.toLocaleString(),
+      change: data.tasksGrowth >= 0 ? `+${data.tasksGrowth}%` : `${data.tasksGrowth}%`,
+      changeValue: data.tasksCompleted,
+      icon: CheckSquare,
+      trend: data.tasksGrowth >= 0 ? "up" : "down",
+    },
+    {
+      title: "Total Users",
+      value: data.totalUsers.toLocaleString(),
+      change: data.usersGrowth >= 0 ? `+${data.usersGrowth}%` : `${data.usersGrowth}%`,
+      changeValue: data.totalUsers,
+      icon: UserCheck,
+      trend: data.usersGrowth >= 0 ? "up" : "down",
+    },
+    {
+      title: "SMS Sent",
+      value: data.totalSMS.toLocaleString(),
+      change: `${data.smsDelivered} delivered`,
+      changeValue: data.smsDelivered,
+      icon: MessageSquare,
+      trend: "up",
+    },
+  ]
+}
 
 const todoItems: Todo[] = [
   { id: "td1", label: "Follow up with new leads", done: false, priority: "high", time: "2 hours ago" },
@@ -210,9 +211,8 @@ const StatCard = ({ stat, index }: { stat: Stat; index: number }) => (
       <div className="p-2 rounded-lg bg-orange-100">
         <stat.icon className="h-4 w-4 text-black" />
       </div>
-      <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
-        stat.trend === "up" ? "bg-orange-100 text-black" : "bg-orange-100 text-black"
-      }`}>
+      <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${stat.trend === "up" ? "bg-orange-100 text-black" : "bg-orange-100 text-black"
+        }`}>
         {stat.trend === "up" ? (
           <ArrowUp className="h-3 w-3" />
         ) : (
@@ -237,17 +237,15 @@ const TodoItem = ({ item, index }: { item: Todo; index: number }) => {
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.1 }}
-      className={`flex items-center gap-3 p-2 rounded-lg border transition-all duration-200 ${
-        completed ? "bg-gray-50 border-gray-200" : "bg-white border-gray-200 hover:border-orange-200 hover:shadow-sm"
-      }`}
+      className={`flex items-center gap-3 p-2 rounded-lg border transition-all duration-200 ${completed ? "bg-gray-50 border-gray-200" : "bg-white border-gray-200 hover:border-orange-200 hover:shadow-sm"
+        }`}
     >
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setCompleted(!completed)}
-        className={`flex-shrink-0 w-4 h-4 rounded-full border-2 transition-all duration-200 ${
-          completed ? "bg-orange-600 border-orange-600" : "border-gray-300 hover:border-orange-400"
-        }`}
+        className={`flex-shrink-0 w-4 h-4 rounded-full border-2 transition-all duration-200 ${completed ? "bg-orange-600 border-orange-600" : "border-gray-300 hover:border-orange-400"
+          }`}
       >
         {completed && <CheckCircle2 className="w-3 h-3 text-white mx-auto" />}
       </motion.button>
@@ -262,7 +260,7 @@ const TodoItem = ({ item, index }: { item: Todo; index: number }) => {
   )
 }
 
-const ActivityRow = ({ activity, index }: { activity: ActivityItemType; index: number }) => (
+const ActivityRow = ({ activity, index }: { activity: RecentActivity; index: number }) => (
   <motion.div
     initial={{ opacity: 0, x: -20 }}
     animate={{ opacity: 1, x: 0 }}
@@ -273,7 +271,8 @@ const ActivityRow = ({ activity, index }: { activity: ActivityItemType; index: n
       <div className="p-1 rounded bg-orange-600">
         {activity.type === "lead" && <Users className="h-3 w-3 text-white" />}
         {activity.type === "task" && <CheckSquare className="h-3 w-3 text-white" />}
-        {activity.type === "support" && <Headphones className="h-3 w-3 text-white" />}
+        {activity.type === "meeting" && <CalendarDays className="h-3 w-3 text-white" />}
+        {activity.type === "sms" && <MessageSquare className="h-3 w-3 text-white" />}
       </div>
     </div>
     <div className="flex-1 min-w-0">
@@ -334,9 +333,8 @@ const menuItems = [
 const IconWrapper = ({ icon: Icon, isActive }: { icon: any; isActive?: boolean }) => (
   <div className="flex items-center justify-center">
     <Icon
-      className={`h-5 w-5 transition-colors duration-300 ${
-        isActive ? "text-orange-600" : "text-gray-500 group-hover:text-orange-600"
-      }`}
+      className={`h-5 w-5 transition-colors duration-300 ${isActive ? "text-orange-600" : "text-gray-500 group-hover:text-orange-600"
+        }`}
     />
   </div>
 )
@@ -381,7 +379,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
 
       <motion.aside
         initial={false}
-        animate={{ 
+        animate={{
           width: collapsed ? 80 : 280,
           x: isMobile && collapsed ? -280 : 0
         }}
@@ -394,7 +392,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
             <div className="flex items-center justify-between">
               {!collapsed && (
                 <div className="flex items-center gap-3">
-                  <motion.div 
+                  <motion.div
                     whileHover={{ rotate: 5 }}
                     className="w-9 h-9 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-md"
                   >
@@ -553,7 +551,7 @@ export const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSideba
         >
           <Menu className="h-5 w-5 text-gray-600" />
         </motion.button>
-        
+
         {/* Search */}
         <div className="relative max-w-md w-full hidden md:block">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -610,8 +608,9 @@ export const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSideba
 
 // Dashboard Page Component
 export default function Dashboard() {
+  const navigate = useNavigate()
   const { user, hasPermission } = useAuth()
-  
+
   // Real data state
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null)
   const [leadsChartData, setLeadsChartData] = useState<LeadsChartData[]>([])
@@ -627,7 +626,7 @@ export default function Dashboard() {
   const loadDashboardData = async () => {
     try {
       setIsLoading(true)
-      
+
       // Load all dashboard data in parallel
       const [statsResponse, chartResponse, stageResponse, activitiesResponse] = await Promise.all([
         dashboardAPI.getDashboardStats(),
@@ -708,6 +707,57 @@ export default function Dashboard() {
 
   const stats = generateStats(dashboardStats)
 
+  // Compute leadsStageData from contacts list
+  // Replace the entire useEffect for fetching contacts with this:
+  useEffect(() => {
+    const fetchContactsAndComputeStages = async () => {
+      try {
+        const response = await contactAPI.getContacts()
+        const contacts = response.data || []
+
+        // Log for debugging
+        console.log('Contacts fetched:', contacts.length)
+
+        // Group contacts by status with better error handling
+        const grouped: Record<string, number> = {
+          'New': 0,
+          'Existing': 0,
+          'First-Time Buyer': 0
+        }
+
+        contacts.forEach((contact: any) => {
+          const status = contact?.status
+          if (status && grouped.hasOwnProperty(status)) {
+            grouped[status] = (grouped[status] || 0) + 1
+          }
+        })
+
+        // Convert to chart data format
+        const chartData: LeadsStageData[] = Object.entries(grouped)
+          .filter(([_, value]) => value > 0) // Only include statuses with leads
+          .map(([name, value]) => ({
+            name,
+            value
+          }))
+
+        console.log('Chart data computed:', chartData)
+        setLeadsStageData(chartData)
+
+      } catch (err) {
+        console.error('Error loading contacts for stage chart:', err)
+        // Set empty data on error
+        setLeadsStageData([])
+      }
+    }
+
+    // Only fetch if we have permission and user is authenticated
+    if (user && hasPermission('contacts', 'read')) {
+      fetchContactsAndComputeStages()
+    } else {
+      setLeadsStageData([])
+    }
+  }, [user]) // Add user as dependency
+
   return (
     <div className="min-h-screen  pl-3 md:pl-6 pt-6">
       {/* Hero Section */}
@@ -740,13 +790,14 @@ export default function Dashboard() {
             className="flex gap-2"
           >
             {hasPermission('contacts', 'create') && (
-              <button className="flex items-center gap-1 px-3 py-2 bg-orange-500 font-semibold text-white rounded-[10px] transition-colors hover:bg-orange-600">
+              <button onClick={() => navigate('/lead-manager/leads')}
+                className="flex items-center gap-1 px-3 py-2 bg-orange-500 font-semibold text-white rounded-[10px] transition-colors hover:bg-orange-600">
                 <Plus className="h-3 w-3 text-white" />
                 Add Lead
               </button>
             )}
             {hasPermission('tasks', 'create') && (
-              <button className="flex items-center gap-1 px-3 py-2 border border-orange-500 font-semibold text-gray-800 rounded-[10px] transition-colors hover:bg-orange-50">
+              <button onClick={() => navigate('/tasks')} className="flex items-center gap-1 px-3 py-2 border border-orange-500 font-semibold text-gray-800 rounded-[10px] transition-colors hover:bg-orange-50">
                 <CheckSquare className="h-3 w-3" />
                 New Task
               </button>
@@ -781,7 +832,7 @@ export default function Dashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                 <XAxis dataKey="month" stroke="#6B7280" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="#6B7280" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip />
+                <RechartsTooltip />
                 <Legend />
                 <Area type="monotone" dataKey="leads" stroke="#EA580C" fill="url(#leadsGradient)" name="Leads" />
                 <Area type="monotone" dataKey="conversions" stroke="#EA580C" fill="url(#conversionsGradient)" name="Conversions" />
@@ -792,12 +843,12 @@ export default function Dashboard() {
           <ChartCard title="Calendar & Schedule" icon={CalendarDays}>
             <div className="space-y-4">
               {/* Active Email Account Status */}
-              <ActiveEmailAccountStatus 
+              <ActiveEmailAccountStatus
                 onConnectionChange={(connected) => {
                   // You can add any additional logic here when email connection status changes
                 }}
               />
-              
+
               {/* Google Calendar Integration */}
               <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
@@ -805,7 +856,7 @@ export default function Dashboard() {
                     <CalendarDays className="h-4 w-4 text-orange-600" />
                     <span className="text-sm font-medium text-orange-800">Google Calendar Integration</span>
                   </div>
-                  <GoogleCalendarAuth 
+                  <GoogleCalendarAuth
                     onConnectionChange={(connected) => {
                       // You can add any additional logic here when connection status changes
                     }}
@@ -815,7 +866,7 @@ export default function Dashboard() {
                   Connect Google Calendar to automatically create events with Google Meet links when scheduling meetings.
                 </p>
               </div>
-              
+
               {/* Calendar Component */}
               <MonthCalendar />
             </div>
@@ -842,7 +893,7 @@ export default function Dashboard() {
           <ChartCard title="Quick Actions" icon={Activity}>
             <div className="space-y-3">
               <button
-                onClick={() => window.location.href = '/ai/email-manager'}
+                onClick={() => navigate('/ai-assistant/email-manager')}
                 className="w-full flex items-center gap-3 p-3 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-lg transition-colors group"
               >
                 <Mail className="h-5 w-5 text-orange-600 group-hover:text-orange-700" />
@@ -851,9 +902,8 @@ export default function Dashboard() {
                   <div className="text-xs text-orange-600">Manage sent & inbox emails</div>
                 </div>
               </button>
-              
-              <button
-                onClick={() => window.location.href = '/ai/email-generator'}
+
+              <button onClick={() => navigate('/ai-assistant/email')}
                 className="w-full flex items-center gap-3 p-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors group"
               >
                 <MessageSquare className="h-5 w-5 text-blue-600 group-hover:text-blue-700" />
@@ -866,58 +916,67 @@ export default function Dashboard() {
           </ChartCard>
 
           <ChartCard title="Leads Distribution" icon={PieChart}>
-  <ResponsiveContainer width="100%" height={260}>
-    <RechartsPieChart>
-      <Pie
-        data={leadsStageData.length > 0 ? leadsStageData : [
-          { name: "New", value: 35 },
-          { name: "Contacted", value: 22 },
-          { name: "Qualified", value: 18 }
-        ]}
-        cx="50%"
-        cy="50%"
-        innerRadius={50}
-        outerRadius={90}
-        dataKey="value"
-        cornerRadius={8}       // smooth rounded slices
-        paddingAngle={2}       // halka gap between slices
-      
-      >
-        {leadsStageData.map((entry, index) => {
-          const colors = [
-            "#FFEDD5", // orange-100
-            "#FED7AA", // orange-200
-            "#FDBA74", // orange-300
-            "#FB923C", // orange-400
-            "#F97316", // orange-500
-          ]
-          return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-        })}
-      </Pie>
+            <div className="mt-4 p-3 bg-gray-100 rounded-lg">
+              <h4 className="text-sm font-semibold mb-2">Debug Info:</h4>
+              <p className="text-xs">Leads Stage Data: {JSON.stringify(leadsStageData)}</p>
+              <p className="text-xs">Contacts Count: {leadsStageData.reduce((sum, item) => sum + item.value, 0)}</p>
+              <p className="text-xs">Is Loading: {isLoading ? 'Yes' : 'No'}</p>
+            </div>
+            <ResponsiveContainer width="100%" height={260}>
+              <RechartsPieChart>
+                <Pie
+                  data={
+                    leadsStageData.length > 0
+                      ? leadsStageData
+                      : [
+                        { name: "No Data", value: 1 },
+                      ]
+                  }
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={90}
+                  dataKey="value"
+                  cornerRadius={8}
+                  paddingAngle={2}
+                  label={leadsStageData.length > 0}
+                >
+                  {(leadsStageData.length > 0 ? leadsStageData : [{ name: "No Data", value: 1 }]).map(
+                    (entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={leadsStageData.length > 0 ? colors[index % colors.length] : '#E5E7EB'}
+                      />
+                    )
+                  )}
+                </Pie>
 
-      <Tooltip
-        formatter={(value: number, name: string) => [`${value}`, name]}
-        contentStyle={{
-          borderRadius: "10px",
-          backgroundColor: "#ffffff",
-          border: "1px solid #e5e7eb",
-        }}
-        itemStyle={{ color: "#111827", fontWeight: 500 }}
-      />
+                <RechartsTooltip
+                  formatter={(value: number, name: string) => {
+                    if (leadsStageData.length === 0) return ['No data available', '']
+                    return [`${value} leads`, name]
+                  }}
+                  contentStyle={{
+                    borderRadius: "10px",
+                    backgroundColor: "#ffffff",
+                    border: "1px solid #e5e7eb",
+                  }}
+                  itemStyle={{ color: "#111827", fontWeight: 500 }}
+                />
 
-      <Legend
-        verticalAlign="bottom"
-        align="center"
-        iconType="circle"
-        wrapperStyle={{
-          marginTop: "8px",
-          fontSize: "13px",
-          color: "#374151",
-        }}
-      />
-    </RechartsPieChart>
-  </ResponsiveContainer>
-</ChartCard>
+                <Legend
+                  verticalAlign="bottom"
+                  align="center"
+                  iconType="circle"
+                  wrapperStyle={{
+                    marginTop: "8px",
+                    fontSize: "13px",
+                    color: "#374151",
+                  }}
+                />
+              </RechartsPieChart>
+            </ResponsiveContainer>
+          </ChartCard>
 
         </div>
       </div>
@@ -940,14 +999,13 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
 
-      <div className={`flex-1 flex flex-col transition-all duration-300 ${
-        sidebarCollapsed ? 'ml-20' : 'ml-72'
-      }`}>
-        <Header 
+      <div className={`flex-1 flex flex-col transition-all duration-300 ${sidebarCollapsed ? 'ml-20' : 'ml-72'
+        }`}>
+        <Header
           sidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
-        
+
         <main className="flex-1 p-6">
           <AnimatePresence mode="wait">
             <motion.div
