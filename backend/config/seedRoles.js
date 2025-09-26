@@ -67,6 +67,7 @@ export const seedDefaultRoles = async () => {
                     { resource: 'settings', actions: ['create', 'read', 'update', 'delete', 'configure'] },
                     // Notes & Documents
                     { resource: 'notes', actions: ['create', 'read', 'update', 'delete', 'dictate'] },
+                    { resource: 'meeting_notes', actions: ['create', 'read', 'update', 'delete', 'transcribe', 'summarize'] },
                 ],
                 isSystem: true
             },
@@ -99,6 +100,7 @@ export const seedDefaultRoles = async () => {
                     { resource: 'settings', actions: ['read', 'update', 'configure'] },
                     // Notes & Documents
                     { resource: 'notes', actions: ['read', 'update', 'dictate'] },
+                    { resource: 'meeting_notes', actions: ['read', 'update', 'transcribe', 'summarize'] },
                 ],
                 isSystem: false
             },
@@ -161,6 +163,7 @@ export const seedDefaultRoles = async () => {
                     { resource: 'dashboards', actions: ['read', 'analyze'] },
                     // Notes & Documents
                     { resource: 'notes', actions: ['create', 'read', 'update', 'dictate'] },
+                    { resource: 'meeting_notes', actions: ['create', 'read', 'update', 'transcribe', 'summarize'] },
                 ],
                 isSystem: false
             },
@@ -190,6 +193,7 @@ export const seedDefaultRoles = async () => {
                     { resource: 'dashboards', actions: ['read'] },
                     // Notes & Documents
                     { resource: 'notes', actions: ['create', 'read', 'update', 'dictate'] },
+                    { resource: 'meeting_notes', actions: ['create', 'read', 'update', 'transcribe', 'summarize'] },
 
                 ],
                 isSystem: false
@@ -222,6 +226,7 @@ export const seedDefaultRoles = async () => {
                     { resource: 'dashboards', actions: ['read'] },
                     // Notes & Documents
                     { resource: 'notes', actions: ['read', 'update'] },
+                    { resource: 'meeting_notes', actions: ['read'] },
 
                 ],
                 isSystem: false
@@ -247,6 +252,7 @@ export const seedDefaultRoles = async () => {
                     { resource: 'dashboards', actions: ['read', 'analyze'] },
                     // Notes & Documents
                     { resource: 'notes', actions: ['read', 'update'] },
+                    { resource: 'meeting_notes', actions: ['read'] },
 
                 ],
                 isSystem: false
@@ -276,6 +282,7 @@ export const seedDefaultRoles = async () => {
                     { resource: 'dashboards', actions: ['read'] },
                     // Notes & Documents
                     { resource: 'notes', actions: ['read', 'update'] },
+                    { resource: 'meeting_notes', actions: ['read'] },
 
                 ],
                 isSystem: false

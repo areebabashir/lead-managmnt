@@ -1,0 +1,613 @@
+{
+  "info": {
+    "name": "Meeting Notes API",
+    "description": "Complete API collection for Meeting Notes functionality in Lead Management System",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "YOUR_JWT_TOKEN_HERE",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login to get JWT token for authentication"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "login"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"user\": {\n    \"_id\": \"user_id\",\n    \"name\": \"Admin User\",\n    \"email\": \"admin@example.com\",\n    \"role\": \"Super Admin\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Generate Transcript",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "audioFile",
+              "type": "file",
+              "src": "path/to/your/audio.wav",
+              "description": "WAV audio file to transcribe"
+            },
+            {
+              "key": "languageCode",
+              "value": "en-US",
+              "type": "text",
+              "description": "Language code for transcription (optional, defaults to en-US)"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/meeting-notes/transcript",
+          "host": ["{{base_url}}"],
+          "path": ["meeting-notes", "transcript"]
+        },
+        "description": "Upload an audio file and generate transcript using Google Speech-to-Text"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "audioFile",
+                  "type": "file",
+                  "src": "sample.wav"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/meeting-notes/transcript",
+              "host": ["{{base_url}}"],
+              "path": ["meeting-notes", "transcript"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [],
+          "cookie": [],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Transcript generated successfully\",\n  \"data\": {\n    \"audioFileUrl\": \"audiiofiles/audioFile-1642567890123-456789.wav\",\n    \"audioFileName\": \"meeting-recording.wav\",\n    \"audioFileSize\": 2048576,\n    \"transcript\": \"okay uh the recording is started then please uh present the email configuration\",\n    \"confidence\": 0.78622705,\n    \"duration\": \"10s\",\n    \"segments\": [\n      {\n        \"text\": \"okay uh the recording is started\",\n        \"confidence\": 0.78622705,\n        \"endTime\": \"5.940s\"\n      },\n      {\n        \"text\": \"then please uh present the email configuration\",\n        \"confidence\": 0.7822323,\n        \"endTime\": \"9.950s\"\n      }\n    ],\n    \"rawTranscriptData\": {\n      \"results\": [...],\n      \"totalBilledTime\": \"10s\",\n      \"requestId\": \"3964155604961091904\"\n    }\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Generate Summary",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"transcript\": \"okay uh the recording is started then please uh present the email configuration. We discussed the SMTP settings and OAuth2 implementation. John will handle the frontend integration while Sarah will work on the backend API endpoints. We need to complete this by Friday.\",\n  \"meetingTitle\": \"Email Configuration Meeting\",\n  \"participants\": [\"John Doe\", \"Sarah Smith\", \"Mike Johnson\"],\n  \"duration\": \"15m\",\n  \"confidence\": 0.85\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/meeting-notes/summary",
+          "host": ["{{base_url}}"],
+          "path": ["meeting-notes", "summary"]
+        },
+        "description": "Generate AI-powered summary from meeting transcript"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transcript\": \"okay uh the recording is started then please uh present the email configuration...\",\n  \"meetingTitle\": \"Email Configuration Meeting\",\n  \"participants\": [\"John Doe\", \"Sarah Smith\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/meeting-notes/summary",
+              "host": ["{{base_url}}"],
+              "path": ["meeting-notes", "summary"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [],
+          "cookie": [],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Summary generated successfully\",\n  \"data\": {\n    \"summary\": \"## Meeting Overview\\nThis meeting focused on email configuration setup, specifically discussing SMTP settings and OAuth2 implementation for the system.\\n\\n## Key Discussion Points\\n- SMTP configuration requirements\\n- OAuth2 authentication setup\\n- Task assignments for frontend and backend development\\n- Project timeline and deadlines\\n\\n## Action Items\\n- John Doe: Handle frontend integration\\n- Sarah Smith: Work on backend API endpoints\\n- Complete implementation by Friday\\n\\n## Important Decisions\\n- Proceed with OAuth2 implementation\\n- Divide work between frontend and backend teams\\n\\n## Next Steps\\n- Begin development work immediately\\n- Schedule follow-up meeting for progress review\\n\",\n    \"isCached\": false\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Create Meeting Note",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"meetingTitle\": \"Email Configuration Meeting\",\n  \"meetingDate\": \"2024-01-15T10:00:00.000Z\",\n  \"participants\": [\n    {\n      \"name\": \"John Doe\",\n      \"email\": \"john@example.com\",\n      \"type\": \"simple\"\n    },\n    {\n      \"name\": \"Sarah Smith\",\n      \"type\": \"simple\"\n    },\n    {\n      \"contactId\": \"contact_object_id_here\",\n      \"type\": \"contact\"\n    }\n  ],\n  \"audioFileUrl\": \"audiiofiles/audioFile-1642567890123-456789.wav\",\n  \"audioFileName\": \"meeting-recording.wav\",\n  \"audioFileSize\": 2048576,\n  \"transcription\": \"okay uh the recording is started then please uh present the email configuration. We discussed the SMTP settings and OAuth2 implementation...\",\n  \"rawTranscriptData\": {\n    \"results\": [...],\n    \"totalBilledTime\": \"10s\"\n  },\n  \"summary\": \"## Meeting Overview\\nThis meeting focused on email configuration setup...\",\n  \"duration\": \"15m\",\n  \"confidence\": 0.85,\n  \"tags\": [\"email\", \"configuration\", \"development\"],\n  \"category\": \"technical\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/meeting-notes",
+          "host": ["{{base_url}}"],
+          "path": ["meeting-notes"]
+        },
+        "description": "Create a new meeting note with all details"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"meetingTitle\": \"Email Configuration Meeting\",\n  \"meetingDate\": \"2024-01-15T10:00:00.000Z\",\n  \"participants\": [...]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/meeting-notes",
+              "host": ["{{base_url}}"],
+              "path": ["meeting-notes"]
+            }
+          },
+          "status": "Created",
+          "code": 201,
+          "_postman_previewlanguage": "json",
+          "header": [],
+          "cookie": [],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Meeting note created successfully\",\n  \"data\": {\n    \"_id\": \"meeting_note_id\",\n    \"meetingTitle\": \"Email Configuration Meeting\",\n    \"meetingDate\": \"2024-01-15T10:00:00.000Z\",\n    \"participants\": [\n      {\n        \"name\": \"John Doe\",\n        \"email\": \"john@example.com\",\n        \"type\": \"simple\"\n      }\n    ],\n    \"audioFileUrl\": \"audiiofiles/audioFile-1642567890123-456789.wav\",\n    \"transcription\": \"okay uh the recording is started...\",\n    \"summary\": \"## Meeting Overview...\",\n    \"transcriptionStatus\": \"completed\",\n    \"summaryStatus\": \"completed\",\n    \"tags\": [\"email\", \"configuration\"],\n    \"category\": \"technical\",\n    \"createdBy\": {\n      \"_id\": \"user_id\",\n      \"name\": \"Admin User\",\n      \"email\": \"admin@example.com\"\n    },\n    \"createdAt\": \"2024-01-15T10:30:00.000Z\",\n    \"updatedAt\": \"2024-01-15T10:30:00.000Z\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Get All Meeting Notes",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/meeting-notes?page=1&limit=10&search=email&category=technical&tags=development,email&dateFrom=2024-01-01&dateTo=2024-01-31&sortBy=meetingDate&sortOrder=desc",
+          "host": ["{{base_url}}"],
+          "path": ["meeting-notes"],
+          "query": [
+            {
+              "key": "page",
+              "value": "1",
+              "description": "Page number (default: 1)"
+            },
+            {
+              "key": "limit",
+              "value": "10",
+              "description": "Items per page (default: 20)"
+            },
+            {
+              "key": "search",
+              "value": "email",
+              "description": "Search in title, transcript, or summary"
+            },
+            {
+              "key": "category",
+              "value": "technical",
+              "description": "Filter by category"
+            },
+            {
+              "key": "tags",
+              "value": "development,email",
+              "description": "Filter by tags (comma-separated)"
+            },
+            {
+              "key": "dateFrom",
+              "value": "2024-01-01",
+              "description": "Start date filter (ISO format)"
+            },
+            {
+              "key": "dateTo",
+              "value": "2024-01-31",
+              "description": "End date filter (ISO format)"
+            },
+            {
+              "key": "sortBy",
+              "value": "meetingDate",
+              "description": "Sort field (default: meetingDate)"
+            },
+            {
+              "key": "sortOrder",
+              "value": "desc",
+              "description": "Sort order: asc or desc (default: desc)"
+            }
+          ]
+        },
+        "description": "Get all meeting notes with pagination, search, and filtering"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/meeting-notes?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["meeting-notes"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [],
+          "cookie": [],
+          "body": "{\n  \"success\": true,\n  \"data\": [\n    {\n      \"_id\": \"meeting_note_id\",\n      \"meetingTitle\": \"Email Configuration Meeting\",\n      \"meetingDate\": \"2024-01-15T10:00:00.000Z\",\n      \"participants\": [...],\n      \"transcriptionStatus\": \"completed\",\n      \"summaryStatus\": \"completed\",\n      \"tags\": [\"email\", \"configuration\"],\n      \"category\": \"technical\",\n      \"createdBy\": {\n        \"name\": \"Admin User\",\n        \"email\": \"admin@example.com\"\n      },\n      \"createdAt\": \"2024-01-15T10:30:00.000Z\"\n    }\n  ],\n  \"pagination\": {\n    \"currentPage\": 1,\n    \"totalPages\": 5,\n    \"totalCount\": 47,\n    \"hasNext\": true,\n    \"hasPrev\": false\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Get Meeting Note by ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/meeting-notes/:id",
+          "host": ["{{base_url}}"],
+          "path": ["meeting-notes", ":id"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "meeting_note_id_here",
+              "description": "Meeting note ID"
+            }
+          ]
+        },
+        "description": "Get a specific meeting note by ID"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/meeting-notes/meeting_note_id",
+              "host": ["{{base_url}}"],
+              "path": ["meeting-notes", "meeting_note_id"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [],
+          "cookie": [],
+          "body": "{\n  \"success\": true,\n  \"data\": {\n    \"_id\": \"meeting_note_id\",\n    \"meetingTitle\": \"Email Configuration Meeting\",\n    \"meetingDate\": \"2024-01-15T10:00:00.000Z\",\n    \"participants\": [\n      {\n        \"name\": \"John Doe\",\n        \"email\": \"john@example.com\",\n        \"type\": \"simple\"\n      },\n      {\n        \"contactId\": {\n          \"_id\": \"contact_id\",\n          \"fullName\": \"Sarah Smith\",\n          \"email\": \"sarah@company.com\",\n          \"company\": \"Tech Corp\"\n        },\n        \"type\": \"contact\"\n      }\n    ],\n    \"audioFileUrl\": \"audiiofiles/audioFile-1642567890123-456789.wav\",\n    \"audioFileName\": \"meeting-recording.wav\",\n    \"audioFileSize\": 2048576,\n    \"transcription\": \"Full meeting transcript here...\",\n    \"summary\": \"Complete meeting summary here...\",\n    \"rawTranscriptData\": {...},\n    \"duration\": \"15m\",\n    \"confidence\": 0.85,\n    \"transcriptionStatus\": \"completed\",\n    \"summaryStatus\": \"completed\",\n    \"tags\": [\"email\", \"configuration\", \"development\"],\n    \"category\": \"technical\",\n    \"createdBy\": {\n      \"_id\": \"user_id\",\n      \"name\": \"Admin User\",\n      \"email\": \"admin@example.com\"\n    },\n    \"createdAt\": \"2024-01-15T10:30:00.000Z\",\n    \"updatedAt\": \"2024-01-15T10:30:00.000Z\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Update Meeting Note",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"meetingTitle\": \"Updated Email Configuration Meeting\",\n  \"meetingDate\": \"2024-01-15T10:00:00.000Z\",\n  \"participants\": [\n    {\n      \"name\": \"John Doe Updated\",\n      \"email\": \"john.updated@example.com\",\n      \"type\": \"simple\"\n    },\n    {\n      \"name\": \"New Participant\",\n      \"type\": \"simple\"\n    }\n  ],\n  \"transcription\": \"Updated transcript content here...\",\n  \"summary\": \"Updated summary content here...\",\n  \"tags\": [\"email\", \"configuration\", \"development\", \"updated\"],\n  \"category\": \"technical-updated\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/meeting-notes/:id",
+          "host": ["{{base_url}}"],
+          "path": ["meeting-notes", ":id"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "meeting_note_id_here",
+              "description": "Meeting note ID to update"
+            }
+          ]
+        },
+        "description": "Update an existing meeting note"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"meetingTitle\": \"Updated Email Configuration Meeting\",\n  \"tags\": [\"email\", \"configuration\", \"updated\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/meeting-notes/meeting_note_id",
+              "host": ["{{base_url}}"],
+              "path": ["meeting-notes", "meeting_note_id"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [],
+          "cookie": [],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Meeting note updated successfully\",\n  \"data\": {\n    \"_id\": \"meeting_note_id\",\n    \"meetingTitle\": \"Updated Email Configuration Meeting\",\n    \"meetingDate\": \"2024-01-15T10:00:00.000Z\",\n    \"participants\": [...],\n    \"transcription\": \"Updated transcript...\",\n    \"summary\": \"Updated summary...\",\n    \"tags\": [\"email\", \"configuration\", \"updated\"],\n    \"createdBy\": {\n      \"_id\": \"user_id\",\n      \"name\": \"Admin User\",\n      \"email\": \"admin@example.com\"\n    },\n    \"updatedBy\": {\n      \"_id\": \"user_id\",\n      \"name\": \"Admin User\",\n      \"email\": \"admin@example.com\"\n    },\n    \"createdAt\": \"2024-01-15T10:30:00.000Z\",\n    \"updatedAt\": \"2024-01-15T11:00:00.000Z\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Delete Meeting Note",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/meeting-notes/:id",
+          "host": ["{{base_url}}"],
+          "path": ["meeting-notes", ":id"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "meeting_note_id_here",
+              "description": "Meeting note ID to delete"
+            }
+          ]
+        },
+        "description": "Delete a meeting note (soft delete - sets isActive to false)"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/meeting-notes/meeting_note_id",
+              "host": ["{{base_url}}"],
+              "path": ["meeting-notes", "meeting_note_id"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [],
+          "cookie": [],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Meeting note deleted successfully\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Get Meeting Notes Statistics",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/meeting-notes/stats",
+          "host": ["{{base_url}}"],
+          "path": ["meeting-notes", "stats"]
+        },
+        "description": "Get meeting notes statistics for the current user"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/meeting-notes/stats",
+              "host": ["{{base_url}}"],
+              "path": ["meeting-notes", "stats"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [],
+          "cookie": [],
+          "body": "{\n  \"success\": true,\n  \"data\": {\n    \"totalNotes\": 47,\n    \"recentNotes\": 12,\n    \"processingNotes\": 2,\n    \"categoryStats\": [\n      {\n        \"_id\": \"technical\",\n        \"count\": 15\n      },\n      {\n        \"_id\": \"business\",\n        \"count\": 20\n      },\n      {\n        \"_id\": \"planning\",\n        \"count\": 12\n      }\n    ],\n    \"monthlyStats\": [\n      {\n        \"_id\": {\n          \"year\": 2024,\n          \"month\": 1\n        },\n        \"count\": 15\n      },\n      {\n        \"_id\": {\n          \"year\": 2023,\n          \"month\": 12\n        },\n        \"count\": 18\n      }\n    ]\n  }\n}"
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-set authorization header if jwt_token is available",
+          "if (pm.collectionVariables.get('jwt_token') && pm.collectionVariables.get('jwt_token') !== 'YOUR_JWT_TOKEN_HERE') {",
+          "    pm.request.headers.add({",
+          "        key: 'Authorization',",
+          "        value: 'Bearer ' + pm.collectionVariables.get('jwt_token')",
+          "    });",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-extract JWT token from login response",
+          "if (pm.info.requestName === 'Login' && pm.response.code === 200) {",
+          "    const responseJson = pm.response.json();",
+          "    if (responseJson.token) {",
+          "        pm.collectionVariables.set('jwt_token', responseJson.token);",
+          "        console.log('JWT token extracted and saved to collection variables');",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ]
+}

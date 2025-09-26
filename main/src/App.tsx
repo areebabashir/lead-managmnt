@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { CompanyProvider } from "./contexts/CompanyContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AppLayout } from "./components/layout/AppLayout";
 import Login from "./pages/Login";
@@ -24,6 +25,7 @@ import AIAssistant from "./pages/AI/AIAssistant";
 import EmailGenerator from "./pages/AI/EmailGenerator";
 import EmailManager from "./pages/AI/EmailManager";
 import MeetingNotes from "./pages/AI/MeetingNotes";
+import MeetingNotesManager from "./pages/AI/MeetingNotesManager";
 import CustomPrompts from "./pages/AI/CustomPrompts";
 import Profile from "./pages/Profile";
 import MeetingScheduling from "./pages/MeetingScheduling";
@@ -42,7 +44,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
+          <CompanyProvider>
+            <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/google-calendar-callback" element={<GoogleCalendarCallback />} />
@@ -150,11 +153,18 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/ai-assistant/meetings" element={
-              <ProtectedRoute requiredPermission={{ resource: 'ai_generator', action: 'generate' }}>
+              // <ProtectedRoute requiredPermission={{ resource: 'meeting_notes', action: 'create' }}>
                 <AppLayout>
                   <MeetingNotes />
                 </AppLayout>
-              </ProtectedRoute>
+              // </ProtectedRoute>
+            } />
+            <Route path="/ai-assistant/meeting-notes-manager" element={
+              // <ProtectedRoute requiredPermission={{ resource: 'meeting_notes', action: 'read' }}>
+                <AppLayout>
+                  <MeetingNotesManager />
+                </AppLayout>
+              // </ProtectedRoute>
             } />
             <Route path="/ai-assistant/prompts" element={
               <ProtectedRoute requiredPermission={{ resource: 'ai_generator', action: 'generate' }}>
@@ -190,6 +200,7 @@ const App = () => (
             {/* Redirect root to dashboard if authenticated, otherwise to login */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </CompanyProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

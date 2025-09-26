@@ -9,7 +9,13 @@ import {
   cancelScheduledEmail,
   deleteEmail,
   getEmailStats,
-  getContactsForEmail
+  getContactsForEmail,
+  // Inbox functionality
+  getInboxEmails,
+  getEmailThread,
+  markEmailAsRead,
+  toggleEmailStar,
+  syncInboxEmails
 } from '../controllers/emailController.js';
 import { requireSignIn } from '../Middlewares/authMiddlewares.js';
 
@@ -33,6 +39,14 @@ router.delete('/:emailId', deleteEmail);
 router.get('/', getUserEmails);
 router.get('/stats', getEmailStats);
 router.get('/:emailId', getEmailById);
+
+// ==================== INBOX ROUTES ====================
+// Inbox functionality
+router.get('/inbox/list', getInboxEmails);
+router.get('/thread/:threadId', getEmailThread);
+router.post('/inbox/sync', syncInboxEmails);
+router.put('/:emailId/read', markEmailAsRead);
+router.put('/:emailId/star', toggleEmailStar);
 
 export default router;
 

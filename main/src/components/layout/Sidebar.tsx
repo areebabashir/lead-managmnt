@@ -25,6 +25,7 @@ import {
   Database,
 } from "lucide-react"
 import { useAuth } from "../../contexts/AuthContext"
+import { useCompany } from "../../contexts/CompanyContext"
 
 interface SidebarProps {
   collapsed: boolean
@@ -80,25 +81,25 @@ const getMenuItems = (hasPermission: (resource: string, action: string) => boole
       href: "/meeting-scheduling",
       show: isSuperAdmin || hasPermission('calendar', 'read'),
     },
-    {
-      title: "Analytics",
-      icon: BarChart3,
-      show: isSuperAdmin || hasPermission('dashboards', 'read'),
-      children: [
-        { 
-          title: "Reports", 
-          href: "/analytics/reports", 
-          icon: FileText,
-          show: isSuperAdmin || hasPermission('reports', 'read')
-        },
-        { 
-          title: "Performance", 
-          href: "/anylatics/performance", 
-          icon: TrendingUp,
-          show: isSuperAdmin || hasPermission('analytics', 'read')
-        },
-      ],
-    },
+    // {
+    //   title: "Analytics",
+    //   icon: BarChart3,
+    //   show: isSuperAdmin || hasPermission('dashboards', 'read'),
+    //   children: [
+    //     { 
+    //       title: "Reports", 
+    //       href: "/analytics/reports", 
+    //       icon: FileText,
+    //       show: isSuperAdmin || hasPermission('reports', 'read')
+    //     },
+    //     { 
+    //       title: "Performance", 
+    //       href: "/anylatics/performance", 
+    //       icon: TrendingUp,
+    //       show: isSuperAdmin || hasPermission('analytics', 'read')
+    //     },
+    //   ],
+    // },
     {
       title: "AI Assistant",
       icon: Bot,
@@ -126,7 +127,13 @@ const getMenuItems = (hasPermission: (resource: string, action: string) => boole
           title: "Meeting Notes", 
           href: "/ai-assistant/meetings", 
           icon: FileText,
-          show: isSuperAdmin || hasPermission('ai_generator', 'generate')
+          show: isSuperAdmin || hasPermission('meeting_notes', 'create')
+        },
+        { 
+          title: "Notes Manager", 
+          href: "/ai-assistant/meeting-notes-manager", 
+          icon: Database,
+          show: isSuperAdmin || hasPermission('meeting_notes', 'read')
         },
         { 
           title: "Custom Prompts", 
@@ -205,6 +212,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const [expandedItems, setExpandedItems] = React.useState<string[]>([])
   const location = useLocation()
   const { hasPermission, userRole } = useAuth()
+  const { company } = useCompany()
   // console.log(hasPermission('contacts', 'read'))
   const toggleExpanded = (title: string) => {
     setExpandedItems((prev) =>
@@ -227,11 +235,25 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
           <div className="flex items-center justify-between">
             {!collapsed && (
               <div className="flex items-center gap-3">
-                {/* Stylish Icon Logo */}
-                <div className="w-9 h-9 rounded-xl bg-orange-500 flex items-center justify-center shadow-md">
+                {/* Company Logo or Default Icon */}
+                {company?.logo ? (
+                  <img
+                    src={company.logo}
+                    alt={`${company.name} logo`}
+                    className="w-9 h-9 rounded-xl object-cover shadow-md"
+                    onError={(e) => {
+                      // Fallback to default icon if image fails to load
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                    }}
+                  />
+                ) : null}
+                <div className={`w-9 h-9 rounded-xl bg-orange-500 flex items-center justify-center shadow-md ${company?.logo ? 'hidden' : ''}`}>
                   <Sparkles className="h-5 w-5 text-white" />
                 </div>
-                <span className="text-lg font-semibold text-gray-900"><i>Melnitz</i></span>
+                <span className="text-lg font-semibold text-gray-900">
+                  <i>{company?.name || 'Melnitz'}</i>
+                </span>
               </div>
             )}
             <button
@@ -275,8 +297,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                               className="flex items-center gap-2"
                             >
                               <span className="font-medium">{item.title}</span>
-                              {item.badge && (
-                                <Badge variant={item.badge === "New" ? "new" : "default"}>{item.badge}</Badge>
+                              {(item as any).badge && (
+                                <Badge variant={(item as any).badge === "New" ? "new" : "default"}>{(item as any).badge}</Badge>
                               )}
                             </motion.div>
                           )}
@@ -357,8 +379,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                               className="flex items-center gap-2 flex-1"
                             >
                               <span className="font-medium">{item.title}</span>
-                              {item.badge && (
-                                <Badge variant={item.badge === "New" ? "new" : "default"}>{item.badge}</Badge>
+                              {(item as any).badge && (
+                                <Badge variant={(item as any).badge === "New" ? "new" : "default"}>{(item as any).badge}</Badge>
                               )}
                             </motion.div>
                           )}

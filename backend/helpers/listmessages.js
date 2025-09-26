@@ -1,54 +1,20 @@
 import { google } from "googleapis";
 import dotenv from "dotenv";
-import EmailAccount from "../models/emailAccountModel.js";
 
 dotenv.config();
 
-// Google OAuth credentials (still from env for client setup)
 const oAuth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
   process.env.GOOGLE_REDIRECT_URI
 );
 
-// Function to get active email account and set up OAuth client
-async function getActiveEmailAccount() {
-  try {
-    const activeAccount = await EmailAccount.findOne({ isActive: true });
-    
-    if (!activeAccount) {
-      throw new Error('No active email account found. Please activate an email account in settings.');
-    }
-
-    if (!activeAccount.google?.refreshToken) {
-      throw new Error('Active email account does not have a valid refresh token. Please reconnect your Google account.');
-    }
-
-    return activeAccount;
-  } catch (error) {
-    console.error('Error getting active email account:', error);
-    throw error;
-  }
+// Attach refresh token
+if (process.env.GOOGLE_REFRESH_TOKEN) {
+  oAuth2Client.setCredentials({ refresh_token: process.env.GOOGLE_REFRESH_TOKEN });
 }
 
-// Function to get configured Gmail client with active account tokens
-async function getGmailClient() {
-  try {
-    const activeAccount = await getActiveEmailAccount();
-    
-    // Set credentials for the active account
-    oAuth2Client.setCredentials({
-      refresh_token: activeAccount.google.refreshToken,
-      access_token: activeAccount.google.accessToken,
-      expiry_date: activeAccount.google.expiryDate
-    });
-
-    return google.gmail({ version: "v1", auth: oAuth2Client });
-  } catch (error) {
-    console.error('Error setting up Gmail client:', error);
-    throw error;
-  }
-}
+const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
 
 /**
  * Decode base64 email body
@@ -62,157 +28,107 @@ function decodeEmailBody(base64Data) {
  * Send an email
  */
 export async function sendEmail(to, subject, text) {
-  try {
-    const gmail = await getGmailClient();
-    const activeAccount = await getActiveEmailAccount();
-    
-    const message = [
-      `From: ${activeAccount.displayName || 'Company'} <${activeAccount.email}>`,
-      `To: ${to}`,
-      `Subject: ${subject}`,
-      "",
-      text,
-    ].join("\n");
+  const message = [
+    `From: Realtech <${process.env.GMAIL_SENDER}>`,
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    "",
+    text,
+  ].join("\n");
 
-    const encodedMessage = Buffer.from(message)
-      .toString("base64")
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=+$/, "");
+  const encodedMessage = Buffer.from(message)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
 
-    const res = await gmail.users.messages.send({
-      userId: "me",
-      requestBody: { raw: encodedMessage },
-    });
+  const res = await gmail.users.messages.send({
+    userId: "me",
+    requestBody: { raw: encodedMessage },
+  });
 
-    return res.data;
-  } catch (error) {
-    console.error('Error sending email:', error);
-    throw error;
-  }
+  return res.data;
 }
 
 /**
  * List messages (optionally with query e.g. "is:unread")
  */
-export async function listMessages(query = "", maxResults = 10) {
-  try {
-    const gmail = await getGmailClient();
-    
-    const res = await gmail.users.messages.list({
-      userId: "me",
-      q: query,
-      maxResults: maxResults,
-    });
-    console.log("List messages:", res.data.messages);
-    return res.data.messages || [];
-  } catch (error) {
-    console.error('Error listing messages:', error);
-    throw error;
-  }
+export async function listMessages(query = "") {
+  const res = await gmail.users.messages.list({
+    userId: "me",
+    q: query,
+    maxResults: 10,
+  });
+  console.log("List messages:", res.data.messages);
+  return res.data.messages || [];
 }
 
 /**
  * Get full message content
  */
 export async function getMessage(messageId) {
-  try {
-    const gmail = await getGmailClient();
-    
-    const res = await gmail.users.messages.get({
-      userId: "me",
-      id: messageId,
-      format: "full", // can be 'metadata' or 'minimal'
-    });
-    console.log("Message:", res.data);
-    return res.data;
-  } catch (error) {
-    console.error('Error getting message:', error);
-    throw error;
-  }
+  const res = await gmail.users.messages.get({
+    userId: "me",
+    id: messageId,
+    format: "full", // can be 'metadata' or 'minimal'
+  });
+  console.log("Message:", res.data);
+  return res.data;
 }
 
 /**
  * Modify message (e.g. mark read/unread, apply label)
  */
 export async function modifyMessage(messageId, labelsToAdd = [], labelsToRemove = []) {
-  try {
-    const gmail = await getGmailClient();
-    
-    const res = await gmail.users.messages.modify({
-      userId: "me",
-      id: messageId,
-      requestBody: {
-        addLabelIds: labelsToAdd,
-        removeLabelIds: labelsToRemove,
-      },
-    });
-    return res.data;
-  } catch (error) {
-    console.error('Error modifying message:', error);
-    throw error;
-  }
+  const res = await gmail.users.messages.modify({
+    userId: "me",
+    id: messageId,
+    requestBody: {
+      addLabelIds: labelsToAdd,
+      removeLabelIds: labelsToRemove,
+    },
+  });
+  return res.data;
 }
 
 /**
  * List all labels
  */
 export async function listLabels() {
-  try {
-    const gmail = await getGmailClient();
-    
-    const res = await gmail.users.labels.list({ userId: "me" });
-    return res.data.labels || [];
-  } catch (error) {
-    console.error('Error listing labels:', error);
-    throw error;
-  }
+  const res = await gmail.users.labels.list({ userId: "me" });
+  return res.data.labels || [];
 }
 
 /**
  * Get a thread (all messages in conversation)
  */
 export async function getThread(threadId) {
-  try {
-    const gmail = await getGmailClient();
-    
-    const res = await gmail.users.threads.get({
-      userId: "me",
-      id: threadId,
-    });
-    
-    // Decode the base64 email body
-    const message = res.data.messages[0];
-    if (message.payload && message.payload.body && message.payload.body.data) {
-      const decodedBody = Buffer.from(message.payload.body.data, 'base64').toString('utf-8');
-      console.log("Decoded email body:", decodedBody);
-    }
-    
-    console.log("Thread:", res.data);
-    return res.data;
-  } catch (error) {
-    console.error('Error getting thread:', error);
-    throw error;
+  const res = await gmail.users.threads.get({
+    userId: "me",
+    id: threadId,
+  });
+  
+  // Decode the base64 email body
+  const message = res.data.messages[0];
+  if (message.payload && message.payload.body && message.payload.body.data) {
+    const decodedBody = Buffer.from(message.payload.body.data, 'base64').toString('utf-8');
+    console.log("Decoded email body:", decodedBody);
   }
+  
+  console.log("Thread:", res.data);
+  return res.data;
 }
 
 /**
  * Get mailbox history since a given historyId (for syncing)
  */
 export async function getHistory(startHistoryId) {
-  try {
-    const gmail = await getGmailClient();
-    
-    const res = await gmail.users.history.list({
-      userId: "me",
-      startHistoryId,
-      historyTypes: ["messageAdded", "messageDeleted"],
-    });
-    return res.data.history || [];
-  } catch (error) {
-    console.error('Error getting history:', error);
-    throw error;
-  }
+  const res = await gmail.users.history.list({
+    userId: "me",
+    startHistoryId,
+    historyTypes: ["messageAdded", "messageDeleted"],
+  });
+  return res.data.history || [];
 }
 
 /**
@@ -220,9 +136,6 @@ export async function getHistory(startHistoryId) {
  */
 export async function syncInboxEmails(userId, maxResults = 50) {
   try {
-    // Get active email account to ensure we're syncing from the right account
-    const activeAccount = await getActiveEmailAccount();
-    
     // Get recent messages from Gmail
     const messages = await listMessages('in:inbox', maxResults);
     
@@ -250,7 +163,7 @@ export async function syncInboxEmails(userId, maxResults = 50) {
         const payload = fullMessage.payload;
         
         // Extract email data
-        const emailData = extractEmailData(payload, fullMessage, userId, activeAccount);
+        const emailData = extractEmailData(payload, fullMessage, userId);
         
         if (emailData) {
           const email = new Email(emailData);
@@ -273,7 +186,7 @@ export async function syncInboxEmails(userId, maxResults = 50) {
 /**
  * Extract email data from Gmail message payload
  */
-function extractEmailData(payload, fullMessage, userId, activeAccount = null) {
+function extractEmailData(payload, fullMessage, userId) {
   try {
     const headers = payload.headers || [];
     
@@ -321,7 +234,6 @@ function extractEmailData(payload, fullMessage, userId, activeAccount = null) {
         name: senderName
       },
       status: 'received',
-      activeEmailAccount: activeAccount ? activeAccount._id : null,
       metadata: {
         gmailMessageId: fullMessage.id,
         threadId: fullMessage.threadId,
@@ -331,13 +243,7 @@ function extractEmailData(payload, fullMessage, userId, activeAccount = null) {
         isStarred: fullMessage.labelIds?.includes('STARRED') || false,
         isImportant: fullMessage.labelIds?.includes('IMPORTANT') || false,
         receivedDate: new Date(date),
-        emailDirection: 'received',
-        // Add active account information for tracking
-        activeEmailAccount: activeAccount ? {
-          id: activeAccount._id,
-          email: activeAccount.email,
-          displayName: activeAccount.displayName
-        } : null
+        emailDirection: 'received'
       }
     };
   } catch (error) {
@@ -366,9 +272,7 @@ function extractBodyFromParts(parts) {
 }
 
 
-// Export helper functions for use by other modules
-export { getActiveEmailAccount, getGmailClient };
-
 // listMessages();
+syncInboxEmails();
 // getMessage("19951abd82bd7f55");
 // getThread("19951abd82bd7f55");

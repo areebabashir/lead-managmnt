@@ -49,6 +49,17 @@ export const generateAndSaveEmail = async (req, res) => {
       });
     }
 
+    // Get active email account
+    const EmailAccount = (await import('../models/emailAccountModel.js')).default;
+    const activeAccount = await EmailAccount.findOne({ isActive: true });
+    
+    if (!activeAccount) {
+      return res.status(404).json({
+        success: false,
+        message: 'No active email account found. Please activate an email account in settings.'
+      });
+    }
+
     let generatedContent = { subject: '', body: '' };
     let aiInteractionId = null;
 
@@ -101,6 +112,7 @@ export const generateAndSaveEmail = async (req, res) => {
       },
       status: 'draft',
       emailType: emailType || 'custom',
+      activeEmailAccount: activeAccount._id,
       aiContext: {
         emailType: emailType || 'custom',
         tone: context?.tone || 'professional',
@@ -312,8 +324,23 @@ export const getUserEmails = async (req, res) => {
       });
     }
 
-    // Build query
-    const query = { 'sender.userId': userId, isActive: true };
+    // Get active email account
+    const EmailAccount = (await import('../models/emailAccountModel.js')).default;
+    const activeAccount = await EmailAccount.findOne({ isActive: true });
+    
+    if (!activeAccount) {
+      return res.status(404).json({
+        success: false,
+        message: 'No active email account found. Please activate an email account in settings.'
+      });
+    }
+
+    // Build query - filter by active email account
+    const query = { 
+      'sender.userId': userId, 
+      'activeEmailAccount': activeAccount._id,
+      isActive: true 
+    };
     if (status) query.status = status;
     if (contactId) query['recipient.contactId'] = contactId;
 
@@ -321,6 +348,7 @@ export const getUserEmails = async (req, res) => {
     const emails = await Email.find(query)
       .populate('recipient.contactId', 'fullName email')
       .populate('aiContext.aiInteractionId', 'prompt response')
+      .populate('activeEmailAccount', 'email displayName')
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
@@ -571,6 +599,243 @@ export const getContactsForEmail = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve contacts',
+      error: error.message
+    });
+  }
+};
+
+// ==================== INBOX FUNCTIONALITY ====================
+
+// Get inbox emails (received emails)
+export const getInboxEmails = async (req, res) => {
+  try {
+    // Check if user is authenticated
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
+
+    const userId = req.user._id;
+    const { 
+      page = 1, 
+      limit = 20, 
+      unreadOnly = false, 
+      starredOnly = false, 
+      label = null 
+    } = req.query;
+
+    // Check permissions
+    if (!await hasPermission(userId, 'ai_generator', 'read')) {
+      return res.status(403).json({
+        success: false,
+        message: 'Insufficient permissions to view inbox'
+      });
+    }
+
+    // Get active email account
+    const EmailAccount = (await import('../models/emailAccountModel.js')).default;
+    const activeAccount = await EmailAccount.findOne({ isActive: true });
+    
+    if (!activeAccount) {
+      return res.status(404).json({
+        success: false,
+        message: 'No active email account found. Please activate an email account in settings.'
+      });
+    }
+
+    const options = {
+      unreadOnly: unreadOnly === 'true',
+      starredOnly: starredOnly === 'true',
+      label: label,
+      limit: parseInt(limit),
+      skip: (parseInt(page) - 1) * parseInt(limit),
+      activeEmailAccountId: activeAccount._id
+    };
+
+    const emails = await Email.getReceivedEmails(userId, options);
+    const total = await Email.countDocuments({ 
+      'metadata.emailDirection': 'received',
+      'activeEmailAccount': activeAccount._id,
+      isActive: true 
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Inbox emails retrieved successfully',
+      data: {
+        emails,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get inbox error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve inbox emails',
+      error: error.message
+    });
+  }
+};
+
+// Get email thread (conversation)
+export const getEmailThread = async (req, res) => {
+  try {
+    // Check if user is authenticated
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
+
+    const userId = req.user._id;
+    const { threadId } = req.params;
+
+    // Check permissions
+    if (!await hasPermission(userId, 'ai_generator', 'read')) {
+      return res.status(403).json({
+        success: false,
+        message: 'Insufficient permissions to view email threads'
+      });
+    }
+
+    const threadEmails = await Email.getEmailThread(threadId);
+
+    res.status(200).json({
+      success: true,
+      message: 'Email thread retrieved successfully',
+      data: threadEmails
+    });
+  } catch (error) {
+    console.error('Get email thread error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve email thread',
+      error: error.message
+    });
+  }
+};
+
+// Mark email as read/unread
+export const markEmailAsRead = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { emailId } = req.params;
+    const { isRead = true } = req.body;
+
+    // Check permissions
+    if (!await hasPermission(userId, 'ai_generator', 'update')) {
+      return res.status(403).json({
+        success: false,
+        message: 'Insufficient permissions to mark emails'
+      });
+    }
+
+    const email = await Email.findById(emailId);
+    if (!email) {
+      return res.status(404).json({
+        success: false,
+        message: 'Email not found'
+      });
+    }
+
+    await email.markAsRead(isRead);
+
+    res.status(200).json({
+      success: true,
+      message: `Email marked as ${isRead ? 'read' : 'unread'}`,
+      data: email
+    });
+  } catch (error) {
+    console.error('Mark email as read error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to mark email',
+      error: error.message
+    });
+  }
+};
+
+// Star/unstar email
+export const toggleEmailStar = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { emailId } = req.params;
+
+    // Check permissions
+    if (!await hasPermission(userId, 'ai_generator', 'update')) {
+      return res.status(403).json({
+        success: false,
+        message: 'Insufficient permissions to star emails'
+      });
+    }
+
+    const email = await Email.findById(emailId);
+    if (!email) {
+      return res.status(404).json({
+        success: false,
+        message: 'Email not found'
+      });
+    }
+
+    await email.toggleStar();
+
+    res.status(200).json({
+      success: true,
+      message: `Email ${email.metadata.isStarred ? 'starred' : 'unstarred'}`,
+      data: email
+    });
+  } catch (error) {
+    console.error('Toggle email star error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to toggle email star',
+      error: error.message
+    });
+  }
+};
+
+// Sync Gmail inbox emails
+export const syncInboxEmails = async (req, res) => {
+  console.log('syncInboxEmails hit');
+  try {
+    const userId = req.user._id;
+    const { maxResults = 50 } = req.body;
+
+    // Check permissions
+    if (!await hasPermission(userId, 'ai_generator', 'read')) {
+      return res.status(403).json({
+        success: false,
+        message: 'Insufficient permissions to sync inbox'
+      });
+    }
+
+    // Import the sync function
+    const { syncInboxEmails: syncFunction } = await import('../helpers/emailHelper.js');
+    
+    const result = await syncFunction(userId, maxResults);
+
+    res.status(200).json({
+      success: true,
+      message: `Synced ${result.synced} emails from Gmail inbox`,
+      data: {
+        synced: result.synced,
+        errors: result.errors,
+        totalErrors: result.errors.length
+      }
+    });
+  } catch (error) {
+    console.error('Sync inbox error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to sync inbox emails',
       error: error.message
     });
   }

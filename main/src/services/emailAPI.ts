@@ -36,7 +36,7 @@ interface Email {
     email: string;
     name: string;
   };
-  status: 'draft' | 'scheduled' | 'sending' | 'sent' | 'failed' | 'cancelled';
+  status: 'draft' | 'scheduled' | 'sending' | 'sent' | 'failed' | 'cancelled' | 'received';
   emailType: string;
   scheduledDate?: string;
   sentDate?: string;
@@ -56,6 +56,26 @@ interface Email {
     clickedAt?: string;
     replied: boolean;
     repliedAt?: string;
+  };
+  metadata: {
+    gmailMessageId?: string;
+    threadId?: string;
+    labels?: string[];
+    attachments?: Array<{
+      filename: string;
+      contentType: string;
+      size: number;
+      url: string;
+      attachmentId?: string;
+    }>;
+    priority?: 'low' | 'normal' | 'high';
+    tags?: string[];
+    gmailLabels?: string[];
+    isRead?: boolean;
+    isStarred?: boolean;
+    isImportant?: boolean;
+    receivedDate?: string;
+    emailDirection?: 'sent' | 'received';
   };
   createdAt: string;
   updatedAt: string;
@@ -182,6 +202,56 @@ class EmailAPI {
   // Get email statistics
   async getEmailStats(): Promise<APIResponse<EmailStats>> {
     return this.makeRequest('/emails/stats');
+  }
+
+  // ==================== INBOX FUNCTIONALITY ====================
+
+  // Get inbox emails (received emails)
+  async getInboxEmails(
+    page: number = 1, 
+    limit: number = 20, 
+    filters: {
+      unreadOnly?: boolean;
+      starredOnly?: boolean;
+      label?: string;
+    } = {}
+  ): Promise<APIResponse<{ emails: Email[]; pagination: any }>> {
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
+    if (filters.unreadOnly) params.append('unreadOnly', 'true');
+    if (filters.starredOnly) params.append('starredOnly', 'true');
+    if (filters.label) params.append('label', filters.label);
+    
+    return this.makeRequest(`/emails/inbox/list?${params.toString()}`);
+  }
+
+  // Get email thread (conversation)
+  async getEmailThread(threadId: string): Promise<APIResponse<Email[]>> {
+    return this.makeRequest(`/emails/thread/${threadId}`);
+  }
+
+  // Mark email as read/unread
+  async markEmailAsRead(emailId: string, isRead: boolean = true): Promise<APIResponse<Email>> {
+    return this.makeRequest(`/emails/${emailId}/read`, {
+      method: 'PUT',
+      body: JSON.stringify({ isRead }),
+    });
+  }
+
+  // Star/unstar email
+  async toggleEmailStar(emailId: string): Promise<APIResponse<Email>> {
+    return this.makeRequest(`/emails/${emailId}/star`, {
+      method: 'PUT',
+    });
+  }
+
+  // Sync Gmail inbox emails
+  async syncInboxEmails(maxResults: number = 50): Promise<APIResponse<{ synced: number; errors: any[]; totalErrors: number }>> {
+    return this.makeRequest('/emails/inbox/sync', {
+      method: 'POST',
+      body: JSON.stringify({ maxResults }),
+    });
   }
 }
 
