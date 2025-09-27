@@ -41,7 +41,7 @@ const AIAssistant: React.FC = () => {
       description: 'Create professional emails',
       icon: Mail,
       href: '/ai-assistant/email',
-      color: 'bg-blue-500'
+      color: 'bg-primary'
     },
     {
       title: 'Meeting Notes',
@@ -55,7 +55,7 @@ const AIAssistant: React.FC = () => {
       description: 'Ask anything with AI',
       icon: MessageSquare,
       href: '/ai-assistant/prompts',
-      color: 'bg-purple-500'
+      color: 'bg-primary'
     }
   ]);
 
@@ -171,8 +171,8 @@ const AIAssistant: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-orange-100 rounded-lg">
-                <Activity className="h-6 w-6 text-orange-600" />
+              <div className="p-3 bg-primary/10 rounded-lg">
+                <Activity className="h-6 w-6 text-primary" />
               </div>
               <div>
                 <p className="text-sm text-gray-600">Total Interactions</p>
@@ -183,8 +183,8 @@ const AIAssistant: React.FC = () => {
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Mail className="h-6 w-6 text-blue-600" />
+              <div className="p-3 bg-primary/10 rounded-lg">
+                <Mail className="h-6 w-6 text-primary" />
               </div>
               <div>
                 <p className="text-sm text-gray-600">Emails Generated</p>
@@ -207,8 +207,8 @@ const AIAssistant: React.FC = () => {
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <MessageSquare className="h-6 w-6 text-purple-600" />
+              <div className="p-3 bg-primary/10 rounded-lg">
+                <MessageSquare className="h-6 w-6 text-primary" />
               </div>
               <div>
                 <p className="text-sm text-gray-600">Custom Prompts</p>
@@ -235,7 +235,7 @@ const AIAssistant: React.FC = () => {
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
-                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                    className="bg-primary h-2 rounded-full transition-all duration-300"
                     style={{ width: `${getUsagePercentage('email')}%` }}
                   ></div>
                 </div>

@@ -230,7 +230,7 @@ const MeetingNotes: React.FC = () => {
                 <div className={`
                   w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200
                   ${isActive 
-                    ? 'bg-blue-600 text-white' 
+                    ? 'bg-primary text-white' 
                     : isCompleted 
                       ? 'bg-green-600 text-white' 
                       : 'bg-gray-200 text-gray-500'

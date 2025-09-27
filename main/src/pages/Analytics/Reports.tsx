@@ -238,7 +238,7 @@ const pieOptions = {
                 <RefreshCw className="w-4 h-4" />
                 Refresh
               </button> */}
-              <button className="flex items-center gap-2 font-semibold bg-orange-500 text-white px-6 py-3 cursor-pointer rounded-[10px] transition-all shadow-lg">
+              <button className="flex items-center gap-2 font-semibold bg-primary text-white px-6 py-3 cursor-pointer rounded-[10px] transition-all shadow-lg">
                 <Download className="w-4 h-4" />
                 Export Report
               </button>
@@ -253,8 +253,8 @@ const pieOptions = {
                 onClick={() => setActiveTab(tab)}
                 className={`px-6 py-3 text-sm font-semibold rounded-lg transition-all ${
                   activeTab === tab
-                    ? 'bg-orange-500 text-white '
-                    : 'text-orange-500  hover:bg-white/50'
+                    ? 'bg-primary text-white '
+                    : 'text-primary  hover:bg-white/50'
                 }`}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -267,7 +267,7 @@ const pieOptions = {
         <div className="bg-white/80 backdrop-blur-sm p-6 rounded-xl  border border-gray-200 mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-orange-500 rounded-xl ">
+              <div className="p-3 bg-primary rounded-xl ">
                 <Filter className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -275,7 +275,7 @@ const pieOptions = {
                 <p className="text-sm text-gray-700">Customize your data view</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-sm text-orange-500 bg-orange-100 px-3 py-1.5 rounded-lg">
+            <div className="flex items-center gap-2 text-sm text-primary bg-primary/10 px-3 py-1.5 rounded-lg">
               <Activity className="w-4 h-4" />
               Last updated: 2 minutes ago
             </div>
@@ -332,7 +332,7 @@ const pieOptions = {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className=" backdrop-blur-sm p-6 rounded-xl border border-gray-200 ">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-orange-100 rounded-xl ">
+              <div className="p-3 bg-primary/10 rounded-xl ">
                 <Users className="w-6 h-6 text-black" />
               </div>
              {/* <button className="p-2 hover:bg-orange-100 rounded-lg transition-colors">
@@ -343,9 +343,9 @@ const pieOptions = {
               <p className="text-sm font-semibold text-black mb-1">Total Leads</p>
               <p className="text-3xl font-bold text-black mb-2">1,247</p>
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 bg-orange-100 px-2 py-1 rounded-lg">
-                  <ArrowUpRight className="w-3 h-3 text-orange-500" />
-                  <span className="text-xs font-semibold text-orange-500">+12.5%</span>
+                <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-lg">
+                  <ArrowUpRight className="w-3 h-3 text-primary" />
+                  <span className="text-xs font-semibold text-primary">+12.5%</span>
                 </div>
                 <span className="text-sm text-gray-700">vs last month</span>
               </div>
@@ -354,7 +354,7 @@ const pieOptions = {
 
           <div className=" backdrop-blur-sm p-6 rounded-xl border border-gray-200 ">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-orange-100 rounded-xl ">
+              <div className="p-3 bg-primary/10 rounded-xl ">
                 <Target className="w-6 h-6 text-black" />
               </div>
               {/*<button className="p-2 hover:bg-orange-100 rounded-lg transition-colors">
@@ -376,7 +376,7 @@ const pieOptions = {
 
           <div className=" backdrop-blur-sm p-6 rounded-xl border border-gray-200 ">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-orange-100 rounded-xl ">
+              <div className="p-3 bg-primary/10 rounded-xl ">
                 <DollarSign className="w-6 h-6 text-black" />
               </div>
               
@@ -396,7 +396,7 @@ const pieOptions = {
 
           <div className=" backdrop-blur-sm p-6 rounded-xl border border-gray-200 ">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-orange-100 rounded-xl ">
+              <div className="p-3 bg-primary/10 rounded-xl ">
                 <TrendingUp className="w-6 h-6 text-black" />
               </div>
               

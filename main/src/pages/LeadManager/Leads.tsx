@@ -236,11 +236,11 @@ const LeadManagerLeads: React.FC = () => {
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case 'New':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-primary/10 text-primary';
       case 'Existing':
         return 'bg-green-100 text-green-800';
       case 'First-Time Buyer':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-primary/10 text-primary';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -434,7 +434,7 @@ const LeadManagerLeads: React.FC = () => {
           </button>
           <button 
             onClick={() => setShowAddModal(true)}
-            className="bg-orange-500 text-white px-4 py-2.5 rounded-md text-base font-semibold hover:bg-orange-600 flex items-center gap-2"
+            className="bg-primary text-white px-4 py-2.5 rounded-md text-base font-semibold hover:bg-primary/90 flex items-center gap-2"
           >
             <Plus size={18} />
             Add New Lead
@@ -498,7 +498,7 @@ const LeadManagerLeads: React.FC = () => {
 
         <button
           onClick={() => setShowExportModal(true)}
-          className="bg-green-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-600 flex items-center gap-2"
+          className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 flex items-center gap-2"
         >
           <Download size={16} />
           Export
@@ -506,7 +506,7 @@ const LeadManagerLeads: React.FC = () => {
 
         <button
           onClick={() => setShowImportModal(true)}
-          className="bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-600 flex items-center gap-2"
+          className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 flex items-center gap-2"
         >
           <Upload size={16} />
           Import

@@ -25,6 +25,16 @@ import {
 import { useAuth } from "../../contexts/AuthContext"
 import { useCompany } from "../../contexts/CompanyContext"
 
+interface MenuItem {
+  title: string
+  icon: React.ComponentType<{ className?: string }>
+  href?: string
+  exact?: boolean
+  show: boolean
+  badge?: string
+  children?: MenuItem[]
+}
+
 interface SidebarProps {
   collapsed: boolean
   onToggle: () => void
@@ -60,10 +70,6 @@ const getMenuItems = (
           title: "SMS",
           href: "/lead-manager/sms",
           icon: MessageSquare,
-<<<<<<< HEAD
-          show: isSuperAdmin || hasPermission("contacts", "read"),
-        },
-=======
           show: isSuperAdmin || hasPermission('contacts', 'read')
         }
         // { 
@@ -72,7 +78,6 @@ const getMenuItems = (
         //   icon: Mail,
         //   show: isSuperAdmin || hasPermission('contacts', 'read')
         // },
->>>>>>> 9adc583ef72b2b04cbb570c2486f65b39b5dcbf5
       ],
     },
     {
@@ -111,17 +116,6 @@ const getMenuItems = (
       icon: Bot,
       show: isSuperAdmin || hasPermission("ai_generator", "read"),
       children: [
-<<<<<<< HEAD
-        {
-          title: "Overview",
-          href: "/ai-assistant",
-          icon: BarChart3,
-          show: isSuperAdmin || hasPermission("ai_generator", "read"),
-        },
-        {
-          title: "Email Generator",
-          href: "/ai-assistant/email",
-=======
         // { 
         //   title: "Overview", 
         //   href: "/ai-assistant", 
@@ -131,7 +125,6 @@ const getMenuItems = (
         { 
           title: "Email Generator", 
           href: "/ai-assistant/email", 
->>>>>>> 9adc583ef72b2b04cbb570c2486f65b39b5dcbf5
           icon: Mail,
           show: isSuperAdmin || hasPermission("ai_generator", "generate"),
         },
@@ -152,15 +145,6 @@ const getMenuItems = (
           href: "/ai-assistant/meeting-notes-manager", 
           icon: Database,
           show: isSuperAdmin || hasPermission('meeting_notes', 'read')
-<<<<<<< HEAD
-        },
-        {
-          title: "Custom Prompts",
-          href: "/ai-assistant/prompts",
-          icon: Bot,
-          show: isSuperAdmin || hasPermission("ai_generator", "generate"),
-        },
-=======
         }
         // { 
         //   title: "Custom Prompts", 
@@ -168,7 +152,6 @@ const getMenuItems = (
         //   icon: Bot,
         //   show: isSuperAdmin || hasPermission('ai_generator', 'generate')
         // },
->>>>>>> 9adc583ef72b2b04cbb570c2486f65b39b5dcbf5
       ],
     },
     {
@@ -189,23 +172,6 @@ const getMenuItems = (
       icon: Headphones,
       show: isSuperAdmin || hasPermission("settings", "read") || hasPermission("roles", "read"),
       children: [
-<<<<<<< HEAD
-        {
-          title: "Roles",
-          href: "/support/roles",
-          icon: Shield,
-          show: isSuperAdmin || hasPermission("roles", "read"),
-        },
-        {
-          title: "Role Assignment",
-          href: "/support/role-assignment",
-          icon: UserCog,
-          show: isSuperAdmin || hasPermission("roles", "assign"),
-        },
-        {
-          title: "Settings",
-          href: "/support/settings",
-=======
         // { 
         //   title: "Tickets", 
         //   href: "/support/tickets", 
@@ -233,7 +199,6 @@ const getMenuItems = (
         { 
           title: "Settings", 
           href: "/support/settings", 
->>>>>>> 9adc583ef72b2b04cbb570c2486f65b39b5dcbf5
           icon: Settings,
           show: isSuperAdmin || hasPermission("settings", "read"),
         },
@@ -298,7 +263,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                     }}
                   />
                 ) : null}
-                <div className={`w-9 h-9 rounded-xl bg-orange-500 flex items-center justify-center shadow-md ${company?.logo ? 'hidden' : ''}`}>
+                <div className={`w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-md ${company?.logo ? 'hidden' : ''}`}>
                   <Sparkles className="h-5 w-5 text-white" />
                 </div>
                 <span className="text-lg font-semibold text-gray-900">
@@ -334,7 +299,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                     <button
                       onClick={() => toggleExpanded(item.title)}
                       className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 group 
-                        ${isParentActive ? "text-black" : "text-black hover:bg-orange-50"}`}
+                        ${isParentActive ? "text-black" : "text-black hover:bg-primary/5"}`}
                     >
                       <div className="flex items-center gap-3">
                         <item.icon className="h-5 w-5 text-black" />
@@ -389,8 +354,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                                   className={({ isActive }) =>
                                     `flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group ${
                                       isActive
-                                        ? "bg-orange-100 text-black"
-                                        : "text-black hover:bg-orange-50"
+                                        ? "bg-primary/10 text-black"
+                                        : "text-black hover:bg-primary/5"
                                     }`
                                   }
                                 >
@@ -414,8 +379,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                     className={({ isActive }) =>
                       `flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group relative ${
                         isActive
-                          ? "bg-orange-100 text-black"
-                          : "text-black hover:bg-orange-50"
+                          ? "bg-primary/10 text-black"
+                          : "text-black hover:bg-primary/5"
                       }`
                     }
                   >

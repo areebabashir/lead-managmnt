@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Building, Mail, MessageSquare, Bell, Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Building, Mail, MessageSquare, Bell, Upload, X, Image as ImageIcon, Loader2, Palette, RotateCcw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { toast } from '@/hooks/use-toast';
 import { useCompany } from '../../contexts/CompanyContext';
 import { EmailAccountModal } from '../../components/EmailAccountModal';
+import { useTheme } from '../../contexts/ThemeContext';
+import { ColorPicker } from '../../components/ui/ColorPicker';
+import { Separator } from '@/components/ui/separator';
 
 const companySchema = z.object({
   name: z.string().min(2, 'Company name must be at least 2 characters'),
@@ -38,6 +41,8 @@ export default function SupportSettings() {
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [autoOpenModal, setAutoOpenModal] = useState(false);
+
+  const { primaryColor, setPrimaryColor, resetToDefault } = useTheme();
 
   // Debug modal state
   useEffect(() => {
@@ -201,6 +206,22 @@ export default function SupportSettings() {
     });
   };
 
+  const handleColorChange = (color: string) => {
+    setPrimaryColor(color);
+    toast({
+      title: 'Theme Updated',
+      description: 'Your theme color has been updated successfully.',
+    });
+  };
+
+  const handleResetTheme = () => {
+    resetToDefault();
+    toast({
+      title: 'Theme Reset',
+      description: 'Your theme has been reset to the default color.',
+    });
+  };
+
   return (
     <div className="space-y-6 px-5">
       <div>
@@ -300,7 +321,7 @@ export default function SupportSettings() {
                                   <button
                                     type="button"
                                     onClick={removeLogo}
-                                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                                    className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-white rounded-full flex items-center justify-center hover:bg-destructive/90 transition-colors"
                                   >
                                     <X className="w-4 h-4" />
                                   </button>
@@ -311,7 +332,7 @@ export default function SupportSettings() {
                               <div className="flex items-center gap-4">
                                 <label
                                   htmlFor="logo-upload"
-                                  className={`flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-600 rounded-lg border border-orange-200 hover:bg-orange-100 cursor-pointer transition-colors ${
+                                  className={`flex items-center gap-2 px-4 py-2 bg-primary/5 text-primary rounded-lg border border-primary/20 hover:bg-primary/10 cursor-pointer transition-colors ${
                                     isUploadingLogo ? 'opacity-50 cursor-not-allowed' : ''
                                   }`}
                                 >
@@ -346,7 +367,7 @@ export default function SupportSettings() {
                   <Button 
                     type="submit" 
                     disabled={isSubmitting || loading}
-                    className="w-full bg-orange-500 text-white font-semibold rounded-[10px] disabled:opacity-50"
+                    className="w-full bg-primary text-white font-semibold rounded-[10px] disabled:opacity-50"
                   >
                     {isSubmitting ? (
                       <>
@@ -386,7 +407,7 @@ export default function SupportSettings() {
                 </p>
                 <Button
                   onClick={() => setShowEmailModal(true)}
-                  className="bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-[10px] px-6 py-2"
+                  className="bg-primary hover:bg-primary/90 text-white font-semibold rounded-[10px] px-6 py-2"
                 >
                   Manage Email Accounts
                 </Button>
@@ -397,6 +418,56 @@ export default function SupportSettings() {
 
         {/* SMS Settings */}
      
+
+        {/* Theme Customization */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.4 }}
+        >
+          <Card className="dashboard-widget">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Palette className="h-5 w-5 text-primary" />
+                Theme Customization
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Choose Your Theme Color</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Select a color to customize the appearance of your application. This will change the primary color used throughout the interface.
+                  </p>
+                  <ColorPicker
+                    selectedColor={primaryColor}
+                    onColorSelect={handleColorChange}
+                    className="mb-4"
+                  />
+                </div>
+                
+                <Separator />
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Reset to Default</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Restore the original purple theme
+                    </p>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleResetTheme}
+                    className="gap-2"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Reset Theme
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Notification Settings */}
       

@@ -59,7 +59,7 @@ All colors MUST be HSL. Modern gradient sidebar with clean dashboard design.
     
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 243 75% 59%;
+    --ring: var(--primary);
     
     /* Border Radius */
     --radius: 0.75rem;
@@ -78,7 +78,7 @@ All colors MUST be HSL. Modern gradient sidebar with clean dashboard design.
 
     --sidebar-border: 220 13% 91%;
 
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: var(--primary);
   }
 
   .dark {
@@ -112,7 +112,7 @@ All colors MUST be HSL. Modern gradient sidebar with clean dashboard design.
     
     --border: 218 27% 25%;
     --input: 218 27% 25%;
-    --ring: 243 75% 59%;
+    --ring: var(--primary);
     --card-shadow: 218 27% 12%;
   }
 }

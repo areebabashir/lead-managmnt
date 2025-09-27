@@ -155,8 +155,8 @@ export default function SMS() {
         {/* Header */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-orange-100 rounded-lg">
-              <MessageSquare className="h-5 w-5 text-orange-600" />
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <MessageSquare className="h-5 w-5 text-primary" />
             </div>
             <h1 className="text-lg font-semibold text-gray-900">SMS</h1>
           </div>
@@ -224,11 +224,11 @@ export default function SMS() {
                       })}
                       className={`flex items-center p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
                         selectedContact?.id === lead._id && selectedContact?.type === 'lead'
-                          ? 'bg-orange-50 border-orange-200'
+                          ? 'bg-primary/5 border-primary/20'
                           : ''
                       }`}
                     >
-                      <div className="flex-shrink-0 w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                      <div className="flex-shrink-0 w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
                         <span className="text-sm font-medium text-orange-600">
                           {lead.fullName.charAt(0).toUpperCase()}
                         </span>
@@ -261,11 +261,11 @@ export default function SMS() {
                       })}
                       className={`flex items-center p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
                         selectedContact?.id === user._id && selectedContact?.type === 'staff'
-                          ? 'bg-orange-50 border-orange-200'
+                          ? 'bg-primary/5 border-primary/20'
                           : ''
                       }`}
                     >
-                      <div className="flex-shrink-0 w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                      <div className="flex-shrink-0 w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
                         <span className="text-sm font-medium text-orange-600">
                           {user.name.charAt(0).toUpperCase()}
                         </span>
@@ -317,7 +317,7 @@ export default function SMS() {
                   {conversation.map((msg) => (
                     <div key={msg._id} className="flex justify-end">
                       <div className="max-w-xs lg:max-w-md">
-                        <div className="bg-orange-600 text-white rounded-lg px-4 py-2">
+                        <div className="bg-primary text-white rounded-lg px-4 py-2">
                           <p className="text-sm">{msg.message}</p>
                         </div>
                         <div className="flex items-center justify-end gap-2 mt-1">
@@ -361,7 +361,7 @@ export default function SMS() {
                 <Button
                   onClick={sendSMS}
                   disabled={isSending || !message.trim()}
-                  className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2"
+                  className="bg-primary hover:bg-primary/90 text-white px-4 py-2"
                 >
                   {isSending ? (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>

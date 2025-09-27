@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CompanyProvider } from "./contexts/CompanyContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AppLayout } from "./components/layout/AppLayout";
 import Login from "./pages/Login";
@@ -27,7 +28,6 @@ import EmailManager from "./pages/AI/EmailManager";
 import MeetingNotes from "./pages/AI/MeetingNotes";
 import MeetingNotesManager from "./pages/AI/MeetingNotesManager";
 import CustomPrompts from "./pages/AI/CustomPrompts";
-// import Profile from "./pages/Profile";
 import MeetingScheduling from "./pages/MeetingScheduling";
 import GoogleCalendarCallback from "./pages/GoogleCalendarCallback";
 
@@ -43,8 +43,9 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AuthProvider>
-          <CompanyProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <CompanyProvider>
             <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
@@ -181,13 +182,6 @@ const App = () => (
               </ProtectedRoute>
             } />
             
-            {/* <Route path="/profile" element={
-              <ProtectedRoute>
-                <AppLayout>
-                  <Profile />
-                </AppLayout>
-              </ProtectedRoute>
-            } /> */}
             
             <Route path="/meeting-scheduling" element={
               <ProtectedRoute requiredPermission={{ resource: 'calendar', action: 'read' }}>
@@ -200,8 +194,9 @@ const App = () => (
             {/* Redirect root to dashboard if authenticated, otherwise to login */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-          </CompanyProvider>
-        </AuthProvider>
+            </CompanyProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

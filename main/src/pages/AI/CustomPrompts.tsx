@@ -257,7 +257,7 @@ const CustomPrompts: React.FC = () => {
                     prompt: quickPrompt.prompt,
                     context: { ...formData.context, type: quickPrompt.category }
                   })}
-                  className="w-full text-left p-3 border border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-colors"
+                  className="w-full text-left p-3 border border-gray-200 rounded-lg hover:border-primary hover:bg-primary/5 transition-colors"
                 >
                   <div className="font-medium text-sm text-gray-900">{quickPrompt.name}</div>
                   <div className="text-xs text-gray-500 mt-1">{quickPrompt.category}</div>
@@ -328,7 +328,7 @@ const CustomPrompts: React.FC = () => {
                 <button
                   onClick={handleGenerateResponse}
                   disabled={loading || !formData.prompt.trim()}
-                  className="w-full flex items-center justify-center gap-2 bg-orange-500 text-white px-4 py-3 rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2 bg-primary text-white px-4 py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
                 >
                   {loading ? (
                     <RefreshCw className="h-5 w-5 animate-spin" />
@@ -509,7 +509,7 @@ const CustomPrompts: React.FC = () => {
                 </button>
                 <button
                   onClick={handleSaveTemplate}
-                  className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                  className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
                 >
                   Save Template
                 </button>

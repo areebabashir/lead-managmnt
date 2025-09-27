@@ -166,7 +166,7 @@ const Badge = ({ children }: { children: React.ReactNode }) => (
   <motion.span
     initial={{ scale: 0 }}
     animate={{ scale: 1 }}
-    className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-black"
+    className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary"
   >
     {children}
   </motion.span>
@@ -186,7 +186,7 @@ const ChartCard = ({
   >
     <div className="p-4 border-b border-gray-100 flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <div className="p-2 bg-orange-100 rounded-lg">
+        <div className="p-2 bg-primary/10 rounded-lg">
           <Icon className="h-4 w-4 text-black" />
         </div>
         <h3 className="text-base font-semibold text-gray-900">{title}</h3>
@@ -208,10 +208,10 @@ const StatCard = ({ stat, index }: { stat: Stat; index: number }) => (
     className="group bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300"
   >
     <div className="flex items-start justify-between mb-3">
-      <div className="p-2 rounded-lg bg-orange-100">
+      <div className="p-2 rounded-lg bg-primary/10">
         <stat.icon className="h-4 w-4 text-black" />
       </div>
-      <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${stat.trend === "up" ? "bg-orange-100 text-black" : "bg-orange-100 text-black"
+      <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${stat.trend === "up" ? "bg-primary/10 text-primary" : "bg-primary/10 text-primary"
         }`}>
         {stat.trend === "up" ? (
           <ArrowUp className="h-3 w-3" />
@@ -244,7 +244,7 @@ const TodoItem = ({ item, index }: { item: Todo; index: number }) => {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setCompleted(!completed)}
-        className={`flex-shrink-0 w-4 h-4 rounded-full border-2 transition-all duration-200 ${completed ? "bg-orange-600 border-orange-600" : "border-gray-300 hover:border-orange-400"
+        className={`flex-shrink-0 w-4 h-4 rounded-full border-2 transition-all duration-200 ${completed ? "bg-primary border-primary" : "border-gray-300 hover:border-primary"
           }`}
       >
         {completed && <CheckCircle2 className="w-3 h-3 text-white mx-auto" />}
@@ -267,8 +267,8 @@ const ActivityRow = ({ activity, index }: { activity: RecentActivity; index: num
     transition={{ delay: index * 0.1 }}
     className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors duration-200"
   >
-    <div className="p-1 rounded-lg border bg-orange-100 border-orange-200">
-      <div className="p-1 rounded bg-orange-600">
+    <div className="p-1 rounded-lg border bg-primary/10 border-primary/20">
+      <div className="p-1 rounded bg-primary">
         {activity.type === "lead" && <Users className="h-3 w-3 text-white" />}
         {activity.type === "task" && <CheckSquare className="h-3 w-3 text-white" />}
         {activity.type === "meeting" && <CalendarDays className="h-3 w-3 text-white" />}
@@ -405,7 +405,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onToggle}
-                className="p-2 rounded-lg bg-orange-100  transition-colors duration-200"
+                className="p-2 rounded-lg bg-primary/10  transition-colors duration-200"
               >
                 {collapsed ? <Menu className="h-5 w-5 text-black" /> : <X className="h-5 w-5 text-black" />}
               </motion.button>
@@ -583,7 +583,7 @@ export const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSideba
           >
             <Bell className="h-5 w-5 text-gray-600" />
           </motion.button>
-          <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs bg-orange-500 text-white rounded-full">
+          <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs bg-primary text-white rounded-full">
             3
           </span>
         </div>
@@ -591,9 +591,9 @@ export const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSideba
         {/* User Profile */}
         <motion.button
           whileHover={{ scale: 1.02 }}
-          className="flex items-center gap-3 px-3 py-2 rounded-lg bg-orange-100 hover:bg-orange-200 transition-colors duration-200"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors duration-200"
         >
-          <div className="h-8 w-8 rounded-full bg-orange-600 flex items-center justify-center text-white font-semibold text-sm">
+          <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-white font-semibold text-sm">
             JD
           </div>
           <div className="text-left hidden sm:block">
@@ -791,13 +791,13 @@ export default function Dashboard() {
           >
             {hasPermission('contacts', 'create') && (
               <button onClick={() => navigate('/lead-manager/leads')}
-                className="flex items-center gap-1 px-3 py-2 bg-orange-500 font-semibold text-white rounded-[10px] transition-colors hover:bg-orange-600">
+                className="flex items-center gap-1 px-3 py-2 bg-primary font-semibold text-white rounded-[10px] transition-colors hover:bg-primary/90">
                 <Plus className="h-3 w-3 text-white" />
                 Add Lead
               </button>
             )}
             {hasPermission('tasks', 'create') && (
-              <button onClick={() => navigate('/tasks')} className="flex items-center gap-1 px-3 py-2 border border-orange-500 font-semibold text-gray-800 rounded-[10px] transition-colors hover:bg-orange-50">
+              <button onClick={() => navigate('/tasks')} className="flex items-center gap-1 px-3 py-2 border border-primary font-semibold text-gray-800 rounded-[10px] transition-colors hover:bg-primary/5">
                 <CheckSquare className="h-3 w-3" />
                 New Task
               </button>
@@ -850,11 +850,11 @@ export default function Dashboard() {
               />
 
               {/* Google Calendar Integration */}
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+              <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4 text-orange-600" />
-                    <span className="text-sm font-medium text-orange-800">Google Calendar Integration</span>
+                    <CalendarDays className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium text-primary">Google Calendar Integration</span>
                   </div>
                   <GoogleCalendarAuth
                     onConnectionChange={(connected) => {
@@ -894,22 +894,22 @@ export default function Dashboard() {
             <div className="space-y-3">
               <button
                 onClick={() => navigate('/ai-assistant/email-manager')}
-                className="w-full flex items-center gap-3 p-3 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-lg transition-colors group"
+                className="w-full flex items-center gap-3 p-3 bg-primary/5 hover:bg-primary/10 border border-primary/20 rounded-lg transition-colors group"
               >
-                <Mail className="h-5 w-5 text-orange-600 group-hover:text-orange-700" />
+                <Mail className="h-5 w-5 text-primary group-hover:text-primary" />
                 <div className="text-left">
-                  <div className="text-sm font-medium text-orange-800">Email Manager</div>
-                  <div className="text-xs text-orange-600">Manage sent & inbox emails</div>
+                  <div className="text-sm font-medium text-primary">Email Manager</div>
+                  <div className="text-xs text-primary">Manage sent & inbox emails</div>
                 </div>
               </button>
 
               <button onClick={() => navigate('/ai-assistant/email')}
-                className="w-full flex items-center gap-3 p-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors group"
+                className="w-full flex items-center gap-3 p-3 bg-primary/5 hover:bg-primary/10 border border-primary/20 rounded-lg transition-colors group"
               >
-                <MessageSquare className="h-5 w-5 text-blue-600 group-hover:text-blue-700" />
+                <MessageSquare className="h-5 w-5 text-primary group-hover:text-primary" />
                 <div className="text-left">
-                  <div className="text-sm font-medium text-blue-800">Email Generator</div>
-                  <div className="text-xs text-blue-600">Create AI-powered emails</div>
+                  <div className="text-sm font-medium text-primary">Email Generator</div>
+                  <div className="text-xs text-primary">Create AI-powered emails</div>
                 </div>
               </button>
             </div>

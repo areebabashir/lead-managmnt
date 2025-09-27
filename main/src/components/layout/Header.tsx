@@ -81,7 +81,7 @@ export const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSideba
             onClick={() => setShowUserMenu(!showUserMenu)}
             className="flex items-center gap-3 px-3 py-2 h-auto bg-gray-50 hover:bg-white border border-gray-200 hover:border-gray-300 rounded-xl transition-colors duration-200"
           >
-            <div className="h-8 w-8 rounded-full bg-orange-100 text-gray-700 font-semibold flex items-center justify-center">
+            <div className="h-8 w-8 rounded-full bg-primary/10 text-primary font-semibold flex items-center justify-center">
               {user ? getUserInitials(user.name) : 'U'}
             </div>
             <div className="text-left">
@@ -96,7 +96,7 @@ export const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSideba
                 <div className="px-3 py-2 border-b border-gray-100">
                   <div className="text-sm font-medium text-gray-900">{user?.name}</div>
                   <div className="text-xs text-gray-500">{user?.email}</div>
-                  <div className="text-xs text-orange-600 font-medium">{user?.role?.name}</div>
+                  <div className="text-xs text-primary font-medium">{user?.role?.name}</div>
                 </div>
                 
                 {/* <button 

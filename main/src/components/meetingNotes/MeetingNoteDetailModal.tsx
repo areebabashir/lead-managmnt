@@ -132,7 +132,7 @@ export const MeetingNoteDetailModal: React.FC<MeetingNoteDetailModalProps> = ({
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'processing':
         return <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
-          <Zap className="h-4 w-4 text-orange-500" />
+          <Zap className="h-4 w-4 text-primary" />
         </motion.div>;
       case 'failed':
         return <AlertCircle className="h-4 w-4 text-red-500" />;
@@ -159,8 +159,8 @@ export const MeetingNoteDetailModal: React.FC<MeetingNoteDetailModalProps> = ({
   const renderParticipant = (participant: any, index: number) => {
     if (participant.type === 'contact' && participant.contactId) {
       return (
-        <div key={index} className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg">
-          <User className="h-4 w-4 text-blue-600" />
+        <div key={index} className="flex items-center gap-2 p-2 bg-primary/5 rounded-lg">
+          <User className="h-4 w-4 text-primary" />
           <div>
             <p className="font-medium text-sm">{participant.contactId.fullName}</p>
             <p className="text-xs text-gray-600">{participant.contactId.email}</p>
@@ -168,7 +168,7 @@ export const MeetingNoteDetailModal: React.FC<MeetingNoteDetailModalProps> = ({
               <p className="text-xs text-gray-500">{participant.contactId.company}</p>
             )}
           </div>
-          <Badge variant="outline" className="text-xs text-blue-600 border-blue-600">
+          <Badge variant="outline" className="text-xs text-primary border-primary">
             Contact
           </Badge>
         </div>

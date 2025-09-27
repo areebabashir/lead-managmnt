@@ -1,15 +1,15 @@
 import express from 'express';
 import {
-    createContact,
-    getContacts,
-    getContact,
-    updateContact,
-    deleteContact,
-    updateStatus,
-    getContactsByStatus,
-    getReferralContacts,
-    importContacts,
-    exportContacts
+  createContact,
+  getContacts,
+  getContact,
+  updateContact,
+  deleteContact,
+  updateStatus,
+  getContactsByStatus,
+  getReferralContacts,
+  importContacts,
+  exportContacts
 } from '../controllers/contactController.js';
 import { requireSignIn } from '../Middlewares/authMiddlewares.js';
 import { hasPermission, hasResourceAccess } from '../Middlewares/hasPermissionMiddleware.js';
@@ -19,22 +19,26 @@ const router = express.Router();
 // Apply authentication middleware to all routes
 router.use(requireSignIn);
 
-// Contact CRUD operations
-router.post('/create', hasPermission('contacts', 'create'), createContact);
-router.get('/', hasResourceAccess('contacts'), getContacts);
-router.get('/:id', hasResourceAccess('contacts'), getContact);
-router.put('/:id', hasPermission('contacts', 'update'), updateContact);
-router.delete('/:id', hasPermission('contacts', 'delete'), deleteContact);
+// =========================
+// Import & Export MUST come before `/:id`
+// =========================
+router.post('/import', hasPermission('contacts', 'import'), importContacts);
+router.get('/export', hasPermission('contacts', 'export'), exportContacts);
 
-// Contact status
-router.put('/:id/status', hasPermission('contacts', 'update'), updateStatus);
-
-// Contact queries and filters
+// =========================
+// Queries & Filters
+// =========================
 router.get('/status/:status', hasResourceAccess('contacts'), getContactsByStatus);
 router.get('/referrals/all', hasResourceAccess('contacts'), getReferralContacts);
 
-// Import and export
-router.post('/import', hasPermission('contacts', 'import'), importContacts);
-router.get('/export', hasPermission('contacts', 'export'), exportContacts);
+// =========================
+// CRUD Operations
+// =========================
+router.post('/create', hasPermission('contacts', 'create'), createContact);
+router.get('/', hasResourceAccess('contacts'), getContacts);
+router.put('/:id/status', hasPermission('contacts', 'update'), updateStatus);
+router.get('/:id', hasResourceAccess('contacts'), getContact);
+router.put('/:id', hasPermission('contacts', 'update'), updateContact);
+router.delete('/:id', hasPermission('contacts', 'delete'), deleteContact);
 
 export default router;

@@ -248,13 +248,13 @@ const RoleManagement: React.FC = () => {
       case 'Super Admin':
         return 'bg-red-100 text-red-800';
       case 'Sales Director':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-primary/10 text-primary';
       case 'Sales Manager':
         return 'bg-green-100 text-green-800';
       case 'Sales Representative':
         return 'bg-yellow-100 text-yellow-800';
       case 'Marketing Specialist':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-primary/10 text-primary';
       case 'Customer Success Manager':
         return 'bg-indigo-100 text-indigo-800';
       default:
@@ -281,7 +281,7 @@ const RoleManagement: React.FC = () => {
         {hasPermission('roles', 'create') && (
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors"
+            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
           >
             <Plus className="h-5 w-5" />
             Add Role
@@ -293,8 +293,8 @@ const RoleManagement: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <Shield className="h-6 w-6 text-blue-600" />
+            <div className="p-3 bg-primary/10 rounded-lg">
+              <Shield className="h-6 w-6 text-primary" />
             </div>
             <div>
               <p className="text-sm text-gray-600">Total Roles</p>
@@ -317,8 +317,8 @@ const RoleManagement: React.FC = () => {
 
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <Settings className="h-6 w-6 text-purple-600" />
+            <div className="p-3 bg-primary/10 rounded-lg">
+              <Settings className="h-6 w-6 text-primary" />
             </div>
             <div>
               <p className="text-sm text-gray-600">Resources</p>
@@ -353,8 +353,8 @@ const RoleManagement: React.FC = () => {
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <Shield className="h-5 w-5 text-orange-600" />
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Shield className="h-5 w-5 text-primary" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900">{role.name}</h3>

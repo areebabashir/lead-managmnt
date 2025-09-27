@@ -74,9 +74,9 @@ const ActiveEmailAccountStatus: React.FC<ActiveEmailAccountStatusProps> = ({ onC
     return {
       icon: AlertCircle,
       text: 'Not connected',
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50',
-      borderColor: 'border-orange-200'
+      color: 'text-primary',
+      bgColor: 'bg-primary/5',
+      borderColor: 'border-primary/20'
     };
   };
 
@@ -91,8 +91,8 @@ const ActiveEmailAccountStatus: React.FC<ActiveEmailAccountStatusProps> = ({ onC
     >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <Mail className="h-4 w-4 text-orange-600" />
-          <span className="text-sm font-medium text-orange-800">Active Email Account</span>
+          <Mail className="h-4 w-4 text-primary" />
+          <span className="text-sm font-medium text-primary">Active Email Account</span>
         </div>
         <div className="flex items-center gap-1">
           <StatusIcon className={`h-4 w-4 ${status.color}`} />
@@ -147,7 +147,7 @@ const ActiveEmailAccountStatus: React.FC<ActiveEmailAccountStatusProps> = ({ onC
       <div className="mt-2 pt-2 border-t border-gray-200">
         <button
           onClick={() => window.location.href = '/support/settings'}
-          className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-700 transition-colors"
+          className="flex items-center gap-1 text-xs text-primary hover:text-primary transition-colors"
         >
           <Settings className="h-3 w-3" />
           Manage Email Accounts

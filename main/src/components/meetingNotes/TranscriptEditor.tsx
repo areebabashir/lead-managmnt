@@ -263,7 +263,7 @@ export const TranscriptEditor: React.FC<TranscriptEditorProps> = ({
             </div>
             
             {hasUnsavedChanges && (
-              <Badge variant="outline" className="text-orange-600 border-orange-600">
+              <Badge variant="outline" className="text-primary border-primary">
                 Unsaved Changes
               </Badge>
             )}
@@ -351,7 +351,7 @@ export const TranscriptEditor: React.FC<TranscriptEditorProps> = ({
                     className={`
                       p-3 border rounded-lg cursor-pointer transition-all duration-200
                       ${selectedSegment === index 
-                        ? 'border-blue-300 bg-blue-50' 
+                        ? 'border-primary bg-primary/5' 
                         : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
                       }
                     `}
@@ -401,7 +401,7 @@ export const TranscriptEditor: React.FC<TranscriptEditorProps> = ({
           
           <div className="flex items-center gap-2">
             {hasUnsavedChanges && (
-              <span className="text-orange-600">● Unsaved changes</span>
+              <span className="text-primary">● Unsaved changes</span>
             )}
             <kbd className="px-2 py-1 bg-gray-100 rounded text-xs">Ctrl+S</kbd>
             <span>to save</span>

@@ -1,67 +1,95 @@
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { UserPlus, X } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { toast } from '@/hooks/use-toast';
+import React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { UserPlus } from "lucide-react";
 
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
+import { toast } from "@/hooks/use-toast";
+
+// ==============================
+// Zod Schema & Types
+// ==============================
 const leadSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
-  phone: z.string().min(10, 'Phone must be at least 10 characters'),
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().min(10, "Phone must be at least 10 characters"),
   company: z.string().optional(),
-  source: z.string().min(1, 'Source is required'),
-  status: z.enum(['new', 'contacted', 'qualified', 'proposal', 'negotiation', 'won', 'lost'], {
-    required_error: 'Please select a status',
-  }),
+  source: z.string().min(1, "Source is required"),
+  status: z.enum(
+    ["new", "contacted", "qualified", "proposal", "negotiation", "won", "lost"],
+    { required_error: "Please select a status" }
+  ),
   notes: z.string().optional(),
   budget: z.string().optional(),
 });
 
-type LeadFormData = z.infer<typeof leadSchema>;
+export type LeadFormData = z.infer<typeof leadSchema>;
 
 interface AddLeadModalProps {
   trigger?: React.ReactNode;
   onLeadAdded?: (lead: LeadFormData) => void;
 }
 
+// ==============================
+// Component
+// ==============================
 export function AddLeadModal({ trigger, onLeadAdded }: AddLeadModalProps) {
   const [open, setOpen] = React.useState(false);
-  
+
   const form = useForm<LeadFormData>({
     resolver: zodResolver(leadSchema),
     defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      company: '',
-      source: '',
-      status: 'new',
-      notes: '',
-      budget: '',
+      name: "",
+      email: "",
+      phone: "",
+      company: "",
+      source: "",
+      status: "new",
+      notes: "",
+      budget: "",
     },
   });
 
   const onSubmit = (data: LeadFormData) => {
-    console.log('Adding lead:', data);
+    console.log("Adding lead:", data);
+
+    // 🔥 Trigger toast notification
     toast({
-      title: 'Lead Added',
+      title: "Lead Added",
       description: `${data.name} has been added to your pipeline.`,
     });
+
+    // Callback to parent (if needed)
     onLeadAdded?.(data);
+
+    // Reset form + close modal
     form.reset();
     setOpen(false);
   };
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
+      {/* Trigger */}
       <SheetTrigger asChild>
         {trigger || (
           <Button className="gap-2">
@@ -70,22 +98,31 @@ export function AddLeadModal({ trigger, onLeadAdded }: AddLeadModalProps) {
           </Button>
         )}
       </SheetTrigger>
-      <SheetContent side="right" className="w-[95vw] sm:max-w-[900px] overflow-y-auto">
+
+      {/* Content */}
+      <SheetContent
+        side="right"
+        className="w-[95vw] sm:max-w-[900px] overflow-y-auto"
+      >
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5" />
             Add New Lead
           </SheetTitle>
         </SheetHeader>
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Name + Email */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Full Name <span className="text-destructive">*</span></FormLabel>
+                    <FormLabel>
+                      Full Name <span className="text-destructive">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="John Doe" {...field} />
                     </FormControl>
@@ -98,7 +135,9 @@ export function AddLeadModal({ trigger, onLeadAdded }: AddLeadModalProps) {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email <span className="text-destructive">*</span></FormLabel>
+                    <FormLabel>
+                      Email <span className="text-destructive">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="john@example.com" type="email" {...field} />
                     </FormControl>
@@ -107,14 +146,17 @@ export function AddLeadModal({ trigger, onLeadAdded }: AddLeadModalProps) {
                 )}
               />
             </div>
-            
+
+            {/* Phone + Company */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone <span className="text-destructive">*</span></FormLabel>
+                    <FormLabel>
+                      Phone <span className="text-destructive">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="+1 (555) 123-4567" {...field} />
                     </FormControl>
@@ -137,13 +179,16 @@ export function AddLeadModal({ trigger, onLeadAdded }: AddLeadModalProps) {
               />
             </div>
 
+            {/* Source + Status */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="source"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Lead Source <span className="text-destructive">*</span></FormLabel>
+                    <FormLabel>
+                      Lead Source <span className="text-destructive">*</span>
+                    </FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -170,7 +215,9 @@ export function AddLeadModal({ trigger, onLeadAdded }: AddLeadModalProps) {
                 name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Status <span className="text-destructive">*</span></FormLabel>
+                    <FormLabel>
+                      Status <span className="text-destructive">*</span>
+                    </FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -193,6 +240,7 @@ export function AddLeadModal({ trigger, onLeadAdded }: AddLeadModalProps) {
               />
             </div>
 
+            {/* Budget */}
             <FormField
               control={form.control}
               name="budget"
@@ -207,6 +255,7 @@ export function AddLeadModal({ trigger, onLeadAdded }: AddLeadModalProps) {
               )}
             />
 
+            {/* Notes */}
             <FormField
               control={form.control}
               name="notes"
@@ -214,10 +263,10 @@ export function AddLeadModal({ trigger, onLeadAdded }: AddLeadModalProps) {
                 <FormItem>
                   <FormLabel>Notes</FormLabel>
                   <FormControl>
-                    <Textarea 
+                    <Textarea
                       placeholder="Additional information about this lead..."
                       className="min-h-[100px]"
-                      {...field} 
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -225,6 +274,7 @@ export function AddLeadModal({ trigger, onLeadAdded }: AddLeadModalProps) {
               )}
             />
 
+            {/* Actions */}
             <div className="flex justify-end gap-3 pt-4">
               <Button
                 type="button"
@@ -233,9 +283,7 @@ export function AddLeadModal({ trigger, onLeadAdded }: AddLeadModalProps) {
               >
                 Cancel
               </Button>
-              <Button type="submit">
-                Add Lead
-              </Button>
+              <Button type="submit">Add Lead</Button>
             </div>
           </form>
         </Form>

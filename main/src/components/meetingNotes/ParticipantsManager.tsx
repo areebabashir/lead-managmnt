@@ -131,11 +131,11 @@ export const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}
-          className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg"
+          className="flex items-center justify-between p-3 bg-primary/5 border border-primary/20 rounded-lg"
         >
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-              <UserCheck className="h-4 w-4 text-blue-600" />
+            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+              <UserCheck className="h-4 w-4 text-primary" />
             </div>
             <div>
               <p className="font-medium text-gray-900">
@@ -158,7 +158,7 @@ export const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Badge variant="outline" className="text-blue-600 border-blue-600">
+            <Badge variant="outline" className="text-primary border-primary">
               Contact
             </Badge>
             <Button
@@ -257,8 +257,8 @@ export const ParticipantsManager: React.FC<ParticipantsManagerProps> = ({
                         onSelect={() => addContactParticipant(contact)}
                         className="flex items-center space-x-3 p-3 cursor-pointer"
                       >
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <User className="h-4 w-4 text-blue-600" />
+                        <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                          <User className="h-4 w-4 text-primary" />
                         </div>
                         <div className="flex-1">
                           <p className="font-medium">{contact.fullName}</p>

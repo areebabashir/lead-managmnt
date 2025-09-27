@@ -176,7 +176,7 @@ const SortableTaskItem: React.FC<SortableTaskItemProps> = ({
           </div>
           <div className="w-full bg-gray-200 rounded-full h-1.5">
             <div 
-              className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
+              className="bg-primary h-1.5 rounded-full transition-all duration-300"
               style={{ width: `${checklistProgress}%` }}
             ></div>
           </div>
@@ -188,8 +188,8 @@ const SortableTaskItem: React.FC<SortableTaskItemProps> = ({
         <div className="flex items-center gap-2">
           {task.assignedTo && (
             <div className="flex items-center gap-1">
-              <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center">
-                <User className="h-3 w-3 text-orange-600" />
+              <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                <User className="h-3 w-3 text-primary" />
               </div>
               <span className="text-xs text-gray-600 truncate max-w-[80px]">
                 {task.assignedTo.name}
@@ -233,7 +233,7 @@ const SortableTaskItem: React.FC<SortableTaskItemProps> = ({
 // Task status and priority mappings
 const taskStatuses = [
   { value: 'todo', label: 'To Do', color: 'bg-gray-500' },
-  { value: 'in_progress', label: 'In Progress', color: 'bg-blue-500' },
+  { value: 'in_progress', label: 'In Progress', color: 'bg-primary' },
   { value: 'review', label: 'Review', color: 'bg-yellow-500' },
   { value: 'done', label: 'Done', color: 'bg-green-500' },
   { value: 'cancelled', label: 'Cancelled', color: 'bg-red-500' }
@@ -242,7 +242,7 @@ const taskStatuses = [
 const taskPriorities = [
   { value: 'low', label: 'Low', color: 'bg-green-500' },
   { value: 'medium', label: 'Medium', color: 'bg-yellow-500' },
-  { value: 'high', label: 'High', color: 'bg-orange-500' },
+  { value: 'high', label: 'High', color: 'bg-primary' },
   { value: 'urgent', label: 'Urgent', color: 'bg-red-500' }
 ];
 
