@@ -60,8 +60,19 @@ const getMenuItems = (
           title: "SMS",
           href: "/lead-manager/sms",
           icon: MessageSquare,
+<<<<<<< HEAD
           show: isSuperAdmin || hasPermission("contacts", "read"),
         },
+=======
+          show: isSuperAdmin || hasPermission('contacts', 'read')
+        }
+        // { 
+        //   title: "Mailbox", 
+        //   href: "/lead-manager/mailbox", 
+        //   icon: Mail,
+        //   show: isSuperAdmin || hasPermission('contacts', 'read')
+        // },
+>>>>>>> 9adc583ef72b2b04cbb570c2486f65b39b5dcbf5
       ],
     },
     {
@@ -100,6 +111,7 @@ const getMenuItems = (
       icon: Bot,
       show: isSuperAdmin || hasPermission("ai_generator", "read"),
       children: [
+<<<<<<< HEAD
         {
           title: "Overview",
           href: "/ai-assistant",
@@ -109,6 +121,17 @@ const getMenuItems = (
         {
           title: "Email Generator",
           href: "/ai-assistant/email",
+=======
+        // { 
+        //   title: "Overview", 
+        //   href: "/ai-assistant", 
+        //   icon: BarChart3,
+        //   show: isSuperAdmin || hasPermission('ai_generator', 'read')
+        // },
+        { 
+          title: "Email Generator", 
+          href: "/ai-assistant/email", 
+>>>>>>> 9adc583ef72b2b04cbb570c2486f65b39b5dcbf5
           icon: Mail,
           show: isSuperAdmin || hasPermission("ai_generator", "generate"),
         },
@@ -129,6 +152,7 @@ const getMenuItems = (
           href: "/ai-assistant/meeting-notes-manager", 
           icon: Database,
           show: isSuperAdmin || hasPermission('meeting_notes', 'read')
+<<<<<<< HEAD
         },
         {
           title: "Custom Prompts",
@@ -136,6 +160,15 @@ const getMenuItems = (
           icon: Bot,
           show: isSuperAdmin || hasPermission("ai_generator", "generate"),
         },
+=======
+        }
+        // { 
+        //   title: "Custom Prompts", 
+        //   href: "/ai-assistant/prompts", 
+        //   icon: Bot,
+        //   show: isSuperAdmin || hasPermission('ai_generator', 'generate')
+        // },
+>>>>>>> 9adc583ef72b2b04cbb570c2486f65b39b5dcbf5
       ],
     },
     {
@@ -156,6 +189,7 @@ const getMenuItems = (
       icon: Headphones,
       show: isSuperAdmin || hasPermission("settings", "read") || hasPermission("roles", "read"),
       children: [
+<<<<<<< HEAD
         {
           title: "Roles",
           href: "/support/roles",
@@ -171,6 +205,35 @@ const getMenuItems = (
         {
           title: "Settings",
           href: "/support/settings",
+=======
+        // { 
+        //   title: "Tickets", 
+        //   href: "/support/tickets", 
+        //   icon: HelpCircle,
+        //   show: isSuperAdmin || hasPermission('tickets', 'read')
+        // },
+        // { 
+        //   title: "Knowledge Base", 
+        //   href: "/support/knowledge-base", 
+        //   icon: Shield,
+        //   show: isSuperAdmin || hasPermission('settings', 'read')
+        // },
+                         { 
+                   title: "Roles", 
+                   href: "/support/roles", 
+                   icon: Shield,
+                   show: isSuperAdmin || hasPermission('roles', 'read')
+                 },
+                 { 
+                   title: "Role Assignment", 
+                   href: "/support/role-assignment", 
+                   icon: UserCog,
+                   show: isSuperAdmin || hasPermission('roles', 'assign')
+                 },
+        { 
+          title: "Settings", 
+          href: "/support/settings", 
+>>>>>>> 9adc583ef72b2b04cbb570c2486f65b39b5dcbf5
           icon: Settings,
           show: isSuperAdmin || hasPermission("settings", "read"),
         },

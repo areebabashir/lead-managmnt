@@ -27,7 +27,7 @@ import EmailManager from "./pages/AI/EmailManager";
 import MeetingNotes from "./pages/AI/MeetingNotes";
 import MeetingNotesManager from "./pages/AI/MeetingNotesManager";
 import CustomPrompts from "./pages/AI/CustomPrompts";
-import Profile from "./pages/Profile";
+// import Profile from "./pages/Profile";
 import MeetingScheduling from "./pages/MeetingScheduling";
 import GoogleCalendarCallback from "./pages/GoogleCalendarCallback";
 
@@ -181,13 +181,13 @@ const App = () => (
               </ProtectedRoute>
             } />
             
-            <Route path="/profile" element={
+            {/* <Route path="/profile" element={
               <ProtectedRoute>
                 <AppLayout>
                   <Profile />
                 </AppLayout>
               </ProtectedRoute>
-            } />
+            } /> */}
             
             <Route path="/meeting-scheduling" element={
               <ProtectedRoute requiredPermission={{ resource: 'calendar', action: 'read' }}>
