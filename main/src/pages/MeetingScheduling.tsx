@@ -12,13 +12,15 @@ import {
   CheckCircle,
   XCircle,
   Video,
-  Phone
+  Phone,
+  Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { getMeetings, getUpcomingMeetings, getTodayMeetings, deleteMeeting, updateMeetingStatus, Meeting, MeetingFilters } from '@/services/meetingAPI';
 
@@ -86,6 +88,178 @@ const mockMeetings: Meeting[] = [
   }
 ];
 
+// Detail View Modal Component
+interface MeetingDetailModalProps {
+  meeting: Meeting | null;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const MeetingDetailModal: React.FC<MeetingDetailModalProps> = ({ meeting, isOpen, onClose }) => {
+  if (!meeting) return null;
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const formatTime = (timeString: string) => {
+    const [hours, minutes] = timeString.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'scheduled':
+        return 'bg-blue-100 text-blue-800';
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'bg-red-100 text-red-800';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'low':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+            {meeting.title}
+          </DialogTitle>
+          <DialogDescription>
+            Meeting details and information
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Basic Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <h3 className="font-semibold text-gray-900">Date & Time</h3>
+              <div className="flex items-center gap-2 text-gray-600">
+                <Calendar className="h-4 w-4" />
+                <span>{formatDate(meeting.date)}</span>
+              </div>
+              <div className="flex items-center gap-2 text-gray-600">
+                <Clock className="h-4 w-4" />
+                <span>{formatTime(meeting.startTime)} - {formatTime(meeting.endTime)}</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="font-semibold text-gray-900">Status & Priority</h3>
+              <div className="flex gap-2">
+                <Badge className={getStatusColor(meeting.status)}>
+                  {meeting.status}
+                </Badge>
+                <Badge className={getPriorityColor(meeting.priority)}>
+                  {meeting.priority} Priority
+                </Badge>
+              </div>
+            </div>
+          </div>
+
+          {/* Location */}
+          {meeting.location && (
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">Location</h3>
+              <div className="flex items-center gap-2 text-gray-600">
+                <MapPin className="h-4 w-4" />
+                <span>{meeting.location}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Description */}
+          {meeting.description && (
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">Description</h3>
+              <p className="text-gray-600 bg-gray-50 p-3 rounded-md">
+                {meeting.description}
+              </p>
+            </div>
+          )}
+
+          {/* Attendees */}
+          {meeting.attendees && meeting.attendees.length > 0 && (
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">Attendees</h3>
+              <div className="space-y-1">
+                {meeting.attendees.map((attendee, index) => (
+                  <div key={index} className="flex items-center gap-2 text-gray-600">
+                    <Users className="h-4 w-4" />
+                    <span>{attendee}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Additional Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">Meeting Type</h3>
+              <p className="text-gray-600 capitalize">{meeting.type}</p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">Reminder</h3>
+              <p className="text-gray-600">{meeting.reminder} minutes before</p>
+            </div>
+          </div>
+
+          {/* Google Meet Integration */}
+          {(meeting.googleMeetLink || meeting.googleEventLink) && (
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">Google Integration</h3>
+              <div className="space-y-2">
+                {meeting.googleMeetLink && (
+                  <Button asChild variant="outline" className="w-full justify-start">
+                    <a href={meeting.googleMeetLink} target="_blank" rel="noopener noreferrer">
+                      <Video className="h-4 w-4 mr-2" />
+                      Join Google Meet
+                    </a>
+                  </Button>
+                )}
+                {meeting.googleEventLink && (
+                  <Button asChild variant="outline" className="w-full justify-start">
+                    <a href={meeting.googleEventLink} target="_blank" rel="noopener noreferrer">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      View Google Calendar Event
+                    </a>
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 export default function MeetingScheduling() {
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [filteredMeetings, setFilteredMeetings] = useState<Meeting[]>([]);
@@ -94,6 +268,8 @@ export default function MeetingScheduling() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   // Load meetings on component mount
   useEffect(() => {
@@ -157,6 +333,10 @@ export default function MeetingScheduling() {
     }
   };
 
+  const handleViewDetails = (meeting: Meeting) => {
+    setSelectedMeeting(meeting);
+    setIsDetailModalOpen(true);
+  };
 
   const filterMeetings = () => {
     let filtered = meetings;
@@ -448,6 +628,14 @@ export default function MeetingScheduling() {
                     <Button 
                       size="sm" 
                       variant="outline" 
+                      className="text-blue-600 hover:text-blue-700"
+                      onClick={() => handleViewDetails(meeting)}
+                    >
+                      <Eye className="h-3 w-3" />
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
                       className="text-red-600 hover:text-red-700"
                       onClick={() => handleDeleteMeeting(meeting._id || '')}
                     >
@@ -525,6 +713,14 @@ export default function MeetingScheduling() {
                         <Button 
                           size="sm" 
                           variant="outline" 
+                          className="text-blue-600 hover:text-blue-700"
+                          onClick={() => handleViewDetails(meeting)}
+                        >
+                          <Eye className="h-3 w-3" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
                           className="text-red-600 hover:text-red-700"
                           onClick={() => handleDeleteMeeting(meeting._id || '')}
                         >
@@ -546,7 +742,12 @@ export default function MeetingScheduling() {
         </CardContent>
       </Card>
 
+      {/* Meeting Detail Modal */}
+      <MeetingDetailModal
+        meeting={selectedMeeting}
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+      />
     </div>
   );
 }
-

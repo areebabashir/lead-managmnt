@@ -73,14 +73,7 @@ export const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSideba
         </button> */}
 
         {/* Notifications */}
-        <div className="relative">
-          <button className="p-2.5 bg-gray-50 border border-gray-200 rounded-xl hover:bg-white hover:border-gray-300 transition-colors duration-200">
-            <Bell className="h-4 w-4 text-gray-600" />
-          </button>
-          <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs bg-red-500 text-white rounded-full">
-            3
-          </span>
-        </div>
+        
 
         {/* User Menu */}
         <div className="relative user-menu-container">
@@ -105,7 +98,7 @@ export const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSideba
                   <div className="text-xs text-gray-500">{user?.email}</div>
                   <div className="text-xs text-orange-600 font-medium">{user?.role?.name}</div>
                 </div>
-                
+{/*                 
                 <button 
                   onClick={() => {
                     navigate("/profile")
@@ -115,7 +108,7 @@ export const Header: React.FC<HeaderProps> = ({ sidebarCollapsed, onToggleSideba
                 >
                   <User className="h-4 w-4 text-gray-500" />
                   Profile
-                </button>
+                </button> */}
                 
                 {hasPermission('settings', 'read') && (
                   <button 

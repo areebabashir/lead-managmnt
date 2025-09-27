@@ -1,38 +1,80 @@
 import { google } from 'googleapis';
 import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
+import { getActiveEmailAccount, getGmailClient } from '../helpers/emailHelper.js';
+
+dotenv.config();
 
 class GoogleCalendarService {
     constructor() {
-        // Hardcoded Google Calendar credentials
+        // Google OAuth credentials (still from env for client setup)
         this.oAuth2Client = new google.auth.OAuth2(
-            "533043152880-e68i6d56n9gd7hvb3d0t8krhmt8sh280.apps.googleusercontent.com",
-            "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",
-            "https://developers.google.com/oauthplayground"
+            process.env.GOOGLE_CLIENT_ID,
+            process.env.GOOGLE_CLIENT_SECRET,
+            process.env.GOOGLE_REDIRECT_URI
         );
         
-        // Set hardcoded refresh token
-        console.log('Setting Google Calendar refresh token...');
-        this.oAuth2Client.setCredentials({
-            refresh_token: "1//04C8A4KmF4ijUCgYIARAAGAQSNwF-L9IrNeIbAcgrfuYgKCfakCr46FMcy-mhNJFedagGElq014k5DKGEEOYjIPFKWPQQataZpOs"
-        });
-        
-        this.calendar = google.calendar({ version: 'v3', auth: this.oAuth2Client });
-        this.setupEmailTransporter();
+        this.calendar = null; // Will be initialized when needed
+        this.emailTransporter = null; // Will be initialized when needed
     }
 
-    setupEmailTransporter() {
-        this.emailTransporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: 'zainkazmi258@gmail.com', // Hardcoded email
-                pass: 'your_app_password_here' // You'll need to add your Gmail app password here
-            }
-        });
+    // Method to get configured calendar client with active account tokens
+    async getCalendarClient() {
+        try {
+            const activeAccount = await getActiveEmailAccount();
+            
+            // Set credentials for the active account
+            this.oAuth2Client.setCredentials({
+                refresh_token: activeAccount.google.refreshToken,
+                access_token: activeAccount.google.accessToken,
+                expiry_date: activeAccount.google.expiryDate
+            });
+
+            this.calendar = google.calendar({ version: 'v3', auth: this.oAuth2Client });
+            return this.calendar;
+        } catch (error) {
+            console.error('Error setting up Calendar client:', error);
+            throw error;
+        }
+    }
+
+    async getEmailTransporter() {
+        if (!this.emailTransporter) {
+            await this.setupEmailTransporter();
+        }
+        return this.emailTransporter;
+    }
+
+    async setupEmailTransporter() {
+        try {
+            const activeAccount = await getActiveEmailAccount();
+            
+            this.emailTransporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: activeAccount.email,
+                    pass: 'your_app_password_here' // You'll need to add your Gmail app password here
+                }
+            });
+        } catch (error) {
+            console.error('Error setting up email transporter:', error);
+            // Fallback to hardcoded values if no active account
+            this.emailTransporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: 'zainkazmi258@gmail.com', // Hardcoded email
+                    pass: 'your_app_password_here' // You'll need to add your Gmail app password here
+                }
+            });
+        }
     }
 
     // Check if we have valid credentials (refresh token)
     async hasValidCredentials() {
         try {
+            // Get calendar client with active account tokens
+            await this.getCalendarClient();
+            
             // Try to refresh the access token to verify credentials
             const { credentials } = await this.oAuth2Client.refreshAccessToken();
             console.log('✅ Google Calendar credentials are valid');
@@ -46,6 +88,9 @@ class GoogleCalendarService {
     // Create a Google Calendar event with Google Meet link
     async createCalendarEvent(meetingData, userEmail) {
         try {
+            // Get calendar client with active account tokens
+            const calendar = await this.getCalendarClient();
+            
             const { title, description, date, startTime, endTime, attendees = [] } = meetingData;
             
             // Convert date and time to ISO format
@@ -84,7 +129,7 @@ class GoogleCalendarService {
                 },
             };
 
-            const response = await this.calendar.events.insert({
+            const response = await calendar.events.insert({
                 calendarId: 'primary',
                 resource: event,
                 conferenceDataVersion: 1,
@@ -111,6 +156,9 @@ class GoogleCalendarService {
     // Update a Google Calendar event
     async updateCalendarEvent(eventId, meetingData, userEmail) {
         try {
+            // Get calendar client with active account tokens
+            const calendar = await this.getCalendarClient();
+            
             const { title, description, date, startTime, endTime, attendees = [] } = meetingData;
             
             // Convert date and time to ISO format
@@ -141,7 +189,7 @@ class GoogleCalendarService {
                 },
             };
 
-            const response = await this.calendar.events.update({
+            const response = await calendar.events.update({
                 calendarId: 'primary',
                 eventId: eventId,
                 resource: event,
@@ -168,7 +216,10 @@ class GoogleCalendarService {
     // Delete a Google Calendar event
     async deleteCalendarEvent(eventId) {
         try {
-            await this.calendar.events.delete({
+            // Get calendar client with active account tokens
+            const calendar = await this.getCalendarClient();
+            
+            await calendar.events.delete({
                 calendarId: 'primary',
                 eventId: eventId,
                 sendUpdates: 'all'
@@ -191,6 +242,9 @@ class GoogleCalendarService {
     // Send meeting invitation email
     async sendMeetingInvitation(meetingData, meetLink, eventLink, attendees) {
         try {
+            // Get email transporter with active account
+            const emailTransporter = await this.getEmailTransporter();
+            
             const { title, description, date, startTime, endTime, location } = meetingData;
             
             const emailContent = `
@@ -230,14 +284,17 @@ class GoogleCalendarService {
                 </div>
             `;
 
+            // Get active account for the from email
+            const activeAccount = await getActiveEmailAccount();
+            
             const mailOptions = {
-                from: 'zainkazmi258@gmail.com',
+                from: activeAccount.email,
                 to: attendees.join(', '),
                 subject: `Meeting Invitation: ${title}`,
                 html: emailContent
             };
 
-            await this.emailTransporter.sendMail(mailOptions);
+            await emailTransporter.sendMail(mailOptions);
             
             return {
                 success: true,

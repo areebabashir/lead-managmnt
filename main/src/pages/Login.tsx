@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { useCompany } from '../contexts/CompanyContext';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -15,6 +16,7 @@ const Login: React.FC = () => {
   const [success, setSuccess] = useState('');
 
   const { login } = useAuth();
+  const { company } = useCompany();
   const navigate = useNavigate();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,9 +114,23 @@ const Login: React.FC = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg"
+            className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg overflow-hidden"
           >
-            <span className="text-white font-bold text-xl">M</span>
+            {company?.logo ? (
+              <img
+                src={company.logo}
+                alt={`${company.name} logo`}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback to default icon if image fails to load
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <span className={`text-white font-bold text-xl ${company?.logo ? 'hidden' : ''}`}>
+              {company?.name ? company.name.charAt(0).toUpperCase() : 'M'}
+            </span>
           </motion.div>
           <motion.h1
             initial={{ opacity: 0, y: 10 }}
@@ -122,7 +138,7 @@ const Login: React.FC = () => {
             transition={{ delay: 0.3 }}
             className="text-3xl font-bold text-gray-900 mb-2"
           >
-            Melnitz
+            {company?.name || 'Melnitz'}
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 10 }}

@@ -14,9 +14,14 @@ import webhookRoutes from './routes/webhookRoutes.js'; // Importing webhook rout
 import emailRoutes from './routes/emailRoutes.js'; // Importing email routes
 import googleCalendarRoutes from './routes/googleCalendarRoutes.js'; // Importing Google Calendar routes
 import smsRoutes from './routes/smsRoutes.js'; // Importing SMS routes
+import meetingNotesRoutes from './routes/meetingNotesRoutes.js'; // Importing meeting notes routes
+import companyRoutes from './routes/companyRoutes.js'; // Importing company routes
+import emailAccountRoutes from './routes/emailAccountRoutes.js'; // Importing email account routes
 import { seedDefaultRoles } from './config/seedRoles.js'; // Import role seeder
 import emailScheduler from './services/emailScheduler.js'; // Import email scheduler
 import googleCalendarService from './services/googleCalendarService.js'; // Import Google Calendar service
+import googleAuthRoutes from './routes/googleAuthRoutes.js';
+
 
 // Load environment variables
 dotenv.config({ path: './.env' });
@@ -34,6 +39,9 @@ const app = express();
 app.use(cors()); // Enable Cross-Origin Resource Sharing
 app.use(express.json()); // Parse incoming JSON requests
 
+// Serve static files from uploads directory
+app.use('/uploads', express.static('uploads'));
+
 // Routes
 app.use('/api/auth', authRoutes); // Mount auth routes
 app.use('/api/roles', roleRoutes); // Mount role routes
@@ -47,26 +55,31 @@ app.use('/api/webhooks', webhookRoutes); // Mount webhook routes
 app.use('/api/emails', emailRoutes); // Mount email routes
 app.use('/api/google-calendar', googleCalendarRoutes); // Mount Google Calendar routes
 app.use('/api/sms', smsRoutes); // Mount SMS routes
+app.use('/api/company', companyRoutes); // Mount company routes
+app.use('/api/email-accounts', emailAccountRoutes); // Mount email account routes
+app.use('/api/google', googleAuthRoutes);
+
 
 // Legacy OAuth callback (kept for backward compatibility)
-app.get("/oauth2callback", async (req, res) => {
-  try {
-    const code = req.query.code;
-    if (!code) {
-      return res.status(400).send("Authorization code is required");
-    }
+// app.get("/oauth2callback", async (req, res) => {
+//   try {
+//     const code = req.query.code;
+//     if (!code) {
+//       return res.status(400).send("Authorization code is required");
+//     }
     
-    const tokenResult = await googleCalendarService.getTokens(code);
-    if (tokenResult.success) {
-      res.send("Google Calendar API connected ✅");
-    } else {
-      res.status(400).send("Failed to connect Google Calendar");
-    }
-  } catch (error) {
-    console.error('OAuth callback error:', error);
-    res.status(500).send("Error connecting Google Calendar");
-  }
-});
+//     const tokenResult = await googleCalendarService.getTokens(code);
+//     if (tokenResult.success) {
+//       res.send("Google Calendar API connected ✅");
+//     } else {
+//       res.status(400).send("Failed to connect Google Calendar");
+//     }
+//   } catch (error) {
+//     console.error('OAuth callback error:', error);
+//     res.status(500).send("Error connecting Google Calendar");
+//   }
+// });
+app.use('/api/meeting-notes', meetingNotesRoutes); // Mount meeting notes routes
 
 // Basic route
 app.get('/', (req, res) => {

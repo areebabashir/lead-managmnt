@@ -26,7 +26,7 @@ class GeminiService {
 
     try {
       this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-      this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
       this.initialized = true;
       console.log('GeminiService initialized successfully');
     } catch (error) {
@@ -369,6 +369,72 @@ Improved text:`;
     } catch (error) {
       console.error('Cache stats error:', error);
       return { totalCached: 0, validCached: 0, inMemoryCacheSize: this.cache.size };
+    }
+  }
+
+  // Summarize meeting transcript (different from structured meeting notes)
+  async summarizeTranscript(transcriptText, meetingContext = {}) {
+    await this.ensureInitialized();
+
+    const { meetingTitle, participants, duration, confidence } = meetingContext;
+
+    console.log('meetingContext', meetingContext);
+
+    // Build context information
+    const contextInfo = [];
+    if (meetingTitle) contextInfo.push(`Meeting Title: ${meetingTitle}`);
+    if (participants && participants.length > 0) {
+      contextInfo.push(`Participants: ${participants.join(', ')}`);
+    }
+    if (duration) contextInfo.push(`Duration: ${duration}`);
+    if (confidence) contextInfo.push(`Transcript Confidence: ${Math.round(confidence * 100)}%`);
+
+    const contextString = contextInfo.length > 0 ? contextInfo.join('\n') + '\n\n' : '';
+
+    const prompt = `Please analyze and summarize the following meeting transcript:
+
+${contextString}Transcript:
+${transcriptText}
+
+Please provide a comprehensive summary that includes:
+
+1. **Meeting Overview**: Brief description of the meeting's purpose and main topic
+
+2. **Key Discussion Points**: Main topics discussed during the meeting
+   - List the most important points raised
+   - Include any significant decisions or conclusions
+
+3. **Action Items**: Specific tasks or follow-ups mentioned
+   - What needs to be done
+   - Who is responsible (if mentioned)
+   - Any deadlines mentioned
+
+4. **Important Decisions**: Any decisions made during the meeting
+
+5. **Next Steps**: Follow-up actions or future meetings planned
+
+6. **Additional Notes**: Any other relevant information or context
+
+Format the summary in a clear, professional manner that would be useful for someone who didn't attend the meeting. Focus on actionable information and key outcomes.
+
+If the transcript quality is poor or unclear in some sections, note this in your summary.`;
+
+    const cacheKey = `transcript:${transcriptText.substring(0, 100)}:${JSON.stringify(meetingContext)}`;
+    const cached = await this.checkCache(prompt, cacheKey);
+
+    if (cached.isCached) {
+      return { summary: cached.response, isCached: true };
+    }
+
+    try {
+      const result = await this.model.generateContent(prompt);
+      const response = result.response.text();
+
+      await this.saveToCache(prompt, response, cacheKey);
+      return { summary: response, isCached: false };
+    } catch (error) {
+      console.error('Transcript summarization error:', error);
+      throw new Error('Failed to summarize meeting transcript');
     }
   }
 
