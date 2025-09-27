@@ -50,6 +50,8 @@ export const seedDefaultRoles = async () => {
                     { resource: 'campaigns', actions: ['create', 'read', 'update', 'delete', 'approve', 'reject', 'configure'] },
                     // Communication
                     { resource: 'ai_generator', actions: ['create', 'read', 'update', 'delete', 'generate', 'configure'] },
+                    { resource: 'email', actions: ['create', 'read', 'update', 'delete', 'send', 'schedule', 'manage', 'sync', 'star', 'cancel', 'edit', 'view'] },
+                    { resource: 'sms', actions: ['create', 'read', 'update', 'delete', 'send', 'schedule', 'manage'] },
                     // Calendar & Scheduling
                     { resource: 'calendar', actions: ['create', 'read', 'update', 'delete', 'schedule', 'integrate'] },
                     { resource: 'appointments', actions: ['create', 'read', 'update', 'delete', 'schedule', 'approve'] },
@@ -84,6 +86,8 @@ export const seedDefaultRoles = async () => {
                     { resource: 'campaigns', actions: ['read', 'update', 'approve', 'reject', 'configure'] },
                     // Communication
                     { resource: 'ai_generator', actions: ['read', 'update', 'generate', 'configure'] },
+                    { resource: 'email', actions: ['read', 'update', 'send', 'schedule', 'manage', 'sync', 'star', 'cancel', 'edit', 'view'] },
+                    { resource: 'sms', actions: ['read', 'update', 'send', 'schedule', 'manage'] },
                     // Calendar & Scheduling
                     { resource: 'calendar', actions: ['read', 'update', 'schedule', 'integrate'] },
                     { resource: 'appointments', actions: ['read', 'update', 'schedule', 'approve'] },
@@ -116,8 +120,9 @@ export const seedDefaultRoles = async () => {
                     // Sales & Pipeline
                     { resource: 'campaigns', actions: ['read', 'update', 'configure'] },
                     // Communication
-          
                     { resource: 'ai_generator', actions: ['read', 'update', 'generate'] },
+                    { resource: 'email', actions: ['read', 'update', 'send', 'schedule', 'manage', 'edit', 'view'] },
+                    { resource: 'sms', actions: ['read', 'update', 'send', 'schedule', 'manage'] },
                     // Calendar & Scheduling
                     { resource: 'calendar', actions: ['read', 'update', 'schedule'] },
                     { resource: 'appointments', actions: ['read', 'update', 'schedule', 'approve'] },

@@ -177,27 +177,33 @@ const ChartCard = ({
   children,
   icon: Icon,
   delay = 0,
-}: { title: string; children: React.ReactNode; icon: any; delay?: number }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.4, delay }}
-    className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300"
-  >
-    <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <div className="p-2 bg-primary/10 rounded-lg">
-          <Icon className="h-4 w-4 text-black" />
+}: { title: string; children: React.ReactNode; icon: any; delay?: number }) => {
+  const { hasPermission } = useAuth()
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay }}
+      className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300"
+    >
+      <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Icon className="h-4 w-4 text-black" />
+          </div>
+          <h3 className="text-base font-semibold text-gray-900">{title}</h3>
         </div>
-        <h3 className="text-base font-semibold text-gray-900">{title}</h3>
+        {hasPermission('dashboards', 'update') && (
+          <button className="p-1 hover:bg-gray-50 rounded-lg transition-colors">
+            <MoreVertical className="h-4 w-4 text-gray-500" />
+          </button>
+        )}
       </div>
-      <button className="p-1 hover:bg-gray-50 rounded-lg transition-colors">
-        <MoreVertical className="h-4 w-4 text-gray-500" />
-      </button>
-    </div>
-    <div className="p-4">{children}</div>
-  </motion.div>
-)
+      <div className="p-4">{children}</div>
+    </motion.div>
+  )
+}
 
 const StatCard = ({ stat, index }: { stat: Stat; index: number }) => (
   <motion.div
@@ -231,6 +237,7 @@ const StatCard = ({ stat, index }: { stat: Stat; index: number }) => (
 
 const TodoItem = ({ item, index }: { item: Todo; index: number }) => {
   const [completed, setCompleted] = useState(item.done)
+  const { hasPermission } = useAuth()
 
   return (
     <motion.div
@@ -240,15 +247,21 @@ const TodoItem = ({ item, index }: { item: Todo; index: number }) => {
       className={`flex items-center gap-3 p-2 rounded-lg border transition-all duration-200 ${completed ? "bg-gray-50 border-gray-200" : "bg-white border-gray-200 hover:border-orange-200 hover:shadow-sm"
         }`}
     >
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setCompleted(!completed)}
-        className={`flex-shrink-0 w-4 h-4 rounded-full border-2 transition-all duration-200 ${completed ? "bg-primary border-primary" : "border-gray-300 hover:border-primary"
-          }`}
-      >
-        {completed && <CheckCircle2 className="w-3 h-3 text-white mx-auto" />}
-      </motion.button>
+      {hasPermission('tasks', 'update') ? (
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setCompleted(!completed)}
+          className={`flex-shrink-0 w-4 h-4 rounded-full border-2 transition-all duration-200 ${completed ? "bg-primary border-primary" : "border-gray-300 hover:border-primary"
+            }`}
+        >
+          {completed && <CheckCircle2 className="w-3 h-3 text-white mx-auto" />}
+        </motion.button>
+      ) : (
+        <div className={`flex-shrink-0 w-4 h-4 rounded-full border-2 ${completed ? "bg-primary border-primary" : "border-gray-300"}`}>
+          {completed && <CheckCircle2 className="w-3 h-3 text-white mx-auto" />}
+        </div>
+      )}
 
       <div className="flex-1 min-w-0">
         <p className={`text-sm font-medium ${completed ? "text-gray-500 line-through" : "text-gray-900"}`}>
@@ -892,26 +905,30 @@ export default function Dashboard() {
 
           <ChartCard title="Quick Actions" icon={Activity}>
             <div className="space-y-3">
-              <button
-                onClick={() => navigate('/ai-assistant/email-manager')}
-                className="w-full flex items-center gap-3 p-3 bg-primary/5 hover:bg-primary/10 border border-primary/20 rounded-lg transition-colors group"
-              >
-                <Mail className="h-5 w-5 text-primary group-hover:text-primary" />
-                <div className="text-left">
-                  <div className="text-sm font-medium text-primary">Email Manager</div>
-                  <div className="text-xs text-primary">Manage sent & inbox emails</div>
-                </div>
-              </button>
+              {hasPermission('email', 'manage') && (
+                <button
+                  onClick={() => navigate('/ai-assistant/email-manager')}
+                  className="w-full flex items-center gap-3 p-3 bg-primary/5 hover:bg-primary/10 border border-primary/20 rounded-lg transition-colors group"
+                >
+                  <Mail className="h-5 w-5 text-primary group-hover:text-primary" />
+                  <div className="text-left">
+                    <div className="text-sm font-medium text-primary">Email Manager</div>
+                    <div className="text-xs text-primary">Manage sent & inbox emails</div>
+                  </div>
+                </button>
+              )}
 
-              <button onClick={() => navigate('/ai-assistant/email')}
-                className="w-full flex items-center gap-3 p-3 bg-primary/5 hover:bg-primary/10 border border-primary/20 rounded-lg transition-colors group"
-              >
-                <MessageSquare className="h-5 w-5 text-primary group-hover:text-primary" />
-                <div className="text-left">
-                  <div className="text-sm font-medium text-primary">Email Generator</div>
-                  <div className="text-xs text-primary">Create AI-powered emails</div>
-                </div>
-              </button>
+              {hasPermission('email', 'generate') && (
+                <button onClick={() => navigate('/ai-assistant/email')}
+                  className="w-full flex items-center gap-3 p-3 bg-primary/5 hover:bg-primary/10 border border-primary/20 rounded-lg transition-colors group"
+                >
+                  <MessageSquare className="h-5 w-5 text-primary group-hover:text-primary" />
+                  <div className="text-left">
+                    <div className="text-sm font-medium text-primary">Email Generator</div>
+                    <div className="text-xs text-primary">Create AI-powered emails</div>
+                  </div>
+                </button>
+              )}
             </div>
           </ChartCard>
 

@@ -10,7 +10,7 @@ const permissionSchema = new mongoose.Schema({
             // Sales & Pipeline
            'opportunities', 'campaigns',
             // Communication
-             'ai_generator',
+             'ai_generator', 'email', 'sms',
             // Calendar & Scheduling
             'calendar', 'appointments',  'reminders',
             // Task & Workflow
@@ -31,7 +31,8 @@ const permissionSchema = new mongoose.Schema({
             'approve', 'reject', 'assign', 'export',
             'import', 'schedule', 'send', 'generate',
             'analyze', 'configure', 'integrate', 'dictate',
-            'automate'
+            'automate', 'manage', 'sync', 'star', 'cancel',
+            'edit', 'view'
         ]
     },
     description: {

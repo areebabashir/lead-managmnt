@@ -26,7 +26,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
               size="sm"
               className="relative h-12 w-full p-0 rounded-lg border-2 hover:scale-105 transition-transform"
               style={{
-                backgroundColor: color.hex,
+                backgroundColor: `hsl(${color.value})`,
                 borderColor: selectedColor === color.value ? 'hsl(var(--foreground))' : 'transparent',
               }}
               onClick={() => onColorSelect(color.value)}
